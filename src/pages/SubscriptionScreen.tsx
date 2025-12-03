@@ -1,0 +1,186 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Check,
+  Crown,
+  Star,
+  Zap,
+  Home,
+  Stethoscope,
+  HeadphonesIcon,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import MobileLayout from "@/components/layout/MobileLayout";
+import ScreenHeader from "@/components/layout/ScreenHeader";
+
+const plans = [
+  {
+    id: "monthly",
+    name: "Monthly",
+    price: 299,
+    period: "per month",
+    popular: false,
+  },
+  {
+    id: "yearly",
+    name: "Yearly",
+    price: 2499,
+    period: "per year",
+    popular: true,
+    savings: "Save ₹1,089",
+  },
+];
+
+const features = [
+  { icon: Home, text: "Unlimited free home sample collection" },
+  { icon: Stethoscope, text: "2 free doctor consultations/month" },
+  { icon: HeadphonesIcon, text: "Priority 24/7 customer support" },
+  { icon: Sparkles, text: "AI-powered health insights" },
+  { icon: Zap, text: "Express 4-hour report delivery" },
+  { icon: Star, text: "Exclusive member discounts (up to 30%)" },
+];
+
+const SubscriptionScreen = () => {
+  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState("yearly");
+
+  return (
+    <MobileLayout showNav={false}>
+      <ScreenHeader title="Health Subscription" />
+
+      <div className="px-4 pb-32">
+        {/* Hero section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 text-center"
+        >
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-warning to-warning/60 flex items-center justify-center mb-4">
+            <Crown className="w-10 h-10 text-warning-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">HealthSwift Plus</h1>
+          <p className="text-muted-foreground mt-2">
+            Unlock premium health benefits with our subscription plans
+          </p>
+        </motion.div>
+
+        {/* Plan selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mt-8 grid grid-cols-2 gap-3"
+        >
+          {plans.map((plan) => (
+            <button
+              key={plan.id}
+              onClick={() => setSelectedPlan(plan.id)}
+              className={`relative p-4 rounded-2xl border-2 transition-all ${
+                selectedPlan === plan.id
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-card"
+              }`}
+            >
+              {plan.popular && (
+                <Badge variant="ai" className="absolute -top-2 left-1/2 -translate-x-1/2">
+                  Most Popular
+                </Badge>
+              )}
+              <p className="font-semibold text-foreground">{plan.name}</p>
+              <p className="text-2xl font-bold text-foreground mt-2">
+                ₹{plan.price}
+              </p>
+              <p className="text-xs text-muted-foreground">{plan.period}</p>
+              {plan.savings && (
+                <Badge variant="softSuccess" className="mt-2">
+                  {plan.savings}
+                </Badge>
+              )}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Features */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-8"
+        >
+          <h2 className="text-lg font-bold text-foreground mb-4">What's Included</h2>
+          <div className="soft-card space-y-4">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.text}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
+                className="flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <feature.icon className="w-5 h-5 text-primary" />
+                </div>
+                <span className="flex-1 text-foreground text-sm">{feature.text}</span>
+                <Check className="w-5 h-5 text-success" />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Testimonials */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8"
+        >
+          <h2 className="text-lg font-bold text-foreground mb-4">What Members Say</h2>
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar">
+            {[
+              { name: "Priya S.", text: "The free home collection alone is worth it! Saved so much time.", rating: 5 },
+              { name: "Rahul M.", text: "Doctor consultations are incredibly helpful. Best investment!", rating: 5 },
+              { name: "Ananya K.", text: "Love the express reports. Got my results in just 4 hours!", rating: 5 },
+            ].map((testimonial, index) => (
+              <div
+                key={index}
+                className="soft-card min-w-[260px] flex-shrink-0"
+              >
+                <div className="flex gap-1 mb-2">
+                  {Array.from({ length: testimonial.rating }).map((_, i) => (
+                    <Star key={i} className="w-4 h-4 text-warning fill-warning" />
+                  ))}
+                </div>
+                <p className="text-sm text-foreground mb-2">"{testimonial.text}"</p>
+                <p className="text-xs text-muted-foreground">- {testimonial.name}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom CTA */}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
+      >
+        <Button
+          variant="hero"
+          className="w-full"
+          size="lg"
+          onClick={() => navigate("/home")}
+        >
+          Start 7-Day Free Trial
+        </Button>
+        <p className="text-center text-xs text-muted-foreground mt-2">
+          Cancel anytime. No questions asked.
+        </p>
+      </motion.div>
+    </MobileLayout>
+  );
+};
+
+export default SubscriptionScreen;

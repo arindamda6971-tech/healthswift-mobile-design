@@ -1,20 +1,129 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, Zap, Phone, Mail, Lock, Eye, EyeOff, MessageCircle } from "lucide-react";
+import { Activity, Zap, Phone, Mail, Lock, Eye, EyeOff, MessageCircle, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const emailSchema = z.string().trim().email("Please enter a valid email");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const phoneSchema = z.string().regex(/^\+?[1-9]\d{9,14}$/, "Please enter a valid phone number");
 
 const LoginScreen = () => {
   const navigate = useNavigate();
+  const { user, signInWithEmail, signUpWithEmail, signInWithPhone, verifyOtp, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  
+  // Form fields
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
-  const handleLogin = () => {
-    navigate("/home");
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/home", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleEmailAuth = async () => {
+    try {
+      // Validate inputs
+      const emailResult = emailSchema.safeParse(email);
+      if (!emailResult.success) {
+        toast({ title: "Invalid Email", description: emailResult.error.errors[0].message, variant: "destructive" });
+        return;
+      }
+      
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        toast({ title: "Invalid Password", description: passwordResult.error.errors[0].message, variant: "destructive" });
+        return;
+      }
+
+      setIsLoading(true);
+      
+      if (isSignUp) {
+        const { error } = await signUpWithEmail(email, password, fullName || undefined);
+        if (error) {
+          if (error.message.includes("already registered")) {
+            toast({ title: "Account Exists", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
+          } else {
+            toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
+          }
+        } else {
+          toast({ title: "Check Your Email", description: "We've sent you a confirmation link. Please check your email." });
+        }
+      } else {
+        const { error } = await signInWithEmail(email, password);
+        if (error) {
+          toast({ title: "Sign In Failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhoneAuth = async () => {
+    try {
+      if (!otpSent) {
+        // Validate phone
+        const phoneResult = phoneSchema.safeParse(phoneNumber);
+        if (!phoneResult.success) {
+          toast({ title: "Invalid Phone", description: "Please enter a valid phone number with country code (e.g., +919876543210)", variant: "destructive" });
+          return;
+        }
+
+        setIsLoading(true);
+        const { error } = await signInWithPhone(phoneNumber);
+        if (error) {
+          toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
+        } else {
+          setOtpSent(true);
+          toast({ title: "OTP Sent", description: "Please check your phone for the verification code." });
+        }
+      } else {
+        // Verify OTP
+        if (otp.length !== 6) {
+          toast({ title: "Invalid OTP", description: "Please enter the 6-digit code.", variant: "destructive" });
+          return;
+        }
+
+        setIsLoading(true);
+        const { error } = await verifyOtp(phoneNumber, otp);
+        if (error) {
+          toast({ title: "Verification Failed", description: "Invalid or expired code. Please try again.", variant: "destructive" });
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast({ title: "Google Sign In Failed", description: error.message, variant: "destructive" });
+      setIsLoading(false);
+    }
+  };
+
+  const handleWhatsAppBooking = () => {
+    const message = encodeURIComponent("Hi! I'd like to book a health test with HealthSwift.");
+    window.open(`https://wa.me/919999999999?text=${message}`, "_blank");
   };
 
   return (
@@ -34,7 +143,9 @@ const LoginScreen = () => {
         <h1 className="text-2xl font-bold text-secondary">
           Health<span className="text-primary">Swift</span>
         </h1>
-        <p className="text-muted-foreground mt-2">Sign in to continue</p>
+        <p className="text-muted-foreground mt-2">
+          {isSignUp ? "Create your account" : "Sign in to continue"}
+        </p>
       </motion.div>
 
       {/* Login form */}
@@ -59,18 +170,59 @@ const LoginScreen = () => {
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="tel"
-                placeholder="Enter your phone number"
+                placeholder="+91 9876543210"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                disabled={otpSent}
                 className="pl-12 h-14 rounded-xl bg-muted border-0 text-base"
               />
             </div>
-            <Button onClick={handleLogin} className="w-full" variant="hero" size="lg">
-              Send OTP
+            {otpSent && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="relative"
+              >
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="pl-12 h-14 rounded-xl bg-muted border-0 text-base tracking-widest"
+                />
+              </motion.div>
+            )}
+            <Button onClick={handlePhoneAuth} className="w-full" variant="hero" size="lg" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : otpSent ? "Verify OTP" : "Send OTP"}
             </Button>
+            {otpSent && (
+              <button
+                onClick={() => { setOtpSent(false); setOtp(""); }}
+                className="text-sm text-primary font-medium w-full text-center"
+              >
+                Change phone number
+              </button>
+            )}
           </TabsContent>
 
           <TabsContent value="email" className="space-y-4">
+            {isSignUp && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="relative"
+              >
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="pl-12 h-14 rounded-xl bg-muted border-0 text-base"
+                />
+              </motion.div>
+            )}
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -91,6 +243,7 @@ const LoginScreen = () => {
                 className="pl-12 pr-12 h-14 rounded-xl bg-muted border-0 text-base"
               />
               <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
@@ -101,9 +254,16 @@ const LoginScreen = () => {
                 )}
               </button>
             </div>
-            <Button onClick={handleLogin} className="w-full" variant="hero" size="lg">
-              Sign In
+            <Button onClick={handleEmailAuth} className="w-full" variant="hero" size="lg" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isSignUp ? "Create Account" : "Sign In"}
             </Button>
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-muted-foreground w-full text-center"
+            >
+              {isSignUp ? "Already have an account? " : "Don't have an account? "}
+              <span className="text-primary font-medium">{isSignUp ? "Sign In" : "Sign Up"}</span>
+            </button>
           </TabsContent>
         </Tabs>
 
@@ -116,7 +276,7 @@ const LoginScreen = () => {
 
         {/* Social login */}
         <div className="space-y-3">
-          <Button variant="glass" className="w-full" size="lg" onClick={handleLogin}>
+          <Button variant="glass" className="w-full" size="lg" onClick={handleGoogleAuth} disabled={isLoading}>
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
@@ -138,7 +298,7 @@ const LoginScreen = () => {
             Continue with Google
           </Button>
 
-          <Button variant="glass" className="w-full bg-success/10 hover:bg-success/20" size="lg" onClick={handleLogin}>
+          <Button variant="glass" className="w-full bg-success/10 hover:bg-success/20" size="lg" onClick={handleWhatsAppBooking}>
             <MessageCircle className="w-5 h-5 text-success" />
             <span className="text-success">Book via WhatsApp</span>
           </Button>

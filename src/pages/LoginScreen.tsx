@@ -194,14 +194,22 @@ const LoginScreen = () => {
               </motion.div>
             )}
             <Button onClick={handlePhoneAuth} className="w-full" variant="hero" size="lg" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : otpSent ? "Verify OTP" : "Send OTP"}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : otpSent ? "Verify OTP" : isSignUp ? "Sign Up with OTP" : "Sign In with OTP"}
             </Button>
-            {otpSent && (
+            {otpSent ? (
               <button
                 onClick={() => { setOtpSent(false); setOtp(""); }}
                 className="text-sm text-primary font-medium w-full text-center"
               >
                 Change phone number
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-muted-foreground w-full text-center"
+              >
+                {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                <span className="text-primary font-medium">{isSignUp ? "Sign In" : "Sign Up"}</span>
               </button>
             )}
           </TabsContent>

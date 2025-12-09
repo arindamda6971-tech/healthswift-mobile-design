@@ -123,7 +123,7 @@ const LoginScreen = () => {
 
   const handleWhatsAppBooking = () => {
     const message = encodeURIComponent("Hi! I'd like to book a health test with HealthSwift.");
-    window.open(`https://wa.me/919999999999?text=${message}`, "_blank");
+    window.open(`https://wa.me/916296092819?text=${message}`, "_blank");
   };
 
   return (

@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const menuItems = [
   { icon: FileText, label: "Medical History", path: "/medical-history", badge: null },
@@ -33,6 +35,17 @@ const menuItems = [
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
 
   return (
     <MobileLayout>
@@ -147,7 +160,11 @@ const ProfileScreen = () => {
           transition={{ delay: 0.5 }}
           className="mt-6"
         >
-          <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Button 
+            variant="ghost" 
+            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={handleLogout}
+          >
             <LogOut className="w-5 h-5" />
             Log Out
           </Button>

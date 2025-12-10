@@ -5,11 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import InstallPrompt from "@/components/InstallPrompt";
 
 // Screens
 import SplashScreen from "./pages/SplashScreen";
 import OnboardingScreen from "./pages/OnboardingScreen";
 import LoginScreen from "./pages/LoginScreen";
+import InstallScreen from "./pages/InstallScreen";
 import HomeScreen from "./pages/HomeScreen";
 import CategoriesScreen from "./pages/CategoriesScreen";
 import TestDetailScreen from "./pages/TestDetailScreen";
@@ -40,6 +42,7 @@ const App = () => (
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingScreen />} />
             <Route path="/login" element={<LoginScreen />} />
+            <Route path="/install" element={<InstallScreen />} />
             
             {/* Protected Routes */}
             <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
@@ -62,6 +65,7 @@ const App = () => (
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <InstallPrompt />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

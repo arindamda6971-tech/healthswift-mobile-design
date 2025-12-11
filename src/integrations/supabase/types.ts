@@ -14,6 +14,411 @@ export type Database = {
   }
   public: {
     Tables: {
+      addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          latitude: number | null
+          longitude: number | null
+          pincode: string
+          state: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          pincode: string
+          state: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          pincode?: string
+          state?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cart_items: {
+        Row: {
+          created_at: string
+          family_member_id: string | null
+          id: string
+          package_id: string | null
+          quantity: number | null
+          test_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          package_id?: string | null
+          quantity?: number | null
+          test_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          package_id?: string | null
+          quantity?: number | null
+          test_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "test_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          blood_group: string | null
+          created_at: string
+          date_of_birth: string | null
+          gender: string | null
+          id: string
+          is_primary: boolean | null
+          medical_conditions: string[] | null
+          name: string
+          phone: string | null
+          relation: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id?: string
+          is_primary?: boolean | null
+          medical_conditions?: string[] | null
+          name: string
+          phone?: string | null
+          relation: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string | null
+          id?: string
+          is_primary?: boolean | null
+          medical_conditions?: string[] | null
+          name?: string
+          phone?: string | null
+          relation?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_scores: {
+        Row: {
+          ai_insights: string | null
+          blood_health: number | null
+          bone_health: number | null
+          created_at: string
+          heart_health: number | null
+          id: string
+          last_calculated_at: string | null
+          metabolic_health: number | null
+          overall_score: number | null
+          updated_at: string
+          user_id: string
+          vitamin_levels: number | null
+        }
+        Insert: {
+          ai_insights?: string | null
+          blood_health?: number | null
+          bone_health?: number | null
+          created_at?: string
+          heart_health?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          metabolic_health?: number | null
+          overall_score?: number | null
+          updated_at?: string
+          user_id: string
+          vitamin_levels?: number | null
+        }
+        Update: {
+          ai_insights?: string | null
+          blood_health?: number | null
+          bone_health?: number | null
+          created_at?: string
+          heart_health?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          metabolic_health?: number | null
+          overall_score?: number | null
+          updated_at?: string
+          user_id?: string
+          vitamin_levels?: number | null
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          family_member_id: string | null
+          id: string
+          order_id: string | null
+          package_id: string | null
+          price: number
+          quantity: number | null
+          test_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          order_id?: string | null
+          package_id?: string | null
+          price: number
+          quantity?: number | null
+          test_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          order_id?: string | null
+          package_id?: string | null
+          price?: number
+          quantity?: number | null
+          test_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "test_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address_id: string | null
+          coupon_code: string | null
+          created_at: string
+          discount: number | null
+          family_member_id: string | null
+          id: string
+          order_number: string | null
+          payment_method: string | null
+          payment_status: string | null
+          phlebotomist_id: string | null
+          scheduled_date: string | null
+          scheduled_time_slot: string | null
+          special_instructions: string | null
+          status: string | null
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_id?: string | null
+          coupon_code?: string | null
+          created_at?: string
+          discount?: number | null
+          family_member_id?: string | null
+          id?: string
+          order_number?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          phlebotomist_id?: string | null
+          scheduled_date?: string | null
+          scheduled_time_slot?: string | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_id?: string | null
+          coupon_code?: string | null
+          created_at?: string
+          discount?: number | null
+          family_member_id?: string | null
+          id?: string
+          order_number?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          phlebotomist_id?: string | null
+          scheduled_date?: string | null
+          scheduled_time_slot?: string | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_tests: {
+        Row: {
+          package_id: string
+          test_id: string
+        }
+        Insert: {
+          package_id: string
+          test_id: string
+        }
+        Update: {
+          package_id?: string
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_tests_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "test_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_tests_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phlebotomists: {
+        Row: {
+          created_at: string
+          current_latitude: number | null
+          current_longitude: number | null
+          experience_years: number | null
+          id: string
+          is_available: boolean | null
+          name: string
+          phone: string | null
+          photo_url: string | null
+          rating: number | null
+          reviews_count: number | null
+          verification_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          experience_years?: number | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          verification_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          experience_years?: number | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          verification_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -52,6 +457,279 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          abnormal_count: number | null
+          ai_recommendations: Json | null
+          ai_summary: string | null
+          created_at: string
+          family_member_id: string | null
+          generated_at: string | null
+          id: string
+          lab_name: string | null
+          order_id: string | null
+          parameters: Json | null
+          pdf_url: string | null
+          risk_level: string | null
+          status: string | null
+          test_id: string | null
+          user_id: string
+        }
+        Insert: {
+          abnormal_count?: number | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          created_at?: string
+          family_member_id?: string | null
+          generated_at?: string | null
+          id?: string
+          lab_name?: string | null
+          order_id?: string | null
+          parameters?: Json | null
+          pdf_url?: string | null
+          risk_level?: string | null
+          status?: string | null
+          test_id?: string | null
+          user_id: string
+        }
+        Update: {
+          abnormal_count?: number | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          created_at?: string
+          family_member_id?: string | null
+          generated_at?: string | null
+          id?: string
+          lab_name?: string | null
+          order_id?: string | null
+          parameters?: Json | null
+          pdf_url?: string | null
+          risk_level?: string | null
+          status?: string | null
+          test_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string | null
+          referral_count: number | null
+          total_points: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code?: string | null
+          referral_count?: number | null
+          total_points?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string | null
+          referral_count?: number | null
+          total_points?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      test_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      test_packages: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          name: string
+          original_price: number | null
+          price: number
+          tests_count: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name: string
+          original_price?: number | null
+          price: number
+          tests_count?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          tests_count?: number | null
+        }
+        Relationships: []
+      }
+      tests: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          fasting_hours: number | null
+          fasting_required: boolean | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          name: string
+          original_price: number | null
+          parameters: Json | null
+          preparation_instructions: string | null
+          price: number
+          report_time_hours: number | null
+          sample_type: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          fasting_hours?: number | null
+          fasting_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name: string
+          original_price?: number | null
+          parameters?: Json | null
+          preparation_instructions?: string | null
+          price: number
+          report_time_hours?: number | null
+          sample_type?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          fasting_hours?: number | null
+          fasting_required?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          name?: string
+          original_price?: number | null
+          parameters?: Json | null
+          preparation_instructions?: string | null
+          price?: number
+          report_time_hours?: number | null
+          sample_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "test_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

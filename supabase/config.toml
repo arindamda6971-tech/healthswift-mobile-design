@@ -1,1 +1,4 @@
 project_id = "dmfqfswgnfpqeseqswhl"
+
+[functions.firebase-auth-bridge]
+verify_jwt = false

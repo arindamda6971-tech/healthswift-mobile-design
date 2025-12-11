@@ -35,7 +35,7 @@ const menuItems = [
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -46,6 +46,9 @@ const ProfileScreen = () => {
       toast.error("Failed to log out");
     }
   };
+
+  const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
+  const contactInfo = user?.phoneNumber || user?.email || "";
 
   return (
     <MobileLayout>
@@ -58,12 +61,20 @@ const ProfileScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           className="soft-card mt-4 flex items-center gap-4"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-            <User className="w-8 h-8 text-primary-foreground" />
-          </div>
+          {user?.photoURL ? (
+            <img 
+              src={user.photoURL} 
+              alt={displayName}
+              className="w-16 h-16 rounded-2xl object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+              <User className="w-8 h-8 text-primary-foreground" />
+            </div>
+          )}
           <div className="flex-1">
-            <h2 className="text-lg font-bold text-foreground">John Doe</h2>
-            <p className="text-sm text-muted-foreground">+91 98765 43210</p>
+            <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
+            <p className="text-sm text-muted-foreground">{contactInfo}</p>
             <Badge variant="soft" className="mt-1">Gold Member</Badge>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate("/edit-profile")}>

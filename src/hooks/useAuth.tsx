@@ -13,6 +13,7 @@ import {
   updateProfile
 } from "firebase/auth";
 import { auth } from "@/integrations/firebase/config";
+import { supabase } from "@/integrations/supabase/client";
 
 declare global {
   interface Window {
@@ -20,6 +21,41 @@ declare global {
     confirmationResult: ConfirmationResult;
   }
 }
+
+// Bridge Firebase auth to Supabase for RLS to work
+const bridgeFirebaseToSupabase = async (firebaseUser: User) => {
+  try {
+    const idToken = await firebaseUser.getIdToken();
+    
+    const { data, error } = await supabase.functions.invoke('firebase-auth-bridge', {
+      body: { firebaseIdToken: idToken }
+    });
+
+    if (error) {
+      console.error('Firebase-Supabase bridge error:', error);
+      return;
+    }
+
+    // If we got a magic link, complete the Supabase auth
+    if (data?.magicLink) {
+      // Extract the token from magic link and verify
+      const url = new URL(data.magicLink);
+      const token = url.searchParams.get('token');
+      const type = url.searchParams.get('type');
+      
+      if (token && type) {
+        await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: type as 'magiclink'
+        });
+      }
+    }
+
+    console.log('Firebase-Supabase bridge successful');
+  } catch (error) {
+    console.error('Error bridging Firebase to Supabase:', error);
+  }
+};
 
 interface AuthContextType {
   user: User | null;
@@ -39,9 +75,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+      
+      // Bridge to Supabase when user signs in
+      if (firebaseUser) {
+        await bridgeFirebaseToSupabase(firebaseUser);
+      } else {
+        // Sign out of Supabase when Firebase user signs out
+        await supabase.auth.signOut();
+      }
     });
 
     // Safety timeout to prevent infinite loading
@@ -60,7 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Bridge will be called by onAuthStateChanged
       return { error: null };
     } catch (error) {
       return { error: error as Error };

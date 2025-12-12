@@ -9,9 +9,12 @@ import {
   AlertCircle,
   Plus,
   ChevronRight,
+  User,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +27,15 @@ interface Report {
   risk_level: string;
   ai_summary: string | null;
   test_id: string;
+  family_member_id: string | null;
+}
+
+interface FamilyMember {
+  id: string;
+  name: string;
+  relation: string;
+  gender: string | null;
+  medical_conditions: string[] | null;
 }
 
 interface MedicalCondition {
@@ -36,7 +48,11 @@ const MedicalHistoryScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string | null>(null); // null = self
   const [loading, setLoading] = useState(true);
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string } | null>(null);
 
   // Sample medical conditions (in production, these would come from the database)
   const [conditions] = useState<MedicalCondition[]>([
@@ -45,21 +61,69 @@ const MedicalHistoryScreen = () => {
   ]);
 
   useEffect(() => {
-    if (user) {
+    const getSupabaseUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setSupabaseUserId(session.user.id);
+      }
+    };
+    getSupabaseUser();
+  }, []);
+
+  useEffect(() => {
+    if (supabaseUserId) {
+      fetchFamilyMembers();
+      fetchUserProfile();
       fetchMedicalHistory();
     }
-  }, [user]);
+  }, [supabaseUserId, selectedMember]);
+
+  const fetchUserProfile = async () => {
+    if (!supabaseUserId) return;
+    
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", supabaseUserId)
+      .maybeSingle();
+    
+    if (data) {
+      setUserProfile(data);
+    }
+  };
+
+  const fetchFamilyMembers = async () => {
+    if (!supabaseUserId) return;
+
+    const { data, error } = await supabase
+      .from("family_members")
+      .select("id, name, relation, gender, medical_conditions")
+      .eq("user_id", supabaseUserId);
+
+    if (data) {
+      setFamilyMembers(data);
+    }
+  };
 
   const fetchMedicalHistory = async () => {
-    if (!user) return;
+    if (!supabaseUserId) return;
+    setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("reports")
-        .select("id, generated_at, status, risk_level, ai_summary, test_id")
-        .eq("user_id", user.uid)
+        .select("id, generated_at, status, risk_level, ai_summary, test_id, family_member_id")
+        .eq("user_id", supabaseUserId)
         .order("generated_at", { ascending: false })
         .limit(10);
+
+      if (selectedMember) {
+        query = query.eq("family_member_id", selectedMember);
+      } else {
+        query = query.is("family_member_id", null);
+      }
+
+      const { data, error } = await query;
 
       if (data) {
         setReports(data);
@@ -97,13 +161,139 @@ const MedicalHistoryScreen = () => {
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getSelectedName = () => {
+    if (!selectedMember) {
+      return userProfile?.full_name || user?.displayName || "You";
+    }
+    const member = familyMembers.find((m) => m.id === selectedMember);
+    return member?.name || "Unknown";
+  };
+
+  const getSelectedConditions = () => {
+    if (selectedMember) {
+      const member = familyMembers.find((m) => m.id === selectedMember);
+      if (member?.medical_conditions && member.medical_conditions.length > 0) {
+        return member.medical_conditions.map((condition) => ({
+          name: condition,
+          diagnosed_date: "",
+          status: "active" as const,
+        }));
+      }
+      return [];
+    }
+    return conditions;
+  };
+
   return (
     <MobileLayout showNav={false}>
       <ScreenHeader title="Medical History" />
 
       <div className="px-4 pb-6">
+        {/* Family Member Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Select Member</span>
+          </div>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Self */}
+            <button
+              onClick={() => setSelectedMember(null)}
+              className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${
+                selectedMember === null
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              <Avatar className="w-12 h-12">
+                <AvatarFallback className={selectedMember === null ? "bg-primary-foreground text-primary" : "bg-background"}>
+                  <User className="w-5 h-5" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium whitespace-nowrap">You</span>
+            </button>
+
+            {/* Family Members */}
+            {familyMembers.map((member) => (
+              <button
+                key={member.id}
+                onClick={() => setSelectedMember(member.id)}
+                className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${
+                  selectedMember === member.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-muted/80"
+                }`}
+              >
+                <Avatar className="w-12 h-12">
+                  <AvatarFallback className={selectedMember === member.id ? "bg-primary-foreground text-primary" : "bg-background"}>
+                    {getInitials(member.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <p className="text-xs font-medium whitespace-nowrap max-w-[60px] truncate">
+                    {member.name.split(" ")[0]}
+                  </p>
+                  <p className={`text-[10px] ${selectedMember === member.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    {member.relation}
+                  </p>
+                </div>
+              </button>
+            ))}
+
+            {/* Add Family Member */}
+            <button
+              onClick={() => navigate("/family")}
+              className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl bg-muted/50 border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all"
+            >
+              <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center">
+                <Plus className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Add</span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Selected Member Header */}
+        <motion.div
+          key={selectedMember}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-4 soft-card bg-gradient-to-r from-primary/10 to-primary/5"
+        >
+          <div className="flex items-center gap-3">
+            <Avatar className="w-14 h-14">
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                {selectedMember ? getInitials(getSelectedName()) : <User className="w-6 h-6" />}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-bold text-foreground text-lg">{getSelectedName()}'s History</h3>
+              <p className="text-sm text-muted-foreground">
+                {selectedMember
+                  ? familyMembers.find((m) => m.id === selectedMember)?.relation
+                  : "Primary Account Holder"}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Quick Stats */}
         <motion.div
+          key={`stats-${selectedMember}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-4 grid grid-cols-3 gap-3"
@@ -115,7 +305,7 @@ const MedicalHistoryScreen = () => {
           </div>
           <div className="soft-card text-center">
             <Activity className="w-6 h-6 mx-auto text-success mb-2" />
-            <p className="text-2xl font-bold text-foreground">{conditions.length}</p>
+            <p className="text-2xl font-bold text-foreground">{getSelectedConditions().length}</p>
             <p className="text-xs text-muted-foreground">Conditions</p>
           </div>
           <div className="soft-card text-center">
@@ -127,6 +317,7 @@ const MedicalHistoryScreen = () => {
 
         {/* Medical Conditions */}
         <motion.div
+          key={`conditions-${selectedMember}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -140,9 +331,9 @@ const MedicalHistoryScreen = () => {
             </Button>
           </div>
 
-          {conditions.length > 0 ? (
+          {getSelectedConditions().length > 0 ? (
             <div className="space-y-3">
-              {conditions.map((condition, index) => (
+              {getSelectedConditions().map((condition, index) => (
                 <motion.div
                   key={condition.name}
                   initial={{ opacity: 0, x: -20 }}
@@ -155,9 +346,11 @@ const MedicalHistoryScreen = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{condition.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Diagnosed: {new Date(condition.diagnosed_date).toLocaleDateString()}
-                    </p>
+                    {condition.diagnosed_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Diagnosed: {new Date(condition.diagnosed_date).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                   <Badge variant={getStatusColor(condition.status) as any}>
                     {condition.status}
@@ -175,6 +368,7 @@ const MedicalHistoryScreen = () => {
 
         {/* Past Reports */}
         <motion.div
+          key={`reports-${selectedMember}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -225,9 +419,9 @@ const MedicalHistoryScreen = () => {
           ) : (
             <div className="soft-card text-center py-8">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">No reports yet</p>
+              <p className="text-muted-foreground">No reports for {getSelectedName()}</p>
               <Button variant="outline" className="mt-4" onClick={() => navigate("/categories")}>
-                Book Your First Test
+                Book a Test
               </Button>
             </div>
           )}
@@ -252,7 +446,7 @@ const MedicalHistoryScreen = () => {
             <Pill className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
             <p className="text-muted-foreground">No medications recorded</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Add medications to track your health better
+              Add medications to track health better
             </p>
           </div>
         </motion.div>

@@ -35,9 +35,9 @@ const trendingTests = [
 ];
 
 const healthPlans = [
-  { icon: Droplets, name: "Diabetes Care", tests: 15, price: 1499, color: "from-primary to-primary/60" },
+  { icon: HeartPulse, name: "Sexual Health Test", tests: 15, price: 1499, color: "from-primary to-primary/60" },
   { icon: Activity, name: "Thyroid Care", tests: 12, price: 1299, color: "from-success to-success/60" },
-  { icon: Users, name: "Senior Citizen", tests: 60, price: 2999, color: "from-secondary to-secondary/60" },
+  { icon: Shield, name: "Allergy Checkup", tests: 25, price: 1899, color: "from-secondary to-secondary/60" },
 ];
 
 const HomeScreen = () => {

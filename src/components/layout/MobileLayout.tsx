@@ -15,7 +15,7 @@ const MobileLayout = ({ children, showNav = true, className = "" }: MobileLayout
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className={`${showNav ? "pb-24" : ""} ${className}`}
+        className={`${showNav ? "pb-32" : ""} ${className}`}
       >
         {children}
       </motion.main>

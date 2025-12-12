@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 // Get greeting based on current time
 const getGreeting = () => {
@@ -60,6 +61,7 @@ const healthPlans = [
 
 const HomeScreen = () => {
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
   const [searchQuery, setSearchQuery] = useState("");
   const [greeting, setGreeting] = useState(getGreeting());
   const [allTests, setAllTests] = useState<any[]>([]);
@@ -108,9 +110,16 @@ const HomeScreen = () => {
             <h1 className="text-xl font-bold text-foreground">Welcome back! 👋</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button className="icon-btn relative">
+            <button 
+              className="icon-btn relative"
+              onClick={() => navigate("/notifications")}
+            >
               <Bell className="w-5 h-5 text-foreground" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-destructive rounded-full flex items-center justify-center text-[10px] font-bold text-destructive-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

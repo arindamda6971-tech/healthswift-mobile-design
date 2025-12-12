@@ -9,11 +9,9 @@ import {
   Crown,
   Gift,
   HelpCircle,
-  Settings,
   LogOut,
   Moon,
   Bell,
-  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 
 const menuItems = [
@@ -30,12 +29,12 @@ const menuItems = [
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
   { icon: Gift, label: "Rewards & Referrals", path: "/rewards", badge: "₹500" },
   { icon: HelpCircle, label: "Help & Support", path: "/support", badge: null },
-  { icon: Settings, label: "Settings", path: "/settings", badge: null },
 ];
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -121,7 +120,7 @@ const ProfileScreen = () => {
               </div>
               <span className="font-medium text-foreground">Dark Mode</span>
             </div>
-            <Switch />
+            <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

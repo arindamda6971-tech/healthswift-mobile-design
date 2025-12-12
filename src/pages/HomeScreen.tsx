@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Bell,
@@ -9,16 +9,34 @@ import {
   Calendar,
   Sparkles,
   ChevronRight,
-  Droplets,
   HeartPulse,
   Activity,
   Beaker,
-  Users,
   Shield,
+  Building2,
+  Star,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MobileLayout from "@/components/layout/MobileLayout";
+import { supabase } from "@/integrations/supabase/client";
+
+// Get greeting based on current time
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Good night";
+};
+
+const diagnosticCenters = [
+  { name: "Dr. Lal PathLabs", rating: 4.8, tests: 500 },
+  { name: "Metropolis Healthcare", rating: 4.7, tests: 450 },
+  { name: "SRL Diagnostics", rating: 4.6, tests: 400 },
+  { name: "Thyrocare", rating: 4.5, tests: 350 },
+];
 
 const quickActions = [
   { icon: FlaskConical, label: "Book Test", path: "/categories", color: "bg-primary/10 text-primary" },
@@ -43,6 +61,37 @@ const healthPlans = [
 const HomeScreen = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [greeting, setGreeting] = useState(getGreeting());
+  const [allTests, setAllTests] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Update greeting every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch all tests for search
+  useEffect(() => {
+    const fetchTests = async () => {
+      const { data } = await supabase
+        .from("tests")
+        .select("id, name, price, original_price, discount_percent")
+        .eq("is_active", true);
+      if (data) setAllTests(data);
+    };
+    fetchTests();
+  }, []);
+
+  // Filter tests based on search query
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return allTests.filter(test =>
+      test.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+  }, [searchQuery, allTests]);
 
   return (
     <MobileLayout>
@@ -55,7 +104,7 @@ const HomeScreen = () => {
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-sm text-muted-foreground">Good morning</p>
+            <p className="text-sm text-muted-foreground">{greeting}</p>
             <h1 className="text-xl font-bold text-foreground">Welcome back! 👋</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -73,32 +122,97 @@ const HomeScreen = () => {
             type="text"
             placeholder="Search tests, packages..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSearchResults(true);
+            }}
+            onFocus={() => setShowSearchResults(true)}
             className="search-input"
           />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setShowSearchResults(false);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+          
+          {/* Search Results Dropdown */}
+          <AnimatePresence>
+            {showSearchResults && searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden"
+              >
+                {searchResults.map((test) => (
+                  <button
+                    key={test.id}
+                    onClick={() => {
+                      navigate(`/test/${test.id}`);
+                      setShowSearchResults(false);
+                      setSearchQuery("");
+                    }}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left border-b border-border last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground text-sm">{test.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {test.discount_percent > 0 && `${test.discount_percent}% off`}
+                      </p>
+                    </div>
+                    <span className="font-semibold text-primary">₹{test.price}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.header>
 
-      {/* Live availability indicator */}
+      {/* Diagnostic Centers */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="mx-4 mt-4 p-4 soft-card flex items-center justify-between"
+        className="mx-4 mt-4"
       >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-success" />
-            </div>
-            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-card animate-pulse" />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Diagnostic Centers</h3>
           </div>
-          <div>
-            <p className="font-semibold text-foreground text-sm">Phlebotomists Available</p>
-            <p className="text-xs text-muted-foreground">12 verified experts near you</p>
-          </div>
+          <Badge variant="live">Partner Labs</Badge>
         </div>
-        <Badge variant="live">Live</Badge>
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar">
+          {diagnosticCenters.map((center, index) => (
+            <motion.div
+              key={center.name}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
+              className="soft-card min-w-[160px] flex-shrink-0 cursor-pointer"
+            >
+              <div className="flex flex-col items-center text-center p-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <Building2 className="w-6 h-6 text-primary" />
+                </div>
+                <p className="font-medium text-foreground text-sm mb-1">{center.name}</p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Star className="w-3 h-3 text-warning fill-warning" />
+                  <span>{center.rating}</span>
+                  <span>•</span>
+                  <span>{center.tests}+ tests</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
       {/* Quick Actions */}

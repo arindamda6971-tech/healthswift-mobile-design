@@ -16,6 +16,7 @@ const EditProfileScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
@@ -26,34 +27,44 @@ const EditProfileScreen = () => {
   });
 
   useEffect(() => {
-    if (user) {
+    const getSupabaseUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setSupabaseUserId(session.user.id);
+      }
+    };
+    getSupabaseUser();
+  }, []);
+
+  useEffect(() => {
+    if (supabaseUserId) {
       fetchProfile();
     }
-  }, [user]);
+  }, [supabaseUserId]);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!supabaseUserId) return;
     
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.uid)
-      .single();
+      .eq("id", supabaseUserId)
+      .maybeSingle();
 
     if (data) {
       setProfile({
-        full_name: data.full_name || user.displayName || "",
-        email: data.email || user.email || "",
-        phone: data.phone || user.phoneNumber || "",
+        full_name: data.full_name || user?.displayName || "",
+        email: data.email || user?.email || "",
+        phone: data.phone || user?.phoneNumber || "",
         date_of_birth: data.date_of_birth || "",
         gender: data.gender || "",
         blood_group: data.blood_group || "",
       });
     } else {
       setProfile({
-        full_name: user.displayName || "",
-        email: user.email || "",
-        phone: user.phoneNumber || "",
+        full_name: user?.displayName || "",
+        email: user?.email || "",
+        phone: user?.phoneNumber || "",
         date_of_birth: "",
         gender: "",
         blood_group: "",
@@ -62,14 +73,17 @@ const EditProfileScreen = () => {
   };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!supabaseUserId) {
+      toast.error("Unable to save. Please try logging in again.");
+      return;
+    }
     
     setLoading(true);
     try {
       const { error } = await supabase
         .from("profiles")
         .upsert({
-          id: user.uid,
+          id: supabaseUserId,
           ...profile,
           updated_at: new Date().toISOString(),
         });
@@ -79,6 +93,7 @@ const EditProfileScreen = () => {
       toast.success("Profile updated successfully");
       navigate("/profile");
     } catch (error) {
+      console.error("Profile save error:", error);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);

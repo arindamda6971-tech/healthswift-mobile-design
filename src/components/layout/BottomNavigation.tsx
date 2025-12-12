@@ -14,32 +14,40 @@ const BottomNavigation = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="bottom-nav">
-      <div className="flex items-center justify-around px-4 py-2">
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[398px]">
+      <div 
+        className="flex items-center justify-around px-2 py-3 rounded-3xl backdrop-blur-xl bg-background/60 border border-border/30 shadow-lg"
+        style={{
+          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
           
           return (
-            <button
+            <motion.button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className="relative flex flex-col items-center gap-1 py-2 px-4 tap-target"
+              whileTap={{ scale: 0.9 }}
+              className="relative flex flex-col items-center gap-0.5 py-1 px-3"
             >
-              <motion.div
-                whileTap={{ scale: 0.9 }}
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  isActive ? "bg-primary/10" : ""
+              <div
+                className={`p-2 rounded-2xl transition-all duration-300 ${
+                  isActive 
+                    ? "bg-primary/15" 
+                    : "hover:bg-muted/50"
                 }`}
               >
                 <Icon
-                  className={`w-6 h-6 transition-colors duration-300 ${
+                  className={`w-5 h-5 transition-colors duration-300 ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 />
-              </motion.div>
+              </div>
               <span
-                className={`text-xs font-medium transition-colors duration-300 ${
+                className={`text-[10px] font-medium transition-colors duration-300 ${
                   isActive ? "text-primary" : "text-muted-foreground"
                 }`}
               >
@@ -48,11 +56,11 @@ const BottomNavigation = () => {
               {isActive && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className="absolute -bottom-1 w-1 h-1 bg-primary rounded-full"
+                  className="absolute -bottom-0.5 w-1 h-1 bg-primary rounded-full"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>

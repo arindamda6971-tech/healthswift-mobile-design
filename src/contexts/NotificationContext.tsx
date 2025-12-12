@@ -1,0 +1,183 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: "order" | "report" | "promo" | "system";
+  read: boolean;
+  created_at: string;
+  data?: Record<string, unknown>;
+}
+
+interface NotificationContextType {
+  notifications: Notification[];
+  unreadCount: number;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  addNotification: (notification: Omit<Notification, "id" | "read" | "created_at">) => void;
+  clearNotifications: () => void;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+export function NotificationProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    const stored = localStorage.getItem("healthswift-notifications");
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Save to localStorage whenever notifications change
+  useEffect(() => {
+    localStorage.setItem("healthswift-notifications", JSON.stringify(notifications));
+  }, [notifications]);
+
+  // Listen for new orders in real-time
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("orders-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+          filter: `user_id=eq.${user.uid}`,
+        },
+        (payload) => {
+          const order = payload.new as { order_number: string; status: string };
+          addNotification({
+            title: "Test Booked Successfully!",
+            message: `Your order #${order.order_number || "N/A"} has been placed.`,
+            type: "order",
+            data: { orderId: (payload.new as { id: string }).id },
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `user_id=eq.${user.uid}`,
+        },
+        (payload) => {
+          const order = payload.new as { order_number: string; status: string };
+          const oldStatus = (payload.old as { status: string })?.status;
+          
+          if (order.status !== oldStatus) {
+            let message = "";
+            switch (order.status) {
+              case "confirmed":
+                message = "Your sample collection has been confirmed.";
+                break;
+              case "collected":
+                message = "Your sample has been collected successfully.";
+                break;
+              case "processing":
+                message = "Your sample is being processed at the lab.";
+                break;
+              case "completed":
+                message = "Your test report is ready!";
+                break;
+              default:
+                message = `Order status updated to ${order.status}`;
+            }
+            
+            addNotification({
+              title: "Order Update",
+              message: `Order #${order.order_number}: ${message}`,
+              type: "order",
+              data: { orderId: (payload.new as { id: string }).id },
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Also listen for new reports
+    const reportsChannel = supabase
+      .channel("reports-notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "reports",
+          filter: `user_id=eq.${user.uid}`,
+        },
+        (payload) => {
+          const report = payload.new as { status: string };
+          if (report.status === "completed") {
+            addNotification({
+              title: "Report Ready!",
+              message: "Your health report is now available with AI insights.",
+              type: "report",
+              data: { reportId: (payload.new as { id: string }).id },
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(reportsChannel);
+    };
+  }, [user]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const addNotification = (notification: Omit<Notification, "id" | "read" | "created_at">) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: crypto.randomUUID(),
+      read: false,
+      created_at: new Date().toISOString(),
+    };
+    setNotifications((prev) => [newNotification, ...prev].slice(0, 50)); // Keep max 50 notifications
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
+  return (
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        markAsRead,
+        markAllAsRead,
+        addNotification,
+        clearNotifications,
+      }}
+    >
+      {children}
+    </NotificationContext.Provider>
+  );
+}
+
+export function useNotifications() {
+  const context = useContext(NotificationContext);
+  if (context === undefined) {
+    throw new Error("useNotifications must be used within a NotificationProvider");
+  }
+  return context;
+}

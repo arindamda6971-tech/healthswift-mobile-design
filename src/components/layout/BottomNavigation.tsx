@@ -14,7 +14,7 @@ const BottomNavigation = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[398px] safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[398px]">
       <div 
         className="flex items-center justify-around px-2 py-3 rounded-3xl backdrop-blur-xl bg-background/60 border border-border/30 shadow-lg"
         style={{

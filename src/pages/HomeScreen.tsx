@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,12 +17,15 @@ import {
   Star,
   X,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { toast } from "sonner";
 
 // Get greeting based on current time
 const getGreeting = () => {
@@ -68,6 +71,29 @@ const HomeScreen = () => {
   const [allTests, setAllTests] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
+  // Fetch all tests for search
+  const fetchTests = useCallback(async () => {
+    const { data } = await supabase
+      .from("tests")
+      .select("id, name, price, original_price, discount_percent")
+      .eq("is_active", true);
+    if (data) setAllTests(data);
+  }, []);
+
+  // Refresh handler for pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    await fetchTests();
+    toast.success("Data refreshed!");
+  }, [fetchTests]);
+
+  const {
+    isRefreshing,
+    pullDistance,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = usePullToRefresh({ onRefresh: handleRefresh, threshold: 80 });
+
   // Update greeting every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,17 +102,10 @@ const HomeScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch all tests for search
+  // Fetch tests on mount
   useEffect(() => {
-    const fetchTests = async () => {
-      const { data } = await supabase
-        .from("tests")
-        .select("id, name, price, original_price, discount_percent")
-        .eq("is_active", true);
-      if (data) setAllTests(data);
-    };
     fetchTests();
-  }, []);
+  }, [fetchTests]);
 
   // Filter tests based on search query
   const searchResults = useMemo(() => {
@@ -97,7 +116,50 @@ const HomeScreen = () => {
   }, [searchQuery, allTests]);
 
   return (
-    <MobileLayout>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="relative"
+    >
+      {/* Pull to Refresh Indicator */}
+      <AnimatePresence>
+        {(pullDistance > 0 || isRefreshing) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            style={{ 
+              height: Math.max(pullDistance, isRefreshing ? 60 : 0),
+              paddingTop: "env(safe-area-inset-top, 0px)"
+            }}
+          >
+            <motion.div
+              animate={{ 
+                rotate: isRefreshing ? 360 : (pullDistance / 80) * 180,
+              }}
+              transition={isRefreshing ? { 
+                repeat: Infinity, 
+                duration: 1, 
+                ease: "linear" 
+              } : { duration: 0 }}
+            >
+              <RefreshCw 
+                className={`w-6 h-6 ${pullDistance >= 80 || isRefreshing ? 'text-primary' : 'text-muted-foreground'}`} 
+              />
+            </motion.div>
+            {pullDistance >= 80 && !isRefreshing && (
+              <span className="ml-2 text-sm text-primary font-medium">Release to refresh</span>
+            )}
+            {isRefreshing && (
+              <span className="ml-2 text-sm text-primary font-medium">Refreshing...</span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <MobileLayout>
       {/* Header */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
@@ -373,6 +435,7 @@ const HomeScreen = () => {
         <Plus className="w-6 h-6 text-primary-foreground" />
       </motion.button>
     </MobileLayout>
+    </div>
   );
 };
 

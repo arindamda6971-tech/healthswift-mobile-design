@@ -16,6 +16,7 @@ import {
   Building2,
   Star,
   X,
+  Plus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -355,6 +356,22 @@ const HomeScreen = () => {
           ))}
         </div>
       </motion.section>
+
+      {/* Floating Action Button */}
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.7, type: "spring", stiffness: 400, damping: 20 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => navigate("/categories")}
+        className="fixed bottom-24 right-4 w-14 h-14 bg-primary rounded-full shadow-lg flex items-center justify-center z-40"
+        style={{
+          boxShadow: "0 4px 20px hsl(var(--primary) / 0.4)",
+        }}
+      >
+        <Plus className="w-6 h-6 text-primary-foreground" />
+      </motion.button>
     </MobileLayout>
   );
 };

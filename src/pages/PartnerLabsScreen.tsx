@@ -232,20 +232,6 @@ const PartnerLabsScreen = () => {
           />
         </div>
 
-        {/* City Filter */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-          {cities.map((city) => (
-            <Button
-              key={city}
-              variant={selectedCity === city ? "default" : "outline"}
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setSelectedCity(city)}
-            >
-              {city}
-            </Button>
-          ))}
-        </div>
 
         {/* Stats */}
         <div className="flex items-center gap-4 p-3 rounded-xl bg-primary/5 border border-primary/10">

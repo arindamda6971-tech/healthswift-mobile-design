@@ -195,7 +195,7 @@ const TestDetailScreen = () => {
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-24 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
+        className="fixed bottom-16 left-1 right-1 max-w-[428px] mx-auto bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl px-4 py-3 shadow-lg"
       >
         <div className="flex items-center gap-4">
           {/* Quantity selector */}

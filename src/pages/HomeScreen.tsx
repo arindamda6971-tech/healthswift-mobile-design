@@ -41,6 +41,8 @@ const diagnosticCenters = [
   { name: "Metropolis Healthcare", rating: 4.7, tests: 450 },
   { name: "SRL Diagnostics", rating: 4.6, tests: 400 },
   { name: "Thyrocare", rating: 4.5, tests: 350 },
+  { name: "Apollo Diagnostics", rating: 4.7, tests: 380 },
+  { name: "Max Lab", rating: 4.6, tests: 320 },
 ];
 
 const quickActions = [
@@ -259,7 +261,14 @@ const HomeScreen = () => {
             <Building2 className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Diagnostic Centers</h3>
           </div>
-          <Badge variant="live">Partner Labs</Badge>
+          <button 
+            onClick={() => navigate('/partner-labs')}
+            className="flex items-center gap-1"
+          >
+            <Badge variant="live" className="cursor-pointer hover:opacity-80 transition-opacity">
+              Partner Labs
+            </Badge>
+          </button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar">
           {diagnosticCenters.map((center, index) => (

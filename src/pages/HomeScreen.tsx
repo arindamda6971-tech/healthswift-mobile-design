@@ -322,7 +322,10 @@ const HomeScreen = () => {
       >
         <div className="flex items-center justify-between px-4 mb-4">
           <h2 className="text-lg font-bold text-foreground">Trending Tests</h2>
-          <button className="flex items-center gap-1 text-primary text-sm font-medium">
+          <button 
+            onClick={() => navigate('/categories')}
+            className="flex items-center gap-1 text-primary text-sm font-medium"
+          >
             View all <ChevronRight className="w-4 h-4" />
           </button>
         </div>

@@ -32,6 +32,7 @@ import DoctorConsultScreen from "./pages/DoctorConsultScreen";
 import RewardsScreen from "./pages/RewardsScreen";
 import FamilyScreen from "./pages/FamilyScreen";
 import PartnerLabsScreen from "./pages/PartnerLabsScreen";
+import LabDetailScreen from "./pages/LabDetailScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
                 <Route path="/rewards" element={<ProtectedRoute><RewardsScreen /></ProtectedRoute>} />
                 <Route path="/family" element={<ProtectedRoute><FamilyScreen /></ProtectedRoute>} />
                 <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
+                <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
                 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />

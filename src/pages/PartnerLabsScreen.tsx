@@ -260,7 +260,7 @@ const PartnerLabsScreen = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               className="soft-card p-4 cursor-pointer"
-              onClick={() => navigate('/categories')}
+              onClick={() => navigate(`/lab/${lab.id}`)}
             >
               <div className="flex gap-3">
                 {/* Lab Icon */}

@@ -195,30 +195,37 @@ const TestDetailScreen = () => {
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-16 left-1 right-1 max-w-[428px] mx-auto bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl px-4 py-3 shadow-lg"
+        className="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[380px]"
       >
-        <div className="flex items-center gap-4">
+        <div 
+          className="flex items-center justify-between px-2 py-1.5 rounded-2xl backdrop-blur-xl bg-background/70 border border-border/30 shadow-md"
+          style={{
+            WebkitBackdropFilter: 'blur(16px)',
+            backdropFilter: 'blur(16px)',
+          }}
+        >
           {/* Quantity selector */}
-          <div className="flex items-center gap-2 bg-muted rounded-xl px-2 py-1">
+          <div className="flex items-center gap-1 bg-muted/50 rounded-xl px-1.5 py-0.5">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-8 h-8 rounded-lg bg-card flex items-center justify-center"
+              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center"
             >
-              <Minus className="w-4 h-4 text-foreground" />
+              <Minus className="w-3 h-3 text-foreground" />
             </button>
-            <span className="w-8 text-center font-semibold text-foreground">{quantity}</span>
+            <span className="w-6 text-center text-sm font-medium text-foreground">{quantity}</span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="w-8 h-8 rounded-lg bg-card flex items-center justify-center"
+              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center"
             >
-              <Plus className="w-4 h-4 text-foreground" />
+              <Plus className="w-3 h-3 text-foreground" />
             </button>
           </div>
 
           {/* Add to cart */}
           <Button
             variant="outline"
-            className="flex-1"
+            size="sm"
+            className="text-xs px-3 py-1 h-7"
             onClick={() => navigate("/cart")}
           >
             Add to Cart
@@ -227,7 +234,8 @@ const TestDetailScreen = () => {
           {/* Book now */}
           <Button
             variant="hero"
-            className="flex-1"
+            size="sm"
+            className="text-xs px-3 py-1 h-7"
             onClick={() => navigate("/book")}
           >
             Book Now

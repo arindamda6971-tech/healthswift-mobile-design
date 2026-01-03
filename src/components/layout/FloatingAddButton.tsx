@@ -1,0 +1,34 @@
+import { Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
+
+const FloatingAddButton = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Hide on certain pages where it's not needed
+  const hiddenPaths = ["/login", "/onboarding", "/splash", "/cart", "/book", "/tracking"];
+  const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+  
+  if (shouldHide) return null;
+
+  return (
+    <motion.button
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 20 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => navigate("/categories")}
+      className="fixed bottom-24 right-4 w-12 h-12 bg-primary rounded-full shadow-lg flex items-center justify-center z-50"
+      style={{
+        boxShadow: "0 4px 20px hsl(var(--primary) / 0.4)",
+      }}
+      aria-label="Add new test"
+    >
+      <Plus className="w-5 h-5 text-primary-foreground" />
+    </motion.button>
+  );
+};
+
+export default FloatingAddButton;

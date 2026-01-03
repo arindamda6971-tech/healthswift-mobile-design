@@ -192,32 +192,30 @@ const TestDetailScreen = () => {
       </div>
 
       {/* Bottom CTA */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[380px]"
-      >
-        <div 
-          className="flex items-center justify-between px-2 py-1.5 rounded-2xl backdrop-blur-xl bg-background/70 border border-border/30 shadow-md"
+      <nav className="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[380px]">
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="flex items-center justify-around px-1 py-1.5 rounded-2xl backdrop-blur-xl bg-background/70 border border-border/30 shadow-md"
           style={{
             WebkitBackdropFilter: 'blur(16px)',
             backdropFilter: 'blur(16px)',
           }}
         >
           {/* Quantity selector */}
-          <div className="flex items-center gap-1 bg-muted/50 rounded-xl px-1.5 py-0.5">
+          <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl px-1 py-0.5">
             <button
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center"
+              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center hover:bg-muted/50 transition-all"
             >
-              <Minus className="w-3 h-3 text-foreground" />
+              <Minus className="w-3 h-3 text-muted-foreground" />
             </button>
-            <span className="w-6 text-center text-sm font-medium text-foreground">{quantity}</span>
+            <span className="w-5 text-center text-xs font-medium text-foreground">{quantity}</span>
             <button
               onClick={() => setQuantity(quantity + 1)}
-              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center"
+              className="w-6 h-6 rounded-lg bg-card flex items-center justify-center hover:bg-muted/50 transition-all"
             >
-              <Plus className="w-3 h-3 text-foreground" />
+              <Plus className="w-3 h-3 text-muted-foreground" />
             </button>
           </div>
 
@@ -225,7 +223,7 @@ const TestDetailScreen = () => {
           <Button
             variant="outline"
             size="sm"
-            className="text-xs px-3 py-1 h-7"
+            className="text-[10px] px-2.5 py-1 h-6 rounded-xl"
             onClick={() => navigate("/cart")}
           >
             Add to Cart
@@ -235,13 +233,13 @@ const TestDetailScreen = () => {
           <Button
             variant="hero"
             size="sm"
-            className="text-xs px-3 py-1 h-7"
+            className="text-[10px] px-2.5 py-1 h-6 rounded-xl"
             onClick={() => navigate("/book")}
           >
             Book Now
           </Button>
-        </div>
-      </motion.div>
+        </motion.div>
+      </nav>
     </MobileLayout>
   );
 };

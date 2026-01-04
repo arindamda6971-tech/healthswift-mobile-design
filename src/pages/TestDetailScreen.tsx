@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -11,36 +11,120 @@ import {
   Plus,
   Minus,
   ShoppingCart,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const testDetails = {
-  name: "Complete Blood Count (CBC)",
-  description: "A complete blood count test measures several components and features of your blood, including red blood cells, white blood cells, and platelets.",
-  price: 299,
-  originalPrice: 499,
-  discount: "40%",
-  reportTime: "6 hours",
-  sampleType: "Blood",
-  fasting: "No fasting required",
-  parameters: [
-    "Hemoglobin", "RBC Count", "WBC Count", "Platelet Count",
-    "PCV/Hematocrit", "MCV", "MCH", "MCHC", "RDW"
-  ],
-  includes: [
-    { icon: Home, text: "Home sample collection" },
-    { icon: Shield, text: "NABL certified lab" },
-    { icon: FileText, text: "Digital report" },
-    { icon: Sparkles, text: "AI-powered insights" },
-  ],
-};
+interface TestData {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  original_price: number | null;
+  discount_percent: number | null;
+  report_time_hours: number | null;
+  sample_type: string | null;
+  fasting_required: boolean | null;
+  fasting_hours: number | null;
+  preparation_instructions: string | null;
+  parameters: any;
+}
+
+const defaultIncludes = [
+  { icon: Home, text: "Home sample collection" },
+  { icon: Shield, text: "NABL certified lab" },
+  { icon: FileText, text: "Digital report" },
+  { icon: Sparkles, text: "AI-powered insights" },
+];
 
 const TestDetailScreen = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [quantity, setQuantity] = useState(1);
+  const [test, setTest] = useState<TestData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTest = async () => {
+      if (!id) {
+        setError("Test ID not provided");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("tests")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error("Error fetching test:", fetchError);
+          setError("Failed to load test details");
+        } else if (!data) {
+          setError("Test not found");
+        } else {
+          setTest(data);
+        }
+      } catch (err) {
+        console.error("Error:", err);
+        setError("Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTest();
+  }, [id]);
+
+  const handleAddToCart = async () => {
+    // For now, just show a toast - cart integration can be added later
+    toast.success(`${test?.name} added to cart!`);
+  };
+
+  if (loading) {
+    return (
+      <MobileLayout>
+        <ScreenHeader title="Test Details" />
+        <div className="flex items-center justify-center h-[60vh]">
+          <LoadingSpinner size="lg" />
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  if (error || !test) {
+    return (
+      <MobileLayout>
+        <ScreenHeader title="Test Details" />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            {error || "Test not found"}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            The test you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => navigate("/categories")}>
+            Browse Tests
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  const discount = test.discount_percent || 0;
+  const originalPrice = test.original_price || test.price;
+  const reportTime = test.report_time_hours ? `${test.report_time_hours} hours` : "24 hours";
+  const parameters = Array.isArray(test.parameters) ? test.parameters : [];
 
   return (
     <MobileLayout>
@@ -49,9 +133,6 @@ const TestDetailScreen = () => {
         rightAction={
           <button onClick={() => navigate("/cart")} className="icon-btn relative">
             <ShoppingCart className="w-5 h-5 text-foreground" />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full text-xs text-primary-foreground flex items-center justify-center">
-              1
-            </span>
           </button>
         }
       />
@@ -65,14 +146,18 @@ const TestDetailScreen = () => {
         >
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <Badge variant="softSuccess" className="mb-2">{testDetails.discount} OFF</Badge>
-              <h1 className="text-xl font-bold text-foreground">{testDetails.name}</h1>
+              {discount > 0 && (
+                <Badge variant="softSuccess" className="mb-2">{discount}% OFF</Badge>
+              )}
+              <h1 className="text-xl font-bold text-foreground">{test.name}</h1>
             </div>
           </div>
 
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-            {testDetails.description}
-          </p>
+          {test.description && (
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              {test.description}
+            </p>
+          )}
 
           {/* Quick info */}
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -82,7 +167,7 @@ const TestDetailScreen = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Report in</p>
-                <p className="font-semibold text-foreground text-sm">{testDetails.reportTime}</p>
+                <p className="font-semibold text-foreground text-sm">{reportTime}</p>
               </div>
             </div>
             <div className="soft-card flex items-center gap-3">
@@ -91,7 +176,9 @@ const TestDetailScreen = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Fasting</p>
-                <p className="font-semibold text-foreground text-sm">Not required</p>
+                <p className="font-semibold text-foreground text-sm">
+                  {test.fasting_required ? `${test.fasting_hours || 8} hours` : "Not required"}
+                </p>
               </div>
             </div>
           </div>
@@ -125,7 +212,7 @@ const TestDetailScreen = () => {
         >
           <h2 className="text-lg font-bold text-foreground mb-3">What's Included</h2>
           <div className="soft-card space-y-3">
-            {testDetails.includes.map((item, index) => (
+            {defaultIncludes.map((item, index) => (
               <div key={index} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
                   <item.icon className="w-4 h-4 text-success" />
@@ -137,29 +224,48 @@ const TestDetailScreen = () => {
         </motion.div>
 
         {/* Parameters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-6"
-        >
-          <h2 className="text-lg font-bold text-foreground mb-3">
-            Parameters ({testDetails.parameters.length})
-          </h2>
-          <div className="soft-card">
-            <div className="flex flex-wrap gap-2">
-              {testDetails.parameters.map((param, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-full text-sm"
-                >
-                  <Check className="w-3 h-3 text-success" />
-                  <span className="text-foreground">{param}</span>
-                </div>
-              ))}
+        {parameters.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6"
+          >
+            <h2 className="text-lg font-bold text-foreground mb-3">
+              Parameters ({parameters.length})
+            </h2>
+            <div className="soft-card">
+              <div className="flex flex-wrap gap-2">
+                {parameters.map((param: any, index: number) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-full text-sm"
+                  >
+                    <Check className="w-3 h-3 text-success" />
+                    <span className="text-foreground">
+                      {typeof param === 'string' ? param : param.name || param}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
+
+        {/* Preparation Instructions */}
+        {test.preparation_instructions && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mb-6"
+          >
+            <h2 className="text-lg font-bold text-foreground mb-3">Preparation</h2>
+            <div className="soft-card">
+              <p className="text-sm text-muted-foreground">{test.preparation_instructions}</p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Pricing */}
         <motion.div
@@ -170,14 +276,18 @@ const TestDetailScreen = () => {
         >
           <h2 className="text-lg font-bold text-foreground mb-3">Price Breakdown</h2>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Test Price</span>
-              <span className="text-foreground line-through">₹{testDetails.originalPrice}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Discount</span>
-              <span className="text-success">-₹{testDetails.originalPrice - testDetails.price}</span>
-            </div>
+            {discount > 0 && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Test Price</span>
+                  <span className="text-foreground line-through">₹{originalPrice}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Discount ({discount}%)</span>
+                  <span className="text-success">-₹{Math.round(originalPrice - test.price)}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Home Collection</span>
               <span className="text-success">FREE</span>
@@ -185,7 +295,7 @@ const TestDetailScreen = () => {
             <div className="h-px bg-border my-3" />
             <div className="flex justify-between">
               <span className="font-semibold text-foreground">Total</span>
-              <span className="font-bold text-lg text-foreground">₹{testDetails.price}</span>
+              <span className="font-bold text-lg text-foreground">₹{test.price * quantity}</span>
             </div>
           </div>
         </motion.div>
@@ -224,7 +334,7 @@ const TestDetailScreen = () => {
             variant="outline"
             size="sm"
             className="text-[10px] px-2.5 py-1 h-6 rounded-xl"
-            onClick={() => navigate("/cart")}
+            onClick={handleAddToCart}
           >
             Add to Cart
           </Button>

@@ -37,12 +37,12 @@ const getGreeting = () => {
 };
 
 const diagnosticCenters = [
-  { name: "Dr. Lal PathLabs", rating: 4.8, tests: 500 },
-  { name: "Metropolis Healthcare", rating: 4.7, tests: 450 },
-  { name: "SRL Diagnostics", rating: 4.6, tests: 400 },
-  { name: "Thyrocare", rating: 4.5, tests: 350 },
-  { name: "Apollo Diagnostics", rating: 4.7, tests: 380 },
-  { name: "Max Lab", rating: 4.6, tests: 320 },
+  { id: "lal-pathlabs", name: "Dr. Lal PathLabs", rating: 4.8, tests: 500 },
+  { id: "metropolis", name: "Metropolis Healthcare", rating: 4.7, tests: 450 },
+  { id: "srl", name: "SRL Diagnostics", rating: 4.6, tests: 400 },
+  { id: "thyrocare", name: "Thyrocare", rating: 4.5, tests: 350 },
+  { id: "apollo", name: "Apollo Diagnostics", rating: 4.7, tests: 380 },
+  { id: "max-lab", name: "Max Lab", rating: 4.6, tests: 320 },
 ];
 
 const quickActions = [
@@ -273,11 +273,12 @@ const HomeScreen = () => {
         <div className="flex gap-3 overflow-x-auto hide-scrollbar">
           {diagnosticCenters.map((center, index) => (
             <motion.div
-              key={center.name}
+              key={center.id}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="soft-card min-w-[160px] flex-shrink-0 cursor-pointer"
+              onClick={() => navigate(`/lab/${center.id}`)}
+              className="soft-card min-w-[160px] flex-shrink-0 cursor-pointer hover:shadow-md transition-shadow"
             >
               <div className="flex flex-col items-center text-center p-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">

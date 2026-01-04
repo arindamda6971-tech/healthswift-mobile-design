@@ -31,7 +31,7 @@ const labsData: Record<string, {
   accredited: string[];
   tests: { id: string; name: string; price: number; originalPrice?: number; category: string; popular?: boolean }[];
 }> = {
-  "1": {
+  "lal-pathlabs": {
     name: "Dr. Lal PathLabs",
     rating: 4.8,
     reviews: 12500,
@@ -62,7 +62,7 @@ const labsData: Record<string, {
       { id: "lpl20", name: "Swasthfit Basic", price: 599, originalPrice: 1200, category: "Health Packages" },
     ],
   },
-  "2": {
+  "metropolis": {
     name: "Metropolis Healthcare",
     rating: 4.7,
     reviews: 9800,
@@ -91,7 +91,7 @@ const labsData: Record<string, {
       { id: "met18", name: "Diabetes Care Package", price: 1299, originalPrice: 2800, category: "Health Packages" },
     ],
   },
-  "3": {
+  "srl": {
     name: "SRL Diagnostics",
     rating: 4.6,
     reviews: 8500,
@@ -119,7 +119,7 @@ const labsData: Record<string, {
       { id: "srl17", name: "Senior Citizen Package", price: 2799, originalPrice: 5500, category: "Health Packages" },
     ],
   },
-  "4": {
+  "thyrocare": {
     name: "Thyrocare Technologies",
     rating: 4.5,
     reviews: 15000,
@@ -145,7 +145,7 @@ const labsData: Record<string, {
       { id: "thy15", name: "Full Body Checkup", price: 999, originalPrice: 2000, category: "Health Packages" },
     ],
   },
-  "5": {
+  "apollo": {
     name: "Apollo Diagnostics",
     rating: 4.7,
     reviews: 7200,
@@ -170,7 +170,7 @@ const labsData: Record<string, {
       { id: "apo14", name: "Apollo Senior Citizen Package", price: 3199, originalPrice: 6500, category: "Health Packages" },
     ],
   },
-  "6": {
+  "max-lab": {
     name: "Max Lab",
     rating: 4.6,
     reviews: 5600,
@@ -191,7 +191,7 @@ const labsData: Record<string, {
       { id: "max10", name: "Max Executive Health Package", price: 4999, originalPrice: 10000, category: "Health Packages" },
     ],
   },
-  "7": {
+  "tata-1mg": {
     name: "Tata 1mg Labs",
     rating: 4.5,
     reviews: 4800,
@@ -213,7 +213,7 @@ const labsData: Record<string, {
       { id: "tata11", name: "1mg Full Body Checkup", price: 2499, originalPrice: 5000, category: "Health Packages" },
     ],
   },
-  "8": {
+  "redcliffe": {
     name: "Redcliffe Labs",
     rating: 4.4,
     reviews: 6200,
@@ -235,7 +235,7 @@ const labsData: Record<string, {
       { id: "red11", name: "Redcliffe Full Body", price: 2199, originalPrice: 4500, category: "Health Packages" },
     ],
   },
-  "9": {
+  "neuberg": {
     name: "Neuberg Diagnostics",
     rating: 4.5,
     reviews: 4500,
@@ -255,7 +255,7 @@ const labsData: Record<string, {
       { id: "neu9", name: "Neuberg Executive Package", price: 2799, originalPrice: 5600, category: "Health Packages" },
     ],
   },
-  "10": {
+  "vijaya": {
     name: "Vijaya Diagnostic Centre",
     rating: 4.6,
     reviews: 3800,
@@ -275,7 +275,7 @@ const labsData: Record<string, {
       { id: "vij9", name: "Vijaya Comprehensive Package", price: 2599, originalPrice: 5200, category: "Health Packages" },
     ],
   },
-  "11": {
+  "mahajan": {
     name: "Mahajan Imaging",
     rating: 4.7,
     reviews: 2900,
@@ -296,7 +296,7 @@ const labsData: Record<string, {
       { id: "mah10", name: "DEXA Bone Density", price: 2200, originalPrice: 3000, category: "Bone Health" },
     ],
   },
-  "12": {
+  "suburban": {
     name: "Suburban Diagnostics",
     rating: 4.5,
     reviews: 3200,
@@ -315,7 +315,7 @@ const labsData: Record<string, {
       { id: "sub8", name: "Suburban Wellness Package", price: 1349, originalPrice: 2700, category: "Health Packages", popular: true },
     ],
   },
-  "13": {
+  "igenetic": {
     name: "iGenetic Diagnostics",
     rating: 4.4,
     reviews: 2100,
@@ -334,7 +334,7 @@ const labsData: Record<string, {
       { id: "igen8", name: "iGenetic Basic Package", price: 999, originalPrice: 2000, category: "Health Packages", popular: true },
     ],
   },
-  "14": {
+  "healthcare-at-home": {
     name: "HealthCare at Home",
     rating: 4.6,
     reviews: 1800,
@@ -354,7 +354,7 @@ const labsData: Record<string, {
       { id: "hcah9", name: "Home Care Premium Package", price: 1699, originalPrice: 3400, category: "Health Packages" },
     ],
   },
-  "15": {
+  "krsnaa": {
     name: "Krsnaa Diagnostics",
     rating: 4.3,
     reviews: 2500,

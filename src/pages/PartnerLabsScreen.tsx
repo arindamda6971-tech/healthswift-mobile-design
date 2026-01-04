@@ -20,7 +20,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 // Partner labs data - Labs across India
 const partnerLabs = [
   {
-    id: "1",
+    id: "lal-pathlabs",
     name: "Dr. Lal PathLabs",
     rating: 4.8,
     reviews: 12500,
@@ -33,7 +33,7 @@ const partnerLabs = [
     image: null,
   },
   {
-    id: "2",
+    id: "metropolis",
     name: "Metropolis Healthcare",
     rating: 4.7,
     reviews: 9800,
@@ -45,7 +45,7 @@ const partnerLabs = [
     accredited: ["NABL", "CAP", "ISO"],
   },
   {
-    id: "3",
+    id: "srl",
     name: "SRL Diagnostics",
     rating: 4.6,
     reviews: 8500,
@@ -57,7 +57,7 @@ const partnerLabs = [
     accredited: ["NABL", "CAP"],
   },
   {
-    id: "4",
+    id: "thyrocare",
     name: "Thyrocare Technologies",
     rating: 4.5,
     reviews: 15000,
@@ -69,7 +69,7 @@ const partnerLabs = [
     accredited: ["NABL", "ISO"],
   },
   {
-    id: "5",
+    id: "apollo",
     name: "Apollo Diagnostics",
     rating: 4.7,
     reviews: 7200,
@@ -81,7 +81,7 @@ const partnerLabs = [
     accredited: ["NABL", "JCI"],
   },
   {
-    id: "6",
+    id: "max-lab",
     name: "Max Lab",
     rating: 4.6,
     reviews: 5600,
@@ -93,7 +93,7 @@ const partnerLabs = [
     accredited: ["NABL", "CAP"],
   },
   {
-    id: "7",
+    id: "tata-1mg",
     name: "Tata 1mg Labs",
     rating: 4.5,
     reviews: 4800,
@@ -105,7 +105,7 @@ const partnerLabs = [
     accredited: ["NABL"],
   },
   {
-    id: "8",
+    id: "redcliffe",
     name: "Redcliffe Labs",
     rating: 4.4,
     reviews: 6200,
@@ -117,7 +117,7 @@ const partnerLabs = [
     accredited: ["NABL", "ISO"],
   },
   {
-    id: "9",
+    id: "neuberg",
     name: "Neuberg Diagnostics",
     rating: 4.5,
     reviews: 4500,
@@ -129,7 +129,7 @@ const partnerLabs = [
     accredited: ["NABL", "CAP"],
   },
   {
-    id: "10",
+    id: "vijaya",
     name: "Vijaya Diagnostic Centre",
     rating: 4.6,
     reviews: 3800,
@@ -141,7 +141,7 @@ const partnerLabs = [
     accredited: ["NABL"],
   },
   {
-    id: "11",
+    id: "mahajan",
     name: "Mahajan Imaging",
     rating: 4.7,
     reviews: 2900,
@@ -153,7 +153,7 @@ const partnerLabs = [
     accredited: ["NABL", "AERB"],
   },
   {
-    id: "12",
+    id: "suburban",
     name: "Suburban Diagnostics",
     rating: 4.5,
     reviews: 3200,
@@ -165,7 +165,7 @@ const partnerLabs = [
     accredited: ["NABL", "CAP"],
   },
   {
-    id: "13",
+    id: "igenetic",
     name: "iGenetic Diagnostics",
     rating: 4.4,
     reviews: 2100,
@@ -177,7 +177,7 @@ const partnerLabs = [
     accredited: ["NABL"],
   },
   {
-    id: "14",
+    id: "healthcare-at-home",
     name: "HealthCare at Home",
     rating: 4.6,
     reviews: 1800,
@@ -189,7 +189,7 @@ const partnerLabs = [
     accredited: ["NABL", "ISO"],
   },
   {
-    id: "15",
+    id: "krsnaa",
     name: "Krsnaa Diagnostics",
     rating: 4.3,
     reviews: 2500,

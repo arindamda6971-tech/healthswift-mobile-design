@@ -5,8 +5,6 @@ import {
   Search,
   Bell,
   FlaskConical,
-  Home as HomeIcon,
-  Calendar,
   Sparkles,
   ChevronRight,
   HeartPulse,
@@ -16,8 +14,9 @@ import {
   Building2,
   Star,
   X,
-  Plus,
   RefreshCw,
+  FileUp,
+  Stethoscope,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,10 +45,8 @@ const diagnosticCenters = [
 ];
 
 const quickActions = [
-  { icon: FlaskConical, label: "Book Test", path: "/categories", color: "bg-primary/10 text-primary" },
-  { icon: HeartPulse, label: "Full Body", path: "/categories", color: "bg-success/10 text-success" },
-  { icon: HomeIcon, label: "Home Collection", path: "/book", color: "bg-warning/10 text-warning" },
-  { icon: Calendar, label: "Schedule", path: "/book", color: "bg-secondary/10 text-secondary" },
+  { icon: FileUp, label: "Upload Prescription", path: "/upload-prescription", color: "bg-primary/10 text-primary" },
+  { icon: Stethoscope, label: "Consult Doctor", path: "/doctor-consult", color: "bg-success/10 text-success" },
 ];
 
 const trendingTests = [
@@ -304,7 +301,7 @@ const HomeScreen = () => {
         transition={{ delay: 0.3 }}
         className="px-4 mt-6"
       >
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {quickActions.map((action, index) => (
             <motion.button
               key={action.label}
@@ -312,12 +309,12 @@ const HomeScreen = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 + index * 0.1 }}
               onClick={() => navigate(action.path)}
-              className="flex flex-col items-center gap-2"
+              className="soft-card flex items-center gap-3 p-4"
             >
-              <div className={`w-14 h-14 rounded-2xl ${action.color} flex items-center justify-center transition-transform active:scale-95`}>
+              <div className={`w-12 h-12 rounded-2xl ${action.color} flex items-center justify-center transition-transform active:scale-95`}>
                 <action.icon className="w-6 h-6" />
               </div>
-              <span className="text-xs font-medium text-foreground">{action.label}</span>
+              <span className="text-sm font-semibold text-foreground">{action.label}</span>
             </motion.button>
           ))}
         </div>

@@ -17,6 +17,7 @@ import InstallScreen from "./pages/InstallScreen";
 import HomeScreen from "./pages/HomeScreen";
 import CategoriesScreen from "./pages/CategoriesScreen";
 import TestDetailScreen from "./pages/TestDetailScreen";
+import TestSelectionScreen from "./pages/TestSelectionScreen";
 import CartScreen from "./pages/CartScreen";
 import BookingScreen from "./pages/BookingScreen";
 import TrackingScreen from "./pages/TrackingScreen";
@@ -57,7 +58,8 @@ const App = () => (
                 {/* Protected Routes */}
                 <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
                 <Route path="/categories" element={<ProtectedRoute><CategoriesScreen /></ProtectedRoute>} />
-                <Route path="/test/detail" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
+                <Route path="/test/select/:id" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
+                <Route path="/test/select" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
                 <Route path="/test/:id" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartScreen /></ProtectedRoute>} />
                 <Route path="/book" element={<ProtectedRoute><BookingScreen /></ProtectedRoute>} />

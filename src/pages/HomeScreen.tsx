@@ -47,7 +47,7 @@ const diagnosticCenters = [
 
 const quickActions = [
   { icon: FlaskConical, label: "Book Test", path: "/categories", color: "bg-primary/10 text-primary" },
-  { icon: HeartPulse, label: "Full Body", path: "/test/full-body", color: "bg-success/10 text-success" },
+  { icon: HeartPulse, label: "Full Body", path: "/categories", color: "bg-success/10 text-success" },
   { icon: HomeIcon, label: "Home Collection", path: "/book", color: "bg-warning/10 text-warning" },
   { icon: Calendar, label: "Schedule", path: "/book", color: "bg-secondary/10 text-secondary" },
 ];
@@ -228,7 +228,7 @@ const HomeScreen = () => {
                   <button
                     key={test.id}
                     onClick={() => {
-                      navigate(`/test/${test.id}`);
+                      navigate(`/test/select/${test.id}`);
                       setShowSearchResults(false);
                       setSearchQuery("");
                     }}
@@ -346,7 +346,19 @@ const HomeScreen = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + index * 0.1 }}
-              onClick={() => navigate("/test/detail")}
+              onClick={() => navigate("/test/select", { 
+                state: { 
+                  test: { 
+                    id: `trending-${index}`,
+                    name: test.name, 
+                    price: test.price, 
+                    original_price: test.originalPrice,
+                    discount_percent: parseInt(test.discount),
+                    report_time_hours: parseInt(test.time),
+                    sample_type: "Blood"
+                  } 
+                } 
+              })}
               className="test-card min-w-[180px] flex-shrink-0 cursor-pointer"
             >
               <div className="p-4">

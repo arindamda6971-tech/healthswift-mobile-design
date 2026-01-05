@@ -65,7 +65,19 @@ const CategoriesScreen = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => navigate("/test/detail")}
+              onClick={() => navigate("/test/select", { 
+                state: { 
+                  test: { 
+                    id: `category-${index}`,
+                    name: category.name, 
+                    price: 499 + (index * 100), 
+                    original_price: 999 + (index * 100),
+                    discount_percent: 40,
+                    report_time_hours: 24,
+                    sample_type: "Blood"
+                  } 
+                } 
+              })}
               className="category-card"
             >
               <div className={`w-12 h-12 rounded-2xl ${category.color} flex items-center justify-center mb-3`}>
@@ -97,7 +109,19 @@ const CategoriesScreen = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + index * 0.1 }}
-              onClick={() => navigate("/test/detail")}
+              onClick={() => navigate("/test/select", { 
+                state: { 
+                  test: { 
+                    id: `package-${index}`,
+                    name: pkg.name, 
+                    price: pkg.price, 
+                    original_price: pkg.originalPrice,
+                    discount_percent: Math.round((1 - pkg.price / pkg.originalPrice) * 100),
+                    report_time_hours: 24,
+                    sample_type: "Blood"
+                  } 
+                } 
+              })}
               className="soft-card flex items-center gap-4 cursor-pointer"
             >
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0">

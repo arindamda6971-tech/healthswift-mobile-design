@@ -4,6 +4,8 @@ interface CartItem {
   id: string;
   name: string;
   price: number;
+  labId?: string;
+  labName?: string;
   quantity: number;
 }
 
@@ -26,18 +28,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
+    console.log("Cart items changed, saving to localStorage:", items);
     localStorage.setItem("healthswift-cart", JSON.stringify(items));
   }, [items]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
+    console.log("CartContext.addToCart called with:", item);
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
-        return prev.map((i) =>
+        const updated = prev.map((i) =>
           i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
+        console.log("Cart updated (increment):", updated);
+        return updated;
       }
-      return [...prev, { ...item, quantity: 1 }];
+      const updated = [...prev, { ...item, quantity: 1 }];
+      console.log("Cart updated (new):", updated);
+      return updated;
     });
   };
 

@@ -97,7 +97,7 @@ const TestDetailScreen = () => {
 
   if (loading) {
     return (
-      <MobileLayout>
+      <MobileLayout showFloatingAdd={false}>
         <ScreenHeader title="Test Details" />
         <div className="flex items-center justify-center h-[60vh]">
           <LoadingSpinner size="lg" />
@@ -108,7 +108,7 @@ const TestDetailScreen = () => {
 
   if (error || !test) {
     return (
-      <MobileLayout>
+      <MobileLayout showFloatingAdd={false}>
         <ScreenHeader title="Test Details" />
         <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
           <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
@@ -132,7 +132,7 @@ const TestDetailScreen = () => {
   const parameters = Array.isArray(test.parameters) ? test.parameters : [];
 
   return (
-    <MobileLayout>
+    <MobileLayout showFloatingAdd={false}>
       <ScreenHeader
         title="Test Details"
         rightAction={

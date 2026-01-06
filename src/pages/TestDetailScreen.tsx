@@ -20,6 +20,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 interface TestData {
   id: string;
@@ -50,6 +51,7 @@ const TestDetailScreen = () => {
   const [test, setTest] = useState<TestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addToCart, itemCount } = useCart();
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -85,9 +87,12 @@ const TestDetailScreen = () => {
     fetchTest();
   }, [id]);
 
-  const handleAddToCart = async () => {
-    // For now, just show a toast - cart integration can be added later
-    toast.success(`${test?.name} added to cart!`);
+  const handleAddToCart = () => {
+    if (!test) return;
+    for (let i = 0; i < quantity; i++) {
+      addToCart({ id: test.id, name: test.name, price: test.price });
+    }
+    toast.success(`${test.name} added to cart!`);
   };
 
   if (loading) {
@@ -133,6 +138,11 @@ const TestDetailScreen = () => {
         rightAction={
           <button onClick={() => navigate("/cart")} className="icon-btn relative">
             <ShoppingCart className="w-5 h-5 text-foreground" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                {itemCount > 9 ? "9+" : itemCount}
+              </span>
+            )}
           </button>
         }
       />
@@ -331,22 +341,13 @@ const TestDetailScreen = () => {
 
           {/* Add to cart */}
           <Button
-            variant="outline"
-            size="sm"
-            className="text-[10px] px-2.5 py-1 h-6 rounded-xl"
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </Button>
-
-          {/* Book now */}
-          <Button
             variant="hero"
             size="sm"
-            className="text-[10px] px-2.5 py-1 h-6 rounded-xl"
-            onClick={() => navigate("/book")}
+            className="text-[10px] px-4 py-1 h-7 rounded-xl"
+            onClick={handleAddToCart}
           >
-            Book Now
+            <ShoppingCart className="w-3 h-3 mr-1" />
+            Add to Cart
           </Button>
         </motion.div>
       </nav>

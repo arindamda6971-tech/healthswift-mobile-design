@@ -1,17 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone } from "lucide-react";
+import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
-
-const cartItems = [
-  { id: 1, name: "Complete Blood Count (CBC)", price: 299, quantity: 1 },
-  { id: 2, name: "Thyroid Profile", price: 399, quantity: 1 },
-];
+import { useCart } from "@/contexts/CartContext";
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -21,32 +17,39 @@ const paymentMethods = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState(cartItems);
+  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
   const [couponCode, setCouponCode] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [couponApplied, setCouponApplied] = useState(false);
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const discount = couponApplied ? 100 : 0;
   const total = subtotal - discount;
-
-  const updateQuantity = (id: number, delta: number) => {
-    setItems(items.map(item => 
-      item.id === id 
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item
-    ));
-  };
-
-  const removeItem = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
-  };
 
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === "HEALTH100") {
       setCouponApplied(true);
     }
   };
+
+  if (items.length === 0) {
+    return (
+      <MobileLayout>
+        <ScreenHeader title="Your Cart" />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+            <ShoppingCart className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Your cart is empty</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Add tests to your cart to proceed with booking
+          </p>
+          <Button onClick={() => navigate("/categories")}>
+            Browse Tests
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>
@@ -89,7 +92,7 @@ const CartScreen = () => {
                     </button>
                   </div>
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeFromCart(item.id)}
                     className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />

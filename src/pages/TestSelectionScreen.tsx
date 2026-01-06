@@ -9,7 +9,10 @@ import {
   ChevronRight,
   AlertCircle,
   Check,
+  ShoppingCart,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -144,6 +147,14 @@ const TestSelectionScreen = () => {
         price: Math.round(test.price * (selectedLabData?.priceMultiplier || 1))
       } 
     });
+  };
+
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (labId: string, labName: string, labPrice: number) => {
+    if (!test) return;
+    addToCart({ id: `${test.id}-${labId}`, name: test.name, price: labPrice, labId, labName });
+    toast.success(`${test.name} added to cart (${labName})`);
   };
 
   if (loading) {
@@ -288,6 +299,17 @@ const TestSelectionScreen = () => {
                     {lab.priceMultiplier < 1 && (
                       <p className="text-[10px] text-success">Save ₹{Math.round(test.price - labPrice)}</p>
                     )}
+                    <div className="mt-2 flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); handleAddToCart(lab.id, lab.name, labPrice); }}
+                        className="px-3"
+                      >
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

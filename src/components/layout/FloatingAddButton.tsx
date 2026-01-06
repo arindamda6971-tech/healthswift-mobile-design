@@ -1,10 +1,12 @@
-import { Plus } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
-const FloatingAddButton = () => {
+const FloatingCartButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { itemCount } = useCart();
   
   // Hide on certain pages where it's not needed
   const hiddenPaths = ["/login", "/onboarding", "/splash", "/cart", "/book", "/tracking"];
@@ -19,16 +21,21 @@ const FloatingAddButton = () => {
       transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 20 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      onClick={() => navigate("/categories")}
+      onClick={() => navigate("/cart")}
       className="fixed bottom-24 right-4 w-12 h-12 bg-primary rounded-full shadow-lg flex items-center justify-center z-50"
       style={{
         boxShadow: "0 4px 20px hsl(var(--primary) / 0.4)",
       }}
-      aria-label="Add new test"
+      aria-label="View cart"
     >
-      <Plus className="w-5 h-5 text-primary-foreground" />
+      <ShoppingCart className="w-5 h-5 text-primary-foreground" />
+      {itemCount > 0 && (
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center">
+          {itemCount > 9 ? "9+" : itemCount}
+        </span>
+      )}
     </motion.button>
   );
 };
 
-export default FloatingAddButton;
+export default FloatingCartButton;

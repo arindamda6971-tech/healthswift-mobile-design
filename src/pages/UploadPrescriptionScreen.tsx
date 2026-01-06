@@ -19,15 +19,45 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecommendedTest {
   id: string;
   name: string;
+  shortName?: string;
+  category?: string;
   price: number;
   originalPrice: number;
   discount: string;
   reportTime: string;
 }
+
+interface AIAnalysisResult {
+  tests: Array<{
+    name: string;
+    shortName?: string;
+    category?: string;
+  }>;
+  confidence: string;
+  notes?: string;
+}
+
+// Test pricing based on category
+const getTestPricing = (category?: string) => {
+  const pricingMap: Record<string, { price: number; originalPrice: number; reportTime: string }> = {
+    "Blood": { price: 299, originalPrice: 499, reportTime: "6 hours" },
+    "Thyroid": { price: 399, originalPrice: 699, reportTime: "24 hours" },
+    "Liver": { price: 449, originalPrice: 799, reportTime: "12 hours" },
+    "Kidney": { price: 499, originalPrice: 899, reportTime: "12 hours" },
+    "Diabetes": { price: 199, originalPrice: 349, reportTime: "4 hours" },
+    "Heart": { price: 599, originalPrice: 999, reportTime: "24 hours" },
+    "Vitamin": { price: 549, originalPrice: 899, reportTime: "24 hours" },
+    "Urine": { price: 149, originalPrice: 249, reportTime: "6 hours" },
+    "Imaging": { price: 999, originalPrice: 1499, reportTime: "48 hours" },
+    "Other": { price: 399, originalPrice: 699, reportTime: "24 hours" },
+  };
+  return pricingMap[category || "Other"] || pricingMap["Other"];
+};
 
 const UploadPrescriptionScreen = () => {
   const navigate = useNavigate();
@@ -38,6 +68,8 @@ const UploadPrescriptionScreen = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [recommendedTests, setRecommendedTests] = useState<RecommendedTest[]>([]);
+  const [analysisNotes, setAnalysisNotes] = useState<string>("");
+  const [confidence, setConfidence] = useState<string>("");
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -52,6 +84,8 @@ const UploadPrescriptionScreen = () => {
         setUploadedImage(reader.result as string);
         setAnalysisComplete(false);
         setRecommendedTests([]);
+        setAnalysisNotes("");
+        setConfidence("");
       };
       reader.readAsDataURL(file);
     }
@@ -62,49 +96,56 @@ const UploadPrescriptionScreen = () => {
     
     setIsAnalyzing(true);
     
-    // Simulate AI analysis
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    
-    // Mock recommended tests based on "analysis"
-    const mockTests: RecommendedTest[] = [
-      {
-        id: "1",
-        name: "Complete Blood Count (CBC)",
-        price: 299,
-        originalPrice: 499,
-        discount: "40%",
-        reportTime: "6 hours",
-      },
-      {
-        id: "2",
-        name: "Thyroid Profile (T3, T4, TSH)",
-        price: 399,
-        originalPrice: 699,
-        discount: "43%",
-        reportTime: "24 hours",
-      },
-      {
-        id: "3",
-        name: "Liver Function Test (LFT)",
-        price: 449,
-        originalPrice: 799,
-        discount: "44%",
-        reportTime: "12 hours",
-      },
-      {
-        id: "4",
-        name: "Kidney Function Test (KFT)",
-        price: 499,
-        originalPrice: 899,
-        discount: "45%",
-        reportTime: "12 hours",
-      },
-    ];
-    
-    setRecommendedTests(mockTests);
-    setIsAnalyzing(false);
-    setAnalysisComplete(true);
-    toast.success("Prescription analyzed successfully!");
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-prescription', {
+        body: { imageBase64: uploadedImage }
+      });
+
+      if (error) {
+        console.error("Error analyzing prescription:", error);
+        toast.error(error.message || "Failed to analyze prescription");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      const result = data as AIAnalysisResult;
+      
+      if (!result.tests || result.tests.length === 0) {
+        toast.error(result.notes || "No tests found in the prescription. Please upload a clearer image.");
+        setAnalysisNotes(result.notes || "");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Convert AI response to recommended tests with pricing
+      const tests: RecommendedTest[] = result.tests.map((test, index) => {
+        const pricing = getTestPricing(test.category);
+        const discount = Math.round(((pricing.originalPrice - pricing.price) / pricing.originalPrice) * 100);
+        
+        return {
+          id: `ai-${index}-${Date.now()}`,
+          name: test.name,
+          shortName: test.shortName,
+          category: test.category,
+          price: pricing.price,
+          originalPrice: pricing.originalPrice,
+          discount: `${discount}%`,
+          reportTime: pricing.reportTime,
+        };
+      });
+
+      setRecommendedTests(tests);
+      setAnalysisNotes(result.notes || "");
+      setConfidence(result.confidence);
+      setAnalysisComplete(true);
+      toast.success(`Found ${tests.length} test${tests.length > 1 ? 's' : ''} in your prescription!`);
+      
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("Failed to analyze prescription. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleRemoveImage = () => {
@@ -291,11 +332,24 @@ const UploadPrescriptionScreen = () => {
                 <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">Analysis Complete</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground">Analysis Complete</p>
+                    {confidence && (
+                      <Badge 
+                        variant={confidence === "high" ? "softSuccess" : confidence === "medium" ? "softWarning" : "softDestructive"}
+                        className="text-xs"
+                      >
+                        {confidence} confidence
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
-                    Found {recommendedTests.length} recommended tests
+                    Found {recommendedTests.length} recommended test{recommendedTests.length !== 1 ? 's' : ''}
                   </p>
+                  {analysisNotes && (
+                    <p className="text-xs text-muted-foreground mt-1">{analysisNotes}</p>
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
+import { useQuery } from "@tanstack/react-query";
+import { getRecommendationsForCart } from "@/lib/recommendations";
+import { toast } from "@/hooks/use-toast";
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -17,7 +20,9 @@ const paymentMethods = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, addToCart } = useCart();
+
+  const { data: recs = [], isLoading: recsLoading } = useQuery({ queryKey: ["recommendations", items], queryFn: () => getRecommendationsForCart(items), enabled: items.length > 0 });
   const [couponCode, setCouponCode] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [couponApplied, setCouponApplied] = useState(false);
@@ -221,6 +226,35 @@ const CartScreen = () => {
             No hidden charges
           </Badge>
         </motion.div>
+
+        {/* Recommendations based on cart */}
+        {recs && recs.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="mt-6"
+          >
+            <h3 className="font-semibold text-foreground mb-3">You may also need</h3>
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-3">
+              {recs.map((r: any) => (
+                <div key={r.id} className="soft-card min-w-[180px] p-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{r.name}</p>
+                      <p className="text-primary font-bold mt-1">₹{r.price}</p>
+                    </div>
+                    <div>
+                      <Button size="sm" variant="ghost" onClick={() => { addToCart({ id: r.id, name: r.name, price: r.price, labName: "" }); toast({ title: 'Added', description: 'Added to cart' }); }}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Bottom CTA */}

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   User,
   ChevronRight,
+  Clock,
   FileText,
   Heart,
   Users,
@@ -23,6 +24,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 
 const menuItems = [
+  { icon: Clock, label: "Orders", path: "/orders", badge: null },
   { icon: FileText, label: "Medical History", path: "/medical-history", badge: null },
   { icon: Heart, label: "Health Score", path: "/health-score", badge: "New" },
   { icon: Users, label: "Family Members", path: "/family", badge: "3" },

@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useCart } from "@/contexts/CartContext";
+import { createOrderFromCart } from "@/integrations/supabase/orders";
+import { toast } from "@/hooks/use-toast";
 
 const addresses = [
   { id: 1, type: "Home", address: "123 Main Street, Apartment 4B, Mumbai 400001", isDefault: true },
@@ -223,16 +226,47 @@ const BookingScreen = () => {
         animate={{ y: 0 }}
         className="fixed bottom-24 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
       >
-        <Button
-          variant="hero"
-          className="w-full"
-          size="lg"
-          onClick={() => navigate("/tracking")}
-        >
-          Confirm Booking
-        </Button>
+        <BookingConfirm />
       </motion.div>
     </MobileLayout>
+  );
+};
+
+const BookingConfirm = () => {
+  const navigate = useNavigate();
+  const { items, subtotal, clearCart } = useCart();
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!items || items.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+    setLoading(true);
+    try {
+      const cartItems = items.map((it) => ({ id: it.id, name: it.name, price: it.price, quantity: it.quantity }));
+      const date = new Date();
+      // scheduled date based on selected day in BookingScreen is not passed here; we'll set today's date by default
+      const scheduledDate = date.toISOString().split("T")[0];
+      const timeSlot = null;
+
+      const { orderId } = await createOrderFromCart({ items: cartItems, subtotal, addressId: null, familyMemberId: null, scheduledDate, scheduledTimeSlot: timeSlot });
+
+      clearCart();
+      toast.success("Booking confirmed — check tracking");
+      navigate("/tracking", { state: { orderId } });
+    } catch (err) {
+      console.error("Booking error", err);
+      toast.error("Failed to create booking. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="hero" className="w-full" size="lg" onClick={handleConfirm} disabled={loading || items.length === 0}>
+      {loading ? "Processing..." : "Confirm Booking"}
+    </Button>
   );
 };
 

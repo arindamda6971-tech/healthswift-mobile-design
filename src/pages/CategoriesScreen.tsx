@@ -1,37 +1,52 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Droplets,
-  Activity,
-  Pill,
-  Sun,
-  Heart,
-  UserCheck,
-  Stethoscope,
-  Baby,
-  Brain,
-  Bone,
-  Sparkles,
-} from "lucide-react";
+import { Sparkles, Stethoscope } from "lucide-react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { Badge } from "@/components/ui/badge";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { getIconForKey } from "@/lib/iconMap";
 
-const categories = [
-  { icon: Droplets, name: "Blood Tests", tests: 45, color: "bg-destructive/10 text-destructive" },
-  { icon: Activity, name: "Liver Function", tests: 12, color: "bg-success/10 text-success" },
-  { icon: Pill, name: "Thyroid", tests: 8, color: "bg-primary/10 text-primary" },
-  { icon: Sun, name: "Vitamin", tests: 15, color: "bg-warning/10 text-warning" },
-  { icon: Heart, name: "Women's Health", tests: 28, color: "bg-pink-100 text-pink-600" },
-  { icon: UserCheck, name: "Men's Health", tests: 22, color: "bg-secondary/10 text-secondary" },
-  { icon: Stethoscope, name: "Full Body", tests: 35, color: "bg-primary/10 text-primary" },
-  { icon: Baby, name: "Pregnancy", tests: 18, color: "bg-purple-100 text-purple-600" },
-  { icon: Brain, name: "Hormones", tests: 20, color: "bg-indigo-100 text-indigo-600" },
-  { icon: Bone, name: "Bone & Joint", tests: 14, color: "bg-orange-100 text-orange-600" },
-];
+interface Category {
+  id: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  sort_order?: number | null;
+  is_active?: boolean | null;
+  tests?: Array<any> | null;
+}
+
+const fetchCategories = async () => {
+  const { data, error } = await supabase
+    .from("test_categories")
+    .select("id, name, description, icon, sort_order, is_active, tests(id)")
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+  return data as Category[];
+};
 
 const CategoriesScreen = () => {
   const navigate = useNavigate();
+
+  const { data: categories = [], isLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
+  if (isLoading) {
+    return (
+      <MobileLayout>
+        <ScreenHeader title="Test Categories" showBack={false} />
+        <div className="flex items-center justify-center h-[60vh]">
+          <LoadingSpinner size="lg" />
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>
@@ -61,36 +76,31 @@ const CategoriesScreen = () => {
         <div className="grid grid-cols-2 gap-3">
           {categories.map((category, index) => (
             <motion.div
-              key={category.name}
+              key={category.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => navigate("/test/select", { 
-                state: { 
-                  test: { 
-                    id: `category-${index}`,
-                    name: category.name, 
-                    price: 499 + (index * 100), 
-                    original_price: 999 + (index * 100),
-                    discount_percent: 40,
-                    report_time_hours: 24,
-                    sample_type: "Blood"
-                  } 
-                } 
-              })}
+              onClick={() => navigate(`/categories/${category.id}`)}
               className="category-card"
             >
-              <div className={`w-12 h-12 rounded-2xl ${category.color} flex items-center justify-center mb-3`}>
-                <category.icon className="w-6 h-6" />
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mb-3`}>
+                {/* If category icon is present map to lucide icon, else show initial */}
+                {(() => {
+                  const Icon = getIconForKey(category.icon ?? undefined);
+                  return Icon ? <Icon className="w-6 h-6 text-primary-foreground" /> : <span className="font-semibold text-primary-foreground">{category.name.charAt(0)}</span>;
+                })()}
               </div>
               <h3 className="font-semibold text-foreground text-sm">{category.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{category.tests} tests</p>
+              <p className="text-xs text-muted-foreground mt-1">{(category.tests || []).length} tests</p>
+              {category.description && (
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{category.description}</p>
+              )}
             </motion.div>
           ))}
         </div>
       </div>
 
-      {/* Popular Packages */}
+      {/* Popular Packages (unchanged) */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

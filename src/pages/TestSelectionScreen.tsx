@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -30,8 +31,8 @@ interface TestData {
   sample_type: string | null;
 }
 
-// Labs with pricing variations
-const labs = [
+// Default fallback labs with pricing variations
+const defaultLabs = [
   { 
     id: "lal-pathlabs", 
     name: "Dr. Lal PathLabs", 
@@ -84,6 +85,40 @@ const labs = [
   },
 ];
 
+const fetchLabs = async () => {
+  // Try common table names: labs, partner_labs
+  const tryTables = ["labs", "partner_labs"];
+
+  for (const table of tryTables) {
+    try {
+      const { data, error } = await supabase
+        .from(table)
+        .select("id, name, rating, reviews, price_multiplier, accredited, home_collection, report_time")
+        .limit(100);
+
+      if (!error && data && data.length > 0) {
+        // map DB fields to our UI contract
+        return data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          rating: d.rating ?? 4.5,
+          reviews: d.reviews ?? 100,
+          priceMultiplier: d.price_multiplier ?? 1,
+          accredited: d.accredited ?? true,
+          homeCollection: d.home_collection ?? true,
+          reportTime: d.report_time ?? "Same day",
+        }));
+      }
+    } catch (err) {
+      // ignore and try next table
+      console.warn(`Failed to fetch labs from ${table}:`, err);
+    }
+  }
+
+  // Fallback to defaults
+  return defaultLabs;
+};
+
 const TestSelectionScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -92,6 +127,10 @@ const TestSelectionScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedLab, setSelectedLab] = useState<string | null>(null);
+  const { data: labsData = [], isLoading: labsLoading } = useQuery({
+    queryKey: ["labs"],
+    queryFn: fetchLabs,
+  });
 
   // Check if test data was passed via state (for static tests)
   const stateTest = location.state?.test as TestData | undefined;
@@ -231,7 +270,7 @@ const TestSelectionScreen = () => {
 
         {/* Lab Options */}
         <div className="space-y-3">
-          {labs.map((lab, index) => {
+          {(labsLoading ? defaultLabs : labsData).map((lab, index) => {
             const labPrice = Math.round(test.price * lab.priceMultiplier);
             const isSelected = selectedLab === lab.id;
             

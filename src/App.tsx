@@ -1,99 +1,58 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import React, { Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CartProvider } from "@/contexts/CartContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import InstallPrompt from "@/components/InstallPrompt";
-import ScrollToTop from "@/components/ScrollToTop";
-// Screens
-import SplashScreen from "./pages/SplashScreen";
-import OnboardingScreen from "./pages/OnboardingScreen";
-import LoginScreen from "./pages/LoginScreen";
-import InstallScreen from "./pages/InstallScreen";
-import HomeScreen from "./pages/HomeScreen";
-import CategoriesScreen from "./pages/CategoriesScreen";
-import TestDetailScreen from "./pages/TestDetailScreen";
-import TestSelectionScreen from "./pages/TestSelectionScreen";
-import CartScreen from "./pages/CartScreen";
-import BookingScreen from "./pages/BookingScreen";
-import TrackingScreen from "./pages/TrackingScreen";
-import ReportsScreen from "./pages/ReportsScreen";
-import ReportDetailScreen from "./pages/ReportDetailScreen";
-import ProfileScreen from "./pages/ProfileScreen";
-import EditProfileScreen from "./pages/EditProfileScreen";
-import MedicalHistoryScreen from "./pages/MedicalHistoryScreen";
-import NotificationsScreen from "./pages/NotificationsScreen";
-import SubscriptionScreen from "./pages/SubscriptionScreen";
-import HealthScoreScreen from "./pages/HealthScoreScreen";
-import DoctorConsultScreen from "./pages/DoctorConsultScreen";
-import RewardsScreen from "./pages/RewardsScreen";
-import FamilyScreen from "./pages/FamilyScreen";
-import PartnerLabsScreen from "./pages/PartnerLabsScreen";
-import LabDetailScreen from "./pages/LabDetailScreen";
-import UploadPrescriptionScreen from "./pages/UploadPrescriptionScreen";
-import NotFound from "./pages/NotFound";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+
+const SplashScreen = React.lazy(() => import("./pages/SplashScreen"));
+const ProfileScreen = React.lazy(() => import("./pages/ProfileScreen"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <NotificationProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <NotificationProvider>
               <BrowserRouter>
-                <ScrollToTop />
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<SplashScreen />} />
-                  <Route path="/onboarding" element={<OnboardingScreen />} />
-                  <Route path="/login" element={<LoginScreen />} />
-                  <Route path="/install" element={<InstallScreen />} />
-                  
-                  {/* Protected Routes */}
-                  <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-                  <Route path="/categories" element={<ProtectedRoute><CategoriesScreen /></ProtectedRoute>} />
-                  <Route path="/test/select/:id" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
-                  <Route path="/test/select" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
-                  <Route path="/test/:id" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
-                  <Route path="/cart" element={<ProtectedRoute><CartScreen /></ProtectedRoute>} />
-                  <Route path="/book" element={<ProtectedRoute><BookingScreen /></ProtectedRoute>} />
-                  <Route path="/tracking" element={<ProtectedRoute><TrackingScreen /></ProtectedRoute>} />
-                  <Route path="/reports" element={<ProtectedRoute><ReportsScreen /></ProtectedRoute>} />
-                  <Route path="/report-detail" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
-                  <Route path="/ai-report" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
-                  <Route path="/edit-profile" element={<ProtectedRoute><EditProfileScreen /></ProtectedRoute>} />
-                  <Route path="/medical-history" element={<ProtectedRoute><MedicalHistoryScreen /></ProtectedRoute>} />
-                  <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-                  <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />
-                  <Route path="/health-score" element={<ProtectedRoute><HealthScoreScreen /></ProtectedRoute>} />
-                  <Route path="/doctor-consult" element={<ProtectedRoute><DoctorConsultScreen /></ProtectedRoute>} />
-                  <Route path="/rewards" element={<ProtectedRoute><RewardsScreen /></ProtectedRoute>} />
-                  <Route path="/family" element={<ProtectedRoute><FamilyScreen /></ProtectedRoute>} />
-                  <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
-                  <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
-                  <Route path="/upload-prescription" element={<ProtectedRoute><UploadPrescriptionScreen /></ProtectedRoute>} />
-                  
-                  {/* Catch-all */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <InstallPrompt />
-              </BrowserRouter>
-            </TooltipProvider>
-          </NotificationProvider>
-        </CartProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                <Suspense fallback={<div style={{padding:20}}>Loading...</div>}>
+                  <Routes>
+              <Route path="/" element={<SplashScreen />} />
+              <Route path="/profile" element={<ProfileScreen />} />
+              {/* Incremental route chunk: cart & booking (to detect compile errors) */}
+              <Route path="/cart" element={React.createElement(React.lazy(() => import("./pages/CartScreen")))} />
+              <Route path="/booking" element={React.createElement(React.lazy(() => import("./pages/BookingScreen")))} />
+              {/* Add orders/history route chunk */}
+              <Route path="/orders" element={React.createElement(React.lazy(() => import("./pages/OrderHistoryScreen")))} />
+              {/* Add tests & categories chunk */}
+              <Route path="/categories" element={React.createElement(React.lazy(() => import("./pages/CategoriesScreen")))} />
+              <Route path="/categories/:id" element={React.createElement(React.lazy(() => import("./pages/CategoryDetailScreen")))} />
+              <Route path="/test/select" element={React.createElement(React.lazy(() => import("./pages/TestSelectionScreen")))} />
+              <Route path="/test/select/:id" element={React.createElement(React.lazy(() => import("./pages/TestSelectionScreen")))} />
+              <Route path="/tests/:id" element={React.createElement(React.lazy(() => import("./pages/TestDetailScreen")))} />
+              <Route path="/home" element={React.createElement(React.lazy(() => import("./pages/HomeScreen")))} />
+              {/* Add reports & notifications */}
+              <Route path="/reports" element={React.createElement(React.lazy(() => import("./pages/ReportsScreen")))} />
+              <Route path="/notifications" element={React.createElement(React.lazy(() => import("./pages/NotificationsScreen")))} />
+              <Route path="/tracking/:orderId" element={React.createElement(React.lazy(() => import("./pages/TrackingScreen")))} />
+              {/* Misc pages */}
+              <Route path="/login" element={React.createElement(React.lazy(() => import("./pages/LoginScreen")))} />
+              <Route path="/onboarding" element={React.createElement(React.lazy(() => import("./pages/OnboardingScreen")))} />
+              <Route path="/install" element={React.createElement(React.lazy(() => import("./pages/InstallScreen")))} />
+              <Route path="*" element={React.createElement(React.lazy(() => import("./pages/NotFound")))} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+            </NotificationProvider>
+          </CartProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

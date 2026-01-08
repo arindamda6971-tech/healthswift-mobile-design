@@ -85,6 +85,9 @@ const CartScreen = () => {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
+                  {item.labName && (
+                    <p className="text-xs text-muted-foreground mt-1">Booked from: {item.labName}</p>
+                  )}
                   <p className="text-primary font-bold mt-1">₹{item.price}</p>
                 </div>
                 <div className="flex items-center gap-3">

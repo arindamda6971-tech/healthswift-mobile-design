@@ -6,9 +6,7 @@ import {
   Star,
   Clock,
   Shield,
-  ChevronRight,
   AlertCircle,
-  Check,
   ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -91,7 +89,7 @@ const TestSelectionScreen = () => {
   const [test, setTest] = useState<TestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLab, setSelectedLab] = useState<string | null>(null);
+  
 
   // Check if test data was passed via state (for static tests)
   const stateTest = location.state?.test as TestData | undefined;
@@ -137,17 +135,7 @@ const TestSelectionScreen = () => {
     fetchTest();
   }, [id, stateTest]);
 
-  const handleBookNow = () => {
-    if (!selectedLab || !test) return;
-    const selectedLabData = labs.find(l => l.id === selectedLab);
-    navigate("/book", { 
-      state: { 
-        test, 
-        lab: selectedLabData,
-        price: Math.round(test.price * (selectedLabData?.priceMultiplier || 1))
-      } 
-    });
-  };
+  
 
   const { addToCart } = useCart();
 
@@ -233,30 +221,16 @@ const TestSelectionScreen = () => {
         <div className="space-y-3">
           {labs.map((lab, index) => {
             const labPrice = Math.round(test.price * lab.priceMultiplier);
-            const isSelected = selectedLab === lab.id;
-            
+
             return (
               <motion.div
                 key={lab.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + index * 0.05 }}
-                onClick={() => setSelectedLab(lab.id)}
-                className={`soft-card cursor-pointer transition-all ${
-                  isSelected 
-                    ? 'ring-2 ring-primary border-primary bg-primary/5' 
-                    : 'hover:border-primary/50'
-                }`}
+                className={`soft-card cursor-pointer transition-all hover:border-primary/50`}
               >
                 <div className="flex items-start gap-3">
-                  {/* Selection indicator */}
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
-                    isSelected 
-                      ? 'border-primary bg-primary' 
-                      : 'border-muted-foreground/30'
-                  }`}>
-                    {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
-                  </div>
 
                   {/* Lab icon */}
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -317,41 +291,7 @@ const TestSelectionScreen = () => {
           })}
         </div>
       </div>
-
-      {/* Bottom CTA */}
-      <nav className="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[380px]">
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="flex items-center justify-between px-4 py-3 rounded-2xl backdrop-blur-xl bg-background/70 border border-border/30 shadow-md"
-          style={{
-            WebkitBackdropFilter: 'blur(16px)',
-            backdropFilter: 'blur(16px)',
-          }}
-        >
-          <div>
-            {selectedLab ? (
-              <>
-                <p className="text-xs text-muted-foreground">Selected Lab</p>
-                <p className="font-semibold text-foreground text-sm">
-                  {labs.find(l => l.id === selectedLab)?.name}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Select a lab to continue</p>
-            )}
-          </div>
-          <Button
-            variant="hero"
-            size="sm"
-            disabled={!selectedLab}
-            onClick={handleBookNow}
-            className="px-6"
-          >
-            Book Now <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </motion.div>
-      </nav>
+      
     </MobileLayout>
   );
 };

@@ -106,13 +106,51 @@ const HomeScreen = () => {
     fetchTests();
   }, [fetchTests]);
 
-  // Filter tests based on search query
+  // Filter tests based on search query. Use supabase results when available,
+  // otherwise fall back to the local `trendingTests` list so search works offline.
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return allTests.filter(test =>
-      test.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5);
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    // Build a searchable pool from fetched tests or fallback to trending tests
+    const pool = (allTests && allTests.length > 0)
+      ? allTests.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          price: t.price ?? t.price,
+          original_price: t.original_price ?? t.originalPrice,
+          discount_percent: t.discount_percent ?? t.discountPercent,
+          category: t.category,
+        }))
+      : trendingTests.map((t, i) => ({
+          id: `trending-${i}`,
+          name: t.name,
+          price: t.price,
+          original_price: t.originalPrice,
+          discount_percent: parseInt(t.discount),
+        }));
+
+    return pool.filter((item: any) => {
+      const name = (item.name || "").toLowerCase();
+      const category = (item.category || "").toLowerCase();
+      return name.includes(q) || category.includes(q);
+    }).slice(0, 7);
   }, [searchQuery, allTests]);
+
+  const handleSearchKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      if (searchResults.length > 0) {
+        const test = searchResults[0];
+        setShowSearchResults(false);
+        setSearchQuery("");
+        if (String(test.id).startsWith("trending-")) {
+          navigate("/test/select", { state: { test } });
+        } else {
+          navigate(`/test/select/${test.id}`);
+        }
+      }
+    }
+  };
 
   return (
     <div
@@ -198,6 +236,7 @@ const HomeScreen = () => {
               setShowSearchResults(true);
             }}
             onFocus={() => setShowSearchResults(true)}
+            onKeyDown={handleSearchKeyDown}
             className="search-input"
           />
           {searchQuery && (
@@ -225,9 +264,13 @@ const HomeScreen = () => {
                   <button
                     key={test.id}
                     onClick={() => {
-                      navigate(`/test/select/${test.id}`);
                       setShowSearchResults(false);
                       setSearchQuery("");
+                      if (String(test.id).startsWith("trending-")) {
+                        navigate("/test/select", { state: { test } });
+                      } else {
+                        navigate(`/test/select/${test.id}`);
+                      }
                     }}
                     className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left border-b border-border last:border-0"
                   >

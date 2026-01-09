@@ -45,11 +45,11 @@ const ProfileScreen = () => {
       if (session?.user?.id) {
         const { data } = await supabase
           .from("profiles")
-          .select("profile_image_url")
+          .select("avatar_url")
           .eq("id", session.user.id)
           .maybeSingle();
-        if (data?.profile_image_url) {
-          setProfileImageUrl(data.profile_image_url);
+        if (data?.avatar_url) {
+          setProfileImageUrl(data.avatar_url);
         }
       }
     };

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
   User,
   ChevronRight,
@@ -20,6 +21,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const menuItems = [
@@ -35,6 +37,24 @@ const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.photoURL || null);
+
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("profile_image_url")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (data?.profile_image_url) {
+          setProfileImageUrl(data.profile_image_url);
+        }
+      }
+    };
+    loadProfileImage();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -60,7 +80,13 @@ const ProfileScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           className="soft-card mt-4 flex items-center gap-4"
         >
-          {user?.photoURL ? (
+          {profileImageUrl ? (
+            <img 
+              src={profileImageUrl} 
+              alt={displayName}
+              className="w-16 h-16 rounded-2xl object-cover"
+            />
+          ) : user?.photoURL ? (
             <img 
               src={user.photoURL} 
               alt={displayName}

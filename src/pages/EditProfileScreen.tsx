@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Camera, User } from "lucide-react";
@@ -17,6 +17,8 @@ const EditProfileScreen = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(user?.photoURL || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
@@ -72,6 +74,25 @@ const EditProfileScreen = () => {
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target?.result as string;
+        setProfileImage(imageData);
+        toast.success("Image selected. Save changes to apply.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraOrGallery = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   const handleSave = async () => {
     if (!supabaseUserId) {
       toast.error("Unable to save. Please try logging in again.");
@@ -112,7 +133,13 @@ const EditProfileScreen = () => {
           className="mt-6 flex justify-center"
         >
           <div className="relative">
-            {user?.photoURL ? (
+            {profileImage ? (
+              <img 
+                src={profileImage} 
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover"
+              />
+            ) : user?.photoURL ? (
               <img 
                 src={user.photoURL} 
                 alt="Profile"
@@ -123,9 +150,22 @@ const EditProfileScreen = () => {
                 <User className="w-12 h-12 text-primary-foreground" />
               </div>
             )}
-            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <button 
+              onClick={handleCameraOrGallery}
+              type="button"
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
               <Camera className="w-4 h-4 text-primary-foreground" />
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture
+              onChange={handleImageSelect}
+              className="hidden"
+              aria-label="Upload profile image"
+            />
           </div>
         </motion.div>
 

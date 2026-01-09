@@ -5,7 +5,7 @@ import {
   User,
   ChevronRight,
   FileText,
-  Heart,
+  MapPin,
   Users,
   Crown,
   Gift,
@@ -26,7 +26,7 @@ import { toast } from "sonner";
 
 const menuItems = [
   { icon: FileText, label: "Medical History", path: "/medical-history", badge: null },
-  { icon: Heart, label: "Health Score", path: "/health-score", badge: "New" },
+  { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
   { icon: Users, label: "Family Members", path: "/family", badge: "3" },
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
   { icon: Gift, label: "Rewards & Referrals", path: "/rewards", badge: "₹500" },
@@ -105,31 +105,6 @@ const ProfileScreen = () => {
           <Button variant="outline" size="sm" onClick={() => navigate("/edit-profile")}>
             Edit
           </Button>
-        </motion.div>
-
-        {/* Health score card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          onClick={() => navigate("/health-score")}
-          className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-success/20 to-primary/20 border border-success/20 cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Your Health Score</p>
-              <p className="text-3xl font-bold text-foreground">78<span className="text-lg font-normal">/100</span></p>
-            </div>
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-success to-success/60 flex items-center justify-center">
-              <Heart className="w-8 h-8 text-success-foreground" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full w-[78%] bg-gradient-to-r from-success to-primary rounded-full" />
-            </div>
-            <span className="text-xs text-muted-foreground">Good</span>
-          </div>
         </motion.div>
 
         {/* Quick settings */}

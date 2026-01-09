@@ -30,6 +30,7 @@ import MedicalHistoryScreen from "./pages/MedicalHistoryScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import SubscriptionScreen from "./pages/SubscriptionScreen";
 import HealthScoreScreen from "./pages/HealthScoreScreen";
+import SavedAddressesScreen from "./pages/SavedAddressesScreen";
 import DoctorConsultScreen from "./pages/DoctorConsultScreen";
 import RewardsScreen from "./pages/RewardsScreen";
 import FamilyScreen from "./pages/FamilyScreen";
@@ -73,6 +74,7 @@ const App = () => (
                   <Route path="/ai-report" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
                   <Route path="/edit-profile" element={<ProtectedRoute><EditProfileScreen /></ProtectedRoute>} />
+                  <Route path="/saved-addresses" element={<ProtectedRoute><SavedAddressesScreen /></ProtectedRoute>} />
                   <Route path="/medical-history" element={<ProtectedRoute><MedicalHistoryScreen /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
                   <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />

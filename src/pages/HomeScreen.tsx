@@ -429,13 +429,13 @@ const HomeScreen = () => {
               <Badge variant="ai">AI Powered</Badge>
             </div>
             <h3 className="text-lg font-bold text-secondary-foreground mb-1">
-              Smart Health Reports
+              Smart Health Assistant
             </h3>
             <p className="text-sm text-secondary-foreground/80 mb-4">
-              Get AI-powered explanations for your test results in simple language
+              Get AI-powered answers to your health questions in simple language
             </p>
-            <Button variant="glass" size="sm" onClick={() => navigate("/ai-report")}>
-              Learn more
+            <Button variant="glass" size="sm" onClick={() => navigate("/health-assistant")}>
+              Chat now
             </Button>
           </div>
           <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />

@@ -260,11 +260,9 @@ const HomeScreen = () => {
           </div>
           <button 
             onClick={() => navigate('/partner-labs')}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 text-primary text-sm font-medium"
           >
-            <Badge variant="live" className="cursor-pointer hover:opacity-80 transition-opacity">
-              Partner Labs
-            </Badge>
+            View all <ChevronRight className="w-4 h-4" />
           </button>
         </div>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar">

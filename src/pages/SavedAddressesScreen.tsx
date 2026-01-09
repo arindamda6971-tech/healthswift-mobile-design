@@ -14,6 +14,8 @@ type AddressItem = {
   id: string;
   address: string;
   phone: string;
+  lat?: number | null;
+  lon?: number | null;
 };
 
 const STORAGE_KEY = "saved_addresses";
@@ -24,6 +26,8 @@ const SavedAddressesScreen = () => {
   const [editing, setEditing] = useState<null | AddressItem>(null);
   const [addressValue, setAddressValue] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
+  const [locLoading, setLocLoading] = useState(false);
+  const [tempCoords, setTempCoords] = useState<{ lat: number; lon: number } | null>(null);
 
   useEffect(() => {
     try {
@@ -48,12 +52,61 @@ const SavedAddressesScreen = () => {
     setEditing(null);
     setAddressValue("");
     setPhoneValue("");
+    setTempCoords(null);
   };
 
   const startEdit = (item: AddressItem) => {
     setEditing(item);
     setAddressValue(item.address);
     setPhoneValue(item.phone);
+    setTempCoords(item.lat != null && item.lon != null ? { lat: item.lat, lon: item.lon } : null);
+  };
+
+  const reverseGeocode = async (lat: number, lon: number) => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+      const res = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "HealthSwiftApp/1.0"
+        }
+      });
+      const data = await res.json();
+      return data.display_name || "";
+    } catch (err) {
+      console.error("Reverse geocode failed", err);
+      return "";
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator?.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLocLoading(true);
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      setTempCoords({ lat, lon });
+
+      const addr = await reverseGeocode(lat, lon);
+      if (addr) {
+        setAddressValue(addr);
+        toast.success("Location found");
+      } else {
+        toast.success("Coordinates obtained — you can save them");
+      }
+
+      setLocLoading(false);
+    }, (err) => {
+      console.error("Geolocation error", err);
+      if (err.code === 1) toast.error("Location permission denied");
+      else toast.error("Failed to get location");
+      setLocLoading(false);
+    }, { enableHighAccuracy: true, timeout: 15000 });
   };
 
   const handleSave = () => {
@@ -68,12 +121,12 @@ const SavedAddressesScreen = () => {
     }
 
     if (editing) {
-      const updated = addresses.map((a) => (a.id === editing.id ? { ...a, address: addressValue, phone: phoneValue } : a));
+      const updated = addresses.map((a) => (a.id === editing.id ? { ...a, address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? a.lat ?? null, lon: tempCoords?.lon ?? a.lon ?? null } : a));
       persist(updated);
       toast.success("Address updated");
     } else {
       const id = typeof crypto !== "undefined" && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.floor(Math.random()*10000)}`;
-      const newItem: AddressItem = { id, address: addressValue, phone: phoneValue };
+      const newItem: AddressItem = { id, address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? null, lon: tempCoords?.lon ?? null };
       persist([newItem, ...addresses]);
       toast.success("Address added");
     }
@@ -81,6 +134,7 @@ const SavedAddressesScreen = () => {
     setEditing(null);
     setAddressValue("");
     setPhoneValue("");
+    setTempCoords(null);
   };
 
   const handleDelete = (id: string) => {
@@ -110,8 +164,17 @@ const SavedAddressesScreen = () => {
               <Input id="phone" value={phoneValue} onChange={(e) => setPhoneValue(e.target.value)} placeholder="Mobile number" />
             </div>
 
+            <div className="mt-2">
+              <Button variant="outline" className="w-full mb-2" onClick={handleUseCurrentLocation} disabled={locLoading}>
+                {locLoading ? "Locating..." : "Use my current location"}
+              </Button>
+              {tempCoords && (
+                <p className="text-sm text-muted-foreground">Lat: {tempCoords.lat.toFixed(6)}, Lon: {tempCoords.lon.toFixed(6)}</p>
+              )}
+            </div>
+
             <div className="flex gap-3 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => { setEditing(null); setAddressValue(""); setPhoneValue(""); }}>
+              <Button variant="outline" className="flex-1" onClick={() => { setEditing(null); setAddressValue(""); setPhoneValue(""); setTempCoords(null); }}>
                 Cancel
               </Button>
               <Button variant="hero" className="flex-1" onClick={handleSave}>
@@ -137,6 +200,9 @@ const SavedAddressesScreen = () => {
                     <div className="flex-1">
                       <p className="font-medium text-foreground">{a.address}</p>
                       <p className="text-sm text-muted-foreground mt-1">{a.phone}</p>
+                      {a.lat != null && a.lon != null && (
+                        <p className="text-xs text-muted-foreground mt-1">Lat: {a.lat.toFixed(6)}, Lon: {a.lon.toFixed(6)}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" onClick={() => startEdit(a)}>

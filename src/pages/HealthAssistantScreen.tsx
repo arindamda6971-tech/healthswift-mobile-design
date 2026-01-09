@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 type Message = {
@@ -10,17 +12,53 @@ type Message = {
   content: string;
 };
 
+type TestRecommendation = {
+  name: string;
+  price: number;
+  id: string;
+};
+
 const suggestedQuestions = [
   "What does a CBC test measure?",
   "Why is Vitamin D important?",
   "How often should I get a health checkup?",
-  "What is HbA1c and why is it important?",
+  "What tests should I take for diabetes?",
 ];
 
+// Parse test recommendations from AI response
+const parseTestRecommendations = (content: string): TestRecommendation[] => {
+  const testPattern = /\[TEST:([^:]+):(\d+)\]/g;
+  const tests: TestRecommendation[] = [];
+  const seenNames = new Set<string>();
+  
+  let match;
+  while ((match = testPattern.exec(content)) !== null) {
+    const name = match[1].trim();
+    const price = parseInt(match[2], 10);
+    if (!seenNames.has(name)) {
+      seenNames.add(name);
+      tests.push({
+        name,
+        price,
+        id: `ai-rec-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+      });
+    }
+  }
+  return tests;
+};
+
+// Format content by removing test tags and making text cleaner
+const formatContent = (content: string): string => {
+  return content.replace(/\[TEST:([^:]+):(\d+)\]/g, '$1');
+};
+
 const HealthAssistantScreen = () => {
+  const navigate = useNavigate();
+  const { addToCart, items } = useCart();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +69,22 @@ const HealthAssistantScreen = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleAddToCart = (test: TestRecommendation) => {
+    addToCart({
+      id: test.id,
+      name: test.name,
+      price: test.price,
+    });
+    setAddedTests(prev => new Set(prev).add(test.name));
+    toast.success(`${test.name} added to cart!`);
+  };
+
+  const isTestInCart = (testName: string): boolean => {
+    return addedTests.has(testName) || items.some(item => 
+      item.name.toLowerCase() === testName.toLowerCase()
+    );
+  };
 
   const streamChat = async (userMessage: string) => {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
@@ -164,9 +218,73 @@ const HealthAssistantScreen = () => {
     streamChat(question);
   };
 
+  const renderMessageContent = (message: Message) => {
+    if (message.role === "user") {
+      return <p className="text-sm whitespace-pre-wrap">{message.content}</p>;
+    }
+
+    const tests = parseTestRecommendations(message.content);
+    const formattedContent = formatContent(message.content);
+
+    return (
+      <div>
+        <p className="text-sm whitespace-pre-wrap">{formattedContent}</p>
+        {tests.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Recommended Tests:</p>
+            <div className="flex flex-wrap gap-2">
+              {tests.map((test) => {
+                const inCart = isTestInCart(test.name);
+                return (
+                  <Button
+                    key={test.id}
+                    variant={inCart ? "outline" : "default"}
+                    size="sm"
+                    className="h-auto py-2 px-3 text-xs"
+                    onClick={() => !inCart && handleAddToCart(test)}
+                    disabled={inCart}
+                  >
+                    {inCart ? (
+                      <Check className="w-3 h-3 mr-1" />
+                    ) : (
+                      <ShoppingCart className="w-3 h-3 mr-1" />
+                    )}
+                    {test.name} - ₹{test.price}
+                    {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {message.content === "" && isLoading && (
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-xs text-muted-foreground">Thinking...</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
-      <ScreenHeader title="Health Assistant" />
+      <ScreenHeader 
+        title="Health Assistant" 
+        rightAction={
+          items.length > 0 ? (
+            <button 
+              onClick={() => navigate("/cart")}
+              className="relative p-2"
+            >
+              <ShoppingCart className="w-5 h-5 text-foreground" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground">
+                {items.length}
+              </span>
+            </button>
+          ) : undefined
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {messages.length === 0 ? (
@@ -182,7 +300,7 @@ const HealthAssistantScreen = () => {
               Hi! I'm your Health Assistant
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              Ask me anything about health tests, wellness tips, or understanding your results.
+              Ask me anything about health tests, wellness tips, or understanding your results. I can help you book tests too!
             </p>
 
             <div className="w-full space-y-2">
@@ -220,19 +338,13 @@ const HealthAssistantScreen = () => {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-md"
                         : "bg-card border border-border text-foreground rounded-bl-md"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    {message.role === "assistant" && message.content === "" && isLoading && (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="text-xs text-muted-foreground">Thinking...</span>
-                      </div>
-                    )}
+                    {renderMessageContent(message)}
                   </div>
                   {message.role === "user" && (
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">

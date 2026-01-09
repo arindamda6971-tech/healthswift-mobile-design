@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import MobileLayout from "@/components/layout/MobileLayout";
+import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 
 // Lab data with test catalogs
@@ -381,6 +382,7 @@ const categories = ["All", "Blood Tests", "Health Packages", "Thyroid", "Diabete
 const LabDetailScreen = () => {
   const { labId } = useParams<{ labId: string }>();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
@@ -416,6 +418,17 @@ const LabDetailScreen = () => {
         toast.info(`${testName} removed from cart`);
       } else {
         newSet.add(testId);
+        // Find the test object to get price and other details
+        const test = lab.tests.find((t) => t.id === testId);
+        if (test) {
+          addToCart({
+            id: testId,
+            name: testName,
+            price: test.price,
+            labId: labId || "",
+            labName: lab.name,
+          });
+        }
         toast.success(`${testName} added to cart`);
       }
       return newSet;

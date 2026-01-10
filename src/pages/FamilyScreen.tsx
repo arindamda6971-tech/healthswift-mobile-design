@@ -53,6 +53,31 @@ const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const genders = ["Male", "Female", "Other"];
 const relations = ["Self", "Spouse", "Father", "Mother", "Son", "Daughter", "Brother", "Sister", "Other"];
 
+const PHONE_REGEX = /^\+?[0-9]{10,15}$/;
+
+const normalizePhone = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  const digitsOnly = trimmed.replace(/\D/g, "");
+  if (!digitsOnly) return null;
+
+  const hasPlus = trimmed.startsWith("+");
+  return `${hasPlus ? "+" : ""}${digitsOnly}`;
+};
+
+const splitConditions = (raw: string): string[] | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  const items = trimmed
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+  return items.length ? items : null;
+};
+
 const FamilyScreen = () => {
   const navigate = useNavigate();
   const { user, supabaseUserId } = useAuth();
@@ -122,26 +147,47 @@ const FamilyScreen = () => {
       return;
     }
 
-    if (!formData.name || !formData.relation) {
+    const name = formData.name.trim();
+    const relation = formData.relation;
+
+    if (!name || !relation) {
       toast.error("Name and relation are required");
       return;
     }
+
+    if (name.length > 100) {
+      toast.error("Name must be 100 characters or less");
+      return;
+    }
+
+    const phone = normalizePhone(formData.phone);
+    if (phone && !PHONE_REGEX.test(phone)) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    const medicalConditions = splitConditions(formData.medical_conditions);
+    if (medicalConditions && medicalConditions.length > 50) {
+      toast.error("Please enter up to 50 medical conditions");
+      return;
+    }
+
+    const gender = formData.gender && genders.includes(formData.gender) ? formData.gender : null;
+    const bloodGroup = formData.blood_group && bloodGroups.includes(formData.blood_group) ? formData.blood_group : null;
 
     setIsSubmitting(true);
 
     try {
       const memberData = {
         user_id: supabaseUserId,
-        name: formData.name,
-        relation: formData.relation,
-        gender: formData.gender || null,
+        name,
+        relation,
+        gender,
         date_of_birth: formData.date_of_birth || null,
-        blood_group: formData.blood_group || null,
-        phone: formData.phone || null,
-        medical_conditions: formData.medical_conditions
-          ? formData.medical_conditions.split(",").map((c) => c.trim())
-          : null,
-        is_primary: formData.relation === "Self",
+        blood_group: bloodGroup,
+        phone,
+        medical_conditions: medicalConditions,
+        is_primary: relation === "Self",
       };
 
       if (editingMember) {

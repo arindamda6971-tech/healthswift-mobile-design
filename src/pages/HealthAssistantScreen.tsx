@@ -27,6 +27,7 @@ const suggestedQuestions = [
 
 // Parse test recommendations from AI response
 const parseTestRecommendations = (content: string): TestRecommendation[] => {
+  if (typeof content !== "string") return [];
   const testPattern = /\[TEST:([^:]+):(\d+)\]/g;
   const tests: TestRecommendation[] = [];
   const seenNames = new Set<string>();
@@ -49,6 +50,7 @@ const parseTestRecommendations = (content: string): TestRecommendation[] => {
 
 // Format content by removing test tags and making text cleaner
 const formatContent = (content: string): string => {
+  if (typeof content !== "string") return "";
   return content.replace(/\[TEST:([^:]+):(\d+)\]/g, '$1');
 };
 
@@ -78,6 +80,21 @@ const HealthAssistantScreen = () => {
     });
     setAddedTests(prev => new Set(prev).add(test.name));
     toast.success(`${test.name} added to cart!`);
+  };
+
+  const handleChooseLab = (test: TestRecommendation) => {
+    // Build a minimal TestData shape expected by TestSelectionScreen
+    const stateTest = {
+      id: test.id,
+      name: test.name,
+      price: test.price,
+      original_price: null,
+      discount_percent: null,
+      report_time_hours: null,
+      sample_type: null,
+    };
+
+    navigate(`/test/select/${test.id}`, { state: { test: stateTest } });
   };
 
   const isTestInCart = (testName: string): boolean => {
@@ -147,10 +164,23 @@ const HealthAssistantScreen = () => {
               assistantContent += content;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: assistantContent,
-                };
+                // find last assistant message index
+                let lastAssistantIndex = -1;
+                for (let j = updated.length - 1; j >= 0; j--) {
+                  if (updated[j].role === "assistant") {
+                    lastAssistantIndex = j;
+                    break;
+                  }
+                }
+                if (lastAssistantIndex >= 0) {
+                  updated[lastAssistantIndex] = {
+                    role: "assistant",
+                    content: assistantContent,
+                  };
+                } else {
+                  // fallback: append assistant message
+                  updated.push({ role: "assistant", content: assistantContent });
+                }
                 return updated;
               });
             }
@@ -177,10 +207,21 @@ const HealthAssistantScreen = () => {
               assistantContent += content;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: assistantContent,
-                };
+                let lastAssistantIndex = -1;
+                for (let j = updated.length - 1; j >= 0; j--) {
+                  if (updated[j].role === "assistant") {
+                    lastAssistantIndex = j;
+                    break;
+                  }
+                }
+                if (lastAssistantIndex >= 0) {
+                  updated[lastAssistantIndex] = {
+                    role: "assistant",
+                    content: assistantContent,
+                  };
+                } else {
+                  updated.push({ role: "assistant", content: assistantContent });
+                }
                 return updated;
               });
             }
@@ -192,8 +233,17 @@ const HealthAssistantScreen = () => {
     } catch (error) {
       console.error("Chat error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to get response");
-      // Remove the empty assistant message if error
-      setMessages((prev) => prev.filter((m) => m.content !== ""));
+      // Remove the last assistant placeholder if it's empty, but keep user messages
+      setMessages((prev) => {
+        const copy = [...prev];
+        if (copy.length > 0) {
+          const last = copy[copy.length - 1];
+          if (last.role === "assistant" && (last.content === "" || last.content == null)) {
+            copy.pop();
+          }
+        }
+        return copy;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -219,52 +269,69 @@ const HealthAssistantScreen = () => {
   };
 
   const renderMessageContent = (message: Message) => {
-    if (message.role === "user") {
-      return <p className="text-sm whitespace-pre-wrap">{message.content}</p>;
-    }
+    try {
+      if (message.role === "user") {
+        return <p className="text-sm whitespace-pre-wrap">{String(message.content ?? "")}</p>;
+      }
 
-    const tests = parseTestRecommendations(message.content);
-    const formattedContent = formatContent(message.content);
+      const contentStr = String(message.content ?? "");
+      const tests = parseTestRecommendations(contentStr);
+      const formattedContent = formatContent(contentStr);
 
-    return (
-      <div>
-        <p className="text-sm whitespace-pre-wrap">{formattedContent}</p>
-        {tests.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Recommended Tests:</p>
-            <div className="flex flex-wrap gap-2">
-              {tests.map((test) => {
-                const inCart = isTestInCart(test.name);
-                return (
-                  <Button
-                    key={test.id}
-                    variant={inCart ? "outline" : "default"}
-                    size="sm"
-                    className="h-auto py-2 px-3 text-xs"
-                    onClick={() => !inCart && handleAddToCart(test)}
-                    disabled={inCart}
-                  >
-                    {inCart ? (
-                      <Check className="w-3 h-3 mr-1" />
-                    ) : (
-                      <ShoppingCart className="w-3 h-3 mr-1" />
-                    )}
-                    {test.name} - ₹{test.price}
-                    {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
-                  </Button>
-                );
-              })}
+      return (
+        <div>
+          <p className="text-sm whitespace-pre-wrap">{formattedContent}</p>
+          {tests.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Recommended Tests:</p>
+              <div className="flex flex-wrap gap-2">
+                {tests.map((test) => {
+                  const inCart = isTestInCart(test.name);
+                  return (
+                    <div key={test.id} className="flex items-center gap-2">
+                      <Button
+                        variant={inCart ? "outline" : "default"}
+                        size="sm"
+                        className="h-auto py-2 px-3 text-xs"
+                        onClick={() => handleChooseLab(test)}
+                      >
+                        {inCart ? (
+                          <Check className="w-3 h-3 mr-1" />
+                        ) : (
+                          <Building2 className="w-3 h-3 mr-1" />
+                        )}
+                        {test.name} - ₹{test.price}
+                        {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto py-2 px-3 text-xs"
+                        onClick={() => !inCart && handleAddToCart(test)}
+                        disabled={inCart}
+                      >
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-        {message.content === "" && isLoading && (
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-xs text-muted-foreground">Thinking...</span>
-          </div>
-        )}
-      </div>
-    );
+          )}
+          {message.content === "" && isLoading && (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs text-muted-foreground">Thinking...</span>
+            </div>
+          )}
+        </div>
+      );
+    } catch (err) {
+      console.error("renderMessageContent error:", err);
+      return <p className="text-sm text-destructive">Unable to render message.</p>;
+    }
   };
 
   return (

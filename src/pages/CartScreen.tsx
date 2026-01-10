@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart } from "lucide-react";
+import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { Tables } from "@/integrations/supabase/types";
+
+type FamilyMember = Tables<"family_members">;
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -17,10 +29,52 @@ const paymentMethods = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
+  const { items, updateQuantity, removeFromCart, updateFamilyMember, subtotal } = useCart();
+  const { supabaseUserId } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [couponApplied, setCouponApplied] = useState(false);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFamilyMembers = async () => {
+      if (!supabaseUserId) {
+        setLoadingMembers(false);
+        return;
+      }
+      
+      setLoadingMembers(true);
+      setMembersError(null);
+      
+      try {
+        const { data, error } = await supabase
+          .from("family_members")
+          .select("*")
+          .eq("user_id", supabaseUserId)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching family members:", error);
+          setMembersError(error.message);
+          setFamilyMembers([]);
+        } else if (data) {
+          setFamilyMembers(data);
+        } else {
+          setFamilyMembers([]);
+        }
+      } catch (err) {
+        console.error("Exception fetching family members:", err);
+        setMembersError(err instanceof Error ? err.message : "Unknown error");
+        setFamilyMembers([]);
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    fetchFamilyMembers();
+  }, [supabaseUserId]);
 
   const discount = couponApplied ? 100 : 0;
   const total = subtotal - discount;
@@ -31,7 +85,7 @@ const CartScreen = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <MobileLayout>
         <ScreenHeader title="Your Cart" />
@@ -64,48 +118,72 @@ const CartScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-3 mt-4"
         >
-          {items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="soft-card"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
-                  {item.labName && (
-                    <p className="text-xs text-muted-foreground mt-1">Booked from: {item.labName}</p>
-                  )}
-                  <p className="text-primary font-bold mt-1">₹{item.price}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1">
+          {items && items.length > 0 ? (
+            items.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="soft-card"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
+                    {item.labName && (
+                      <p className="text-xs text-muted-foreground mt-1">Booked from: {item.labName}</p>
+                    )}
+                    <p className="text-primary font-bold mt-1">₹{item.price}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1">
+                      <button
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="w-6 h-6 rounded flex items-center justify-center"
+                      >
+                        <Minus className="w-3 h-3 text-foreground" />
+                      </button>
+                      <span className="w-4 text-center text-sm font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="w-6 h-6 rounded flex items-center justify-center"
+                      >
+                        <Plus className="w-3 h-3 text-foreground" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="w-6 h-6 rounded flex items-center justify-center"
+                      onClick={() => removeFromCart(item.id)}
+                      className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
                     >
-                      <Minus className="w-3 h-3 text-foreground" />
-                    </button>
-                    <span className="w-4 text-center text-sm font-medium">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="w-6 h-6 rounded flex items-center justify-center"
-                    >
-                      <Plus className="w-3 h-3 text-foreground" />
+                      <Trash2 className="w-4 h-4 text-destructive" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+
+                {!loadingMembers && familyMembers && familyMembers.length > 0 && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-border">
+                    <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <Select
+                      value={item.familyMemberId || "none"}
+                      onValueChange={(value) => updateFamilyMember(item.id, value === "none" ? undefined : value)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Assign to family member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {familyMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </motion.div>
+            ))
+          ) : null}
         </motion.div>
 
         {/* Coupon section */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Phone,
@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/contexts/CartContext";
 
 const phlebotomist = {
   name: "Rahul Sharma",
@@ -35,7 +38,66 @@ const trackingSteps = [
 
 const TrackingScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { supabaseUserId } = useAuth();
+  const { items: cartItems, clearCart } = useCart();
   const [eta, setEta] = useState(12);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const createOrder = async () => {
+      if (isCreatingOrder || orderId) return;
+
+      const stateCartItems = (location.state as any)?.cartItems || cartItems;
+      if (!stateCartItems || stateCartItems.length === 0 || !supabaseUserId) return;
+
+      setIsCreatingOrder(true);
+      try {
+        // Create order
+        const { data: orderData, error: orderError } = await supabase
+          .from("orders")
+          .insert({
+            user_id: supabaseUserId,
+            subtotal: stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0),
+            total: stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0),
+            status: "pending",
+            payment_status: "pending",
+          })
+          .select()
+          .single();
+
+        if (orderError) throw orderError;
+
+        setOrderId(orderData.id);
+
+        // Create order items with family_member_id
+        const orderItems = stateCartItems.map((item: any) => ({
+          order_id: orderData.id,
+          test_id: item.id,
+          package_id: item.packageId || null,
+          quantity: item.quantity,
+          price: item.price,
+          family_member_id: item.familyMemberId || null,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+
+        if (itemsError) throw itemsError;
+
+        // Clear cart after successful order creation
+        clearCart();
+      } catch (error) {
+        console.error("Error creating order:", error);
+      } finally {
+        setIsCreatingOrder(false);
+      }
+    };
+
+    createOrder();
+  }, [supabaseUserId, location.state, isCreatingOrder, orderId, cartItems, clearCart]);
 
   useEffect(() => {
     const timer = setInterval(() => {

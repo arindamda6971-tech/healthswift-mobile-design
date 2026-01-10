@@ -27,6 +27,7 @@ const suggestedQuestions = [
 
 // Parse test recommendations from AI response
 const parseTestRecommendations = (content: string): TestRecommendation[] => {
+  if (typeof content !== "string") return [];
   const testPattern = /\[TEST:([^:]+):(\d+)\]/g;
   const tests: TestRecommendation[] = [];
   const seenNames = new Set<string>();
@@ -49,6 +50,7 @@ const parseTestRecommendations = (content: string): TestRecommendation[] => {
 
 // Format content by removing test tags and making text cleaner
 const formatContent = (content: string): string => {
+  if (typeof content !== "string") return "";
   return content.replace(/\[TEST:([^:]+):(\d+)\]/g, '$1');
 };
 
@@ -207,8 +209,17 @@ const HealthAssistantScreen = () => {
     } catch (error) {
       console.error("Chat error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to get response");
-      // Remove the empty assistant message if error
-      setMessages((prev) => prev.filter((m) => m.content !== ""));
+      // Remove the last assistant placeholder if it's empty, but keep user messages
+      setMessages((prev) => {
+        const copy = [...prev];
+        if (copy.length > 0) {
+          const last = copy[copy.length - 1];
+          if (last.role === "assistant" && (last.content === "" || last.content == null)) {
+            copy.pop();
+          }
+        }
+        return copy;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -235,11 +246,12 @@ const HealthAssistantScreen = () => {
 
   const renderMessageContent = (message: Message) => {
     if (message.role === "user") {
-      return <p className="text-sm whitespace-pre-wrap">{message.content}</p>;
+      return <p className="text-sm whitespace-pre-wrap">{String(message.content ?? "")}</p>;
     }
 
-    const tests = parseTestRecommendations(message.content);
-    const formattedContent = formatContent(message.content);
+    const contentStr = String(message.content ?? "");
+    const tests = parseTestRecommendations(contentStr);
+    const formattedContent = formatContent(contentStr);
 
     return (
       <div>

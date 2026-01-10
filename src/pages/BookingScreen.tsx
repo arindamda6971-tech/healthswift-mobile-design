@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useCart } from "@/contexts/CartContext";
 
 const addresses = [
   { id: 1, type: "Home", address: "123 Main Street, Apartment 4B, Mumbai 400001", isDefault: true },
@@ -39,6 +40,7 @@ const familyMembers = [
 
 const BookingScreen = () => {
   const navigate = useNavigate();
+  const { items: cartItems } = useCart();
   const [selectedAddress, setSelectedAddress] = useState(1);
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedTime, setSelectedTime] = useState(2);
@@ -227,7 +229,15 @@ const BookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          onClick={() => navigate("/tracking")}
+          onClick={() => navigate("/tracking", { 
+            state: { 
+              cartItems: cartItems,
+              selectedAddress,
+              selectedDate,
+              selectedTime,
+              selectedMember
+            } 
+          })}
         >
           Confirm Booking
         </Button>

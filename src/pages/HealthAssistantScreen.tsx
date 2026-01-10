@@ -80,6 +80,21 @@ const HealthAssistantScreen = () => {
     toast.success(`${test.name} added to cart!`);
   };
 
+  const handleChooseLab = (test: TestRecommendation) => {
+    // Build a minimal TestData shape expected by TestSelectionScreen
+    const stateTest = {
+      id: test.id,
+      name: test.name,
+      price: test.price,
+      original_price: null,
+      discount_percent: null,
+      report_time_hours: null,
+      sample_type: null,
+    };
+
+    navigate(`/test/select/${test.id}`, { state: { test: stateTest } });
+  };
+
   const isTestInCart = (testName: string): boolean => {
     return addedTests.has(testName) || items.some(item => 
       item.name.toLowerCase() === testName.toLowerCase()
@@ -236,22 +251,33 @@ const HealthAssistantScreen = () => {
               {tests.map((test) => {
                 const inCart = isTestInCart(test.name);
                 return (
-                  <Button
-                    key={test.id}
-                    variant={inCart ? "outline" : "default"}
-                    size="sm"
-                    className="h-auto py-2 px-3 text-xs"
-                    onClick={() => !inCart && handleAddToCart(test)}
-                    disabled={inCart}
-                  >
-                    {inCart ? (
-                      <Check className="w-3 h-3 mr-1" />
-                    ) : (
+                  <div key={test.id} className="flex items-center gap-2">
+                    <Button
+                      variant={inCart ? "outline" : "default"}
+                      size="sm"
+                      className="h-auto py-2 px-3 text-xs"
+                      onClick={() => handleChooseLab(test)}
+                    >
+                      {inCart ? (
+                        <Check className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Building2 className="w-3 h-3 mr-1" />
+                      )}
+                      {test.name} - ₹{test.price}
+                      {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-auto py-2 px-3 text-xs"
+                      onClick={() => !inCart && handleAddToCart(test)}
+                      disabled={inCart}
+                    >
                       <ShoppingCart className="w-3 h-3 mr-1" />
-                    )}
-                    {test.name} - ₹{test.price}
-                    {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
-                  </Button>
+                      Add
+                    </Button>
+                  </div>
                 );
               })}
             </div>

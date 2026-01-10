@@ -31,8 +31,6 @@ const CartScreen = () => {
     }
   };
 
-  const [showDebug, setShowDebug] = useState(false);
-
   if (items.length === 0) {
     return (
       <MobileLayout>
@@ -49,15 +47,7 @@ const CartScreen = () => {
             <Button onClick={() => navigate("/categories") }>
               Browse Tests
             </Button>
-            <Button variant="outline" onClick={() => setShowDebug((s) => !s)}>
-              {showDebug ? "Hide debug" : "Show debug"}
-            </Button>
           </div>
-          {showDebug && (
-            <pre className="mt-4 p-3 bg-muted text-xs rounded max-w-full overflow-auto w-full text-left">{
-              JSON.stringify({ items, storage: localStorage.getItem("healthswift-cart") }, null, 2)
-            }</pre>
-          )}
         </div>
       </MobileLayout>
     );

@@ -2,15 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Download,
-  Sparkles,
   Calendar,
   FileText,
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
@@ -57,19 +54,6 @@ const reports = [
 const ReportsScreen = () => {
   const navigate = useNavigate();
   const [selectedReport, setSelectedReport] = useState<number | null>(null);
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return "softSuccess";
-      case "medium":
-        return "softWarning";
-      case "high":
-        return "softDestructive";
-      default:
-        return "soft";
-    }
-  };
 
   const getRiskIcon = (risk: string) => {
     switch (risk) {
@@ -125,21 +109,6 @@ const ReportsScreen = () => {
                           {report.date}
                         </p>
                       </div>
-                    </div>
-                    <Badge variant={getRiskColor(report.riskLevel) as any}>
-                      {report.riskLevel === "low" ? "Normal" : report.riskLevel === "medium" ? "Attention" : "Alert"}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-end">
-                    <div className="flex gap-2">
-                      <Button variant="soft" size="sm" className="h-8 px-3">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        AI Summary
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Download className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
                 </motion.div>

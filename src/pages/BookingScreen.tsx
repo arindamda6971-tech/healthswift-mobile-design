@@ -5,7 +5,6 @@ import {
   MapPin,
   Clock,
   Calendar,
-  User,
   Plus,
   ChevronRight,
   Navigation,
@@ -32,19 +31,12 @@ const timeSlots = [
   { id: 8, time: "8:00 PM - 10:00 PM", available: true, phlebotomists: 2 },
 ];
 
-const familyMembers = [
-  { id: 1, name: "You", relation: "Self", age: 28 },
-  { id: 2, name: "Priya", relation: "Wife", age: 26 },
-  { id: 3, name: "Dad", relation: "Father", age: 58 },
-];
-
 const BookingScreen = () => {
   const navigate = useNavigate();
   const { items: cartItems } = useCart();
   const [selectedAddress, setSelectedAddress] = useState(1);
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedTime, setSelectedTime] = useState(2);
-  const [selectedMember, setSelectedMember] = useState(1);
 
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -110,40 +102,6 @@ const BookingScreen = () => {
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{addr.address}</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Family member selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-6"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-foreground">Patient</h3>
-            <button className="flex items-center gap-1 text-primary text-sm font-medium">
-              <Plus className="w-4 h-4" /> Add Member
-            </button>
-          </div>
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-            {familyMembers.map((member) => (
-              <button
-                key={member.id}
-                onClick={() => setSelectedMember(member.id)}
-                className={`flex-shrink-0 soft-card flex flex-col items-center gap-2 min-w-[100px] transition-all ${
-                  selectedMember === member.id ? "ring-2 ring-primary" : ""
-                }`}
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-foreground text-sm">{member.name}</p>
-                  <p className="text-xs text-muted-foreground">{member.relation}</p>
-                </div>
               </button>
             ))}
           </div>

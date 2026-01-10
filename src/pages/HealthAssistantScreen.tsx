@@ -164,10 +164,23 @@ const HealthAssistantScreen = () => {
               assistantContent += content;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: assistantContent,
-                };
+                // find last assistant message index
+                let lastAssistantIndex = -1;
+                for (let j = updated.length - 1; j >= 0; j--) {
+                  if (updated[j].role === "assistant") {
+                    lastAssistantIndex = j;
+                    break;
+                  }
+                }
+                if (lastAssistantIndex >= 0) {
+                  updated[lastAssistantIndex] = {
+                    role: "assistant",
+                    content: assistantContent,
+                  };
+                } else {
+                  // fallback: append assistant message
+                  updated.push({ role: "assistant", content: assistantContent });
+                }
                 return updated;
               });
             }
@@ -194,10 +207,21 @@ const HealthAssistantScreen = () => {
               assistantContent += content;
               setMessages((prev) => {
                 const updated = [...prev];
-                updated[updated.length - 1] = {
-                  role: "assistant",
-                  content: assistantContent,
-                };
+                let lastAssistantIndex = -1;
+                for (let j = updated.length - 1; j >= 0; j--) {
+                  if (updated[j].role === "assistant") {
+                    lastAssistantIndex = j;
+                    break;
+                  }
+                }
+                if (lastAssistantIndex >= 0) {
+                  updated[lastAssistantIndex] = {
+                    role: "assistant",
+                    content: assistantContent,
+                  };
+                } else {
+                  updated.push({ role: "assistant", content: assistantContent });
+                }
                 return updated;
               });
             }
@@ -245,64 +269,69 @@ const HealthAssistantScreen = () => {
   };
 
   const renderMessageContent = (message: Message) => {
-    if (message.role === "user") {
-      return <p className="text-sm whitespace-pre-wrap">{String(message.content ?? "")}</p>;
-    }
+    try {
+      if (message.role === "user") {
+        return <p className="text-sm whitespace-pre-wrap">{String(message.content ?? "")}</p>;
+      }
 
-    const contentStr = String(message.content ?? "");
-    const tests = parseTestRecommendations(contentStr);
-    const formattedContent = formatContent(contentStr);
+      const contentStr = String(message.content ?? "");
+      const tests = parseTestRecommendations(contentStr);
+      const formattedContent = formatContent(contentStr);
 
-    return (
-      <div>
-        <p className="text-sm whitespace-pre-wrap">{formattedContent}</p>
-        {tests.length > 0 && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Recommended Tests:</p>
-            <div className="flex flex-wrap gap-2">
-              {tests.map((test) => {
-                const inCart = isTestInCart(test.name);
-                return (
-                  <div key={test.id} className="flex items-center gap-2">
-                    <Button
-                      variant={inCart ? "outline" : "default"}
-                      size="sm"
-                      className="h-auto py-2 px-3 text-xs"
-                      onClick={() => handleChooseLab(test)}
-                    >
-                      {inCart ? (
-                        <Check className="w-3 h-3 mr-1" />
-                      ) : (
-                        <Building2 className="w-3 h-3 mr-1" />
-                      )}
-                      {test.name} - ₹{test.price}
-                      {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
-                    </Button>
+      return (
+        <div>
+          <p className="text-sm whitespace-pre-wrap">{formattedContent}</p>
+          {tests.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Recommended Tests:</p>
+              <div className="flex flex-wrap gap-2">
+                {tests.map((test) => {
+                  const inCart = isTestInCart(test.name);
+                  return (
+                    <div key={test.id} className="flex items-center gap-2">
+                      <Button
+                        variant={inCart ? "outline" : "default"}
+                        size="sm"
+                        className="h-auto py-2 px-3 text-xs"
+                        onClick={() => handleChooseLab(test)}
+                      >
+                        {inCart ? (
+                          <Check className="w-3 h-3 mr-1" />
+                        ) : (
+                          <Building2 className="w-3 h-3 mr-1" />
+                        )}
+                        {test.name} - ₹{test.price}
+                        {inCart && <span className="ml-1 text-muted-foreground">(Added)</span>}
+                      </Button>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-auto py-2 px-3 text-xs"
-                      onClick={() => !inCart && handleAddToCart(test)}
-                      disabled={inCart}
-                    >
-                      <ShoppingCart className="w-3 h-3 mr-1" />
-                      Add
-                    </Button>
-                  </div>
-                );
-              })}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-auto py-2 px-3 text-xs"
+                        onClick={() => !inCart && handleAddToCart(test)}
+                        disabled={inCart}
+                      >
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-        {message.content === "" && isLoading && (
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-xs text-muted-foreground">Thinking...</span>
-          </div>
-        )}
-      </div>
-    );
+          )}
+          {message.content === "" && isLoading && (
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs text-muted-foreground">Thinking...</span>
+            </div>
+          )}
+        </div>
+      );
+    } catch (err) {
+      console.error("renderMessageContent error:", err);
+      return <p className="text-sm text-destructive">Unable to render message.</p>;
+    }
   };
 
   return (

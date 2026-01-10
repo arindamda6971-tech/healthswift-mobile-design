@@ -75,7 +75,6 @@ const App = () => (
                   <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
                   <Route path="/edit-profile" element={<ProtectedRoute><EditProfileScreen /></ProtectedRoute>} />
                   <Route path="/saved-addresses" element={<ProtectedRoute><SavedAddressesScreen /></ProtectedRoute>} />
-                  <Route path="/medical-history" element={<ProtectedRoute><MedicalHistoryScreen /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
                   <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />
                   <Route path="/health-score" element={<ProtectedRoute><HealthScoreScreen /></ProtectedRoute>} />

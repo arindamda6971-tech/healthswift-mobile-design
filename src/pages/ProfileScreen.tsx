@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import {
   User,
   ChevronRight,
-  FileText,
   MapPin,
-  Users,
   Crown,
   Gift,
   HelpCircle,
@@ -25,9 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const menuItems = [
-  { icon: FileText, label: "Medical History", path: "/medical-history", badge: null },
   { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
-  { icon: Users, label: "Family Members", path: "/family", badge: "3" },
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
   { icon: Gift, label: "Rewards & Referrals", path: "/rewards", badge: "₹500" },
   { icon: HelpCircle, label: "Help & Support", path: "/support", badge: null },

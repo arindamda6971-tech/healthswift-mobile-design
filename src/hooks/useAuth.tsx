@@ -22,13 +22,8 @@ declare global {
   }
 }
 
-// Extended user type that includes Supabase UUID
-interface ExtendedUser extends User {
-  supabaseId?: string;
-}
-
 // Bridge Firebase auth to Supabase for RLS to work
-const bridgeFirebaseToSupabase = async (firebaseUser: User): Promise<string | null> => {
+const bridgeFirebaseToSupabase = async (firebaseUser: User) => {
   try {
     const idToken = await firebaseUser.getIdToken();
     
@@ -38,7 +33,7 @@ const bridgeFirebaseToSupabase = async (firebaseUser: User): Promise<string | nu
 
     if (error) {
       console.error('Firebase-Supabase bridge error:', error);
-      return null;
+      return;
     }
 
     // If we got a magic link, complete the Supabase auth
@@ -57,20 +52,14 @@ const bridgeFirebaseToSupabase = async (firebaseUser: User): Promise<string | nu
     }
 
     console.log('Firebase-Supabase bridge successful');
-    
-    // Get the Supabase user ID after bridging
-    const { data: sessionData } = await supabase.auth.getSession();
-    return sessionData?.session?.user?.id || null;
   } catch (error) {
     console.error('Error bridging Firebase to Supabase:', error);
-    return null;
   }
 };
 
 interface AuthContextType {
-  user: ExtendedUser | null;
+  user: User | null;
   loading: boolean;
-  supabaseUserId: string | null;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signInWithPhone: (phone: string) => Promise<{ error: Error | null }>;
@@ -82,28 +71,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+      
+      // Bridge to Supabase when user signs in
       if (firebaseUser) {
-        // Bridge to Supabase when user signs in
-        const supabaseId = await bridgeFirebaseToSupabase(firebaseUser);
-        setSupabaseUserId(supabaseId);
-        
-        // Create extended user with supabaseId
-        const extendedUser = firebaseUser as ExtendedUser;
-        extendedUser.supabaseId = supabaseId || undefined;
-        setUser(extendedUser);
+        await bridgeFirebaseToSupabase(firebaseUser);
       } else {
         // Sign out of Supabase when Firebase user signs out
         await supabase.auth.signOut();
-        setUser(null);
-        setSupabaseUserId(null);
       }
-      setLoading(false);
     });
 
     // Safety timeout to prevent infinite loading
@@ -118,17 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
-
-  // Also check for existing Supabase session on mount
-  useEffect(() => {
-    const checkSupabaseSession = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session?.user?.id) {
-        setSupabaseUserId(sessionData.session.user.id);
-      }
-    };
-    checkSupabaseSession();
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -219,7 +190,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         loading,
-        supabaseUserId,
         signInWithEmail,
         signUpWithEmail,
         signInWithPhone,

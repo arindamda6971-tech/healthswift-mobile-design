@@ -55,7 +55,7 @@ const relations = ["Self", "Spouse", "Father", "Mother", "Son", "Daughter", "Bro
 
 const FamilyScreen = () => {
   const navigate = useNavigate();
-  const { user, supabaseUserId } = useAuth();
+  const { user } = useAuth();
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -88,16 +88,13 @@ const FamilyScreen = () => {
   };
 
   const fetchFamilyMembers = async () => {
-    if (!supabaseUserId) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
     
     try {
       const { data, error } = await supabase
         .from("family_members")
         .select("*")
-        .eq("user_id", supabaseUserId)
+        .eq("user_id", user.uid)
         .order("is_primary", { ascending: false })
         .order("created_at", { ascending: true });
 
@@ -113,11 +110,11 @@ const FamilyScreen = () => {
 
   useEffect(() => {
     fetchFamilyMembers();
-  }, [supabaseUserId]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabaseUserId) {
+    if (!user) {
       toast.error("Please login to add family members");
       return;
     }
@@ -131,7 +128,7 @@ const FamilyScreen = () => {
 
     try {
       const memberData = {
-        user_id: supabaseUserId,
+        user_id: user.uid,
         name: formData.name,
         relation: formData.relation,
         gender: formData.gender || null,

@@ -25,12 +25,13 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  // Use sessionStorage for sensitive health notifications - clears when browser tab closes
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = localStorage.getItem("healthswift-notifications");
+    const stored = sessionStorage.getItem("healthswift-notifications");
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Auto-expire old notifications (7 days) and save to localStorage
+  // Auto-expire old notifications (7 days) and save to sessionStorage
   useEffect(() => {
     const MAX_NOTIFICATION_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
     const now = Date.now();
@@ -44,7 +45,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setNotifications(filtered);
     }
     
-    localStorage.setItem("healthswift-notifications", JSON.stringify(filtered));
+    sessionStorage.setItem("healthswift-notifications", JSON.stringify(filtered));
   }, [notifications]);
 
   // Listen for new orders in real-time

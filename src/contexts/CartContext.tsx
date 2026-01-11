@@ -24,14 +24,15 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  // Use sessionStorage for sensitive health data - clears when browser tab closes
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem("healthswift-cart");
+    const saved = sessionStorage.getItem("healthswift-cart");
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    console.log("Cart items changed, saving to localStorage:", items);
-    localStorage.setItem("healthswift-cart", JSON.stringify(items));
+    if (import.meta.env.DEV) console.log("Cart items changed, saving to sessionStorage:", items);
+    sessionStorage.setItem("healthswift-cart", JSON.stringify(items));
   }, [items]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {

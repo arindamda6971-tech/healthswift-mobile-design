@@ -211,9 +211,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Clear sensitive localStorage data to prevent health information exposure on shared devices
-    localStorage.removeItem('healthswift-notifications');
-    localStorage.removeItem('healthswift-cart');
+    // Clear sensitive sessionStorage data (used for health data on shared devices)
+    sessionStorage.removeItem('healthswift-notifications');
+    sessionStorage.removeItem('healthswift-cart');
+    sessionStorage.removeItem('saved_addresses');
+    
+    // Clear non-sensitive localStorage items
     localStorage.removeItem('healthswift-theme');
     localStorage.removeItem('healthswift-pwa-install-dismissed');
     

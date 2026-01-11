@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAddresses } from "@/contexts/AddressContext";
 
 const menuItems = [
   { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
@@ -61,6 +62,8 @@ const ProfileScreen = () => {
       toast.error("Failed to log out");
     }
   };
+
+  const { addresses, defaultAddressId } = useAddresses();
 
   const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
   const contactInfo = user?.phoneNumber || user?.email || "";
@@ -150,10 +153,16 @@ const ProfileScreen = () => {
                 <item.icon className="w-5 h-5 text-foreground" />
               </div>
               <span className="flex-1 text-left font-medium text-foreground">{item.label}</span>
-              {item.badge && (
-                <Badge variant={item.badge === "New" ? "soft" : item.badge.includes("₹") ? "softSuccess" : "secondary"}>
-                  {item.badge}
+              {item.label === "Saved Addresses" ? (
+                <Badge variant={addresses.length > 0 ? "softSuccess" : "secondary"}>
+                  {addresses.length > 0 ? `${addresses.length} saved` : "No saved"}
                 </Badge>
+              ) : (
+                item.badge && (
+                  <Badge variant={item.badge === "New" ? "soft" : item.badge.includes("₹") ? "softSuccess" : "secondary"}>
+                    {item.badge}
+                  </Badge>
+                )
               )}
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </motion.button>

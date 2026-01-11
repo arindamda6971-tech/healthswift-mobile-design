@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart, User } from "lucide-react";
+import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Tables } from "@/integrations/supabase/types";
 
-type FamilyMember = Tables<"family_members">;
+type Address = Tables<"addresses">;
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -29,51 +29,53 @@ const paymentMethods = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, updateFamilyMember, subtotal } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
   const { supabaseUserId } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [couponApplied, setCouponApplied] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [membersError, setMembersError] = useState<string | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   useEffect(() => {
-    const fetchFamilyMembers = async () => {
+    const fetchAddresses = async () => {
       if (!supabaseUserId) {
-        setLoadingMembers(false);
+        setLoadingAddresses(false);
         return;
       }
       
-      setLoadingMembers(true);
-      setMembersError(null);
+      setLoadingAddresses(true);
       
       try {
         const { data, error } = await supabase
-          .from("family_members")
+          .from("addresses")
           .select("*")
           .eq("user_id", supabaseUserId)
-          .order("created_at", { ascending: false });
+          .order("is_default", { ascending: false });
 
         if (error) {
-          if (import.meta.env.DEV) console.error("Error fetching family members:", error);
-          setMembersError("Unable to load family members. Please try again.");
-          setFamilyMembers([]);
+          if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
+          setAddresses([]);
         } else if (data) {
-          setFamilyMembers(data);
+          setAddresses(data);
+          // Auto-select default address or first address
+          const defaultAddress = data.find(addr => addr.is_default) || data[0];
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id);
+          }
         } else {
-          setFamilyMembers([]);
+          setAddresses([]);
         }
       } catch (err) {
-        if (import.meta.env.DEV) console.error("Exception fetching family members:", err);
-        setMembersError("Unable to load family members. Please try again.");
-        setFamilyMembers([]);
+        if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
+        setAddresses([]);
       } finally {
-        setLoadingMembers(false);
+        setLoadingAddresses(false);
       }
     };
 
-    fetchFamilyMembers();
+    fetchAddresses();
   }, [supabaseUserId]);
 
   const discount = couponApplied ? 100 : 0;
@@ -127,7 +129,7 @@ const CartScreen = () => {
                 transition={{ delay: index * 0.1 }}
                 className="soft-card"
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
                     {item.labName && (
@@ -159,31 +161,94 @@ const CartScreen = () => {
                     </button>
                   </div>
                 </div>
-
-                {!loadingMembers && familyMembers && familyMembers.length > 0 && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-border">
-                    <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <Select
-                      value={item.familyMemberId || "none"}
-                      onValueChange={(value) => updateFamilyMember(item.id, value === "none" ? undefined : value)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Assign to family member" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Unassigned</SelectItem>
-                        {familyMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
               </motion.div>
             ))
           ) : null}
+        </motion.div>
+
+        {/* Select Address Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-6"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground">Select Address</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary text-xs h-auto p-0"
+              onClick={() => navigate("/saved-addresses")}
+            >
+              Manage
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+          
+          {loadingAddresses ? (
+            <div className="soft-card">
+              <p className="text-sm text-muted-foreground">Loading addresses...</p>
+            </div>
+          ) : addresses.length === 0 ? (
+            <div className="soft-card">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">No addresses saved</p>
+                </div>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  onClick={() => navigate("/saved-addresses")}
+                >
+                  Add New
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {addresses.map((address) => (
+                <button
+                  key={address.id}
+                  onClick={() => setSelectedAddressId(address.id)}
+                  className={`w-full soft-card flex items-start gap-3 transition-all text-left ${
+                    selectedAddressId === address.id
+                      ? "ring-2 ring-primary"
+                      : ""
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground text-sm capitalize">{address.type || "Home"}</p>
+                      {address.is_default && (
+                        <Badge variant="soft" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {address.address_line1}
+                      {address.address_line2 && `, ${address.address_line2}`}
+                      , {address.city}, {address.state} - {address.pincode}
+                    </p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${
+                    selectedAddressId === address.id
+                      ? "border-primary bg-primary"
+                      : "border-muted-foreground"
+                  } flex items-center justify-center`}>
+                    {selectedAddressId === address.id && (
+                      <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Coupon section */}
@@ -304,7 +369,8 @@ const CartScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          onClick={() => navigate("/book")}
+          onClick={() => navigate("/book", { state: { selectedAddressId } })}
+          disabled={!selectedAddressId && addresses.length > 0}
         >
           Proceed to Book • ₹{total}
         </Button>

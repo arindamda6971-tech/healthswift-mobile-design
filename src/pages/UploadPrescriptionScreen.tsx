@@ -102,8 +102,8 @@ const UploadPrescriptionScreen = () => {
       });
 
       if (error) {
-        console.error("Error analyzing prescription:", error);
-        toast.error(error.message || "Failed to analyze prescription");
+        if (import.meta.env.DEV) console.error("Error analyzing prescription:", error);
+        toast.error("Failed to analyze prescription. Please try again.");
         setIsAnalyzing(false);
         return;
       }

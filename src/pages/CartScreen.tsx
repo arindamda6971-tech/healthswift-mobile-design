@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart } from "lucide-react";
+import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart, MapPin, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Address = Tables<"addresses">;
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -18,9 +30,53 @@ const paymentMethods = [
 const CartScreen = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, subtotal } = useCart();
+  const { supabaseUserId } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("upi");
   const [couponApplied, setCouponApplied] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!supabaseUserId) {
+        setLoadingAddresses(false);
+        return;
+      }
+      
+      setLoadingAddresses(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from("addresses")
+          .select("*")
+          .eq("user_id", supabaseUserId)
+          .order("is_default", { ascending: false });
+
+        if (error) {
+          if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
+          setAddresses([]);
+        } else if (data) {
+          setAddresses(data);
+          // Auto-select default address or first address
+          const defaultAddress = data.find(addr => addr.is_default) || data[0];
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id);
+          }
+        } else {
+          setAddresses([]);
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
+        setAddresses([]);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [supabaseUserId]);
 
   const discount = couponApplied ? 100 : 0;
   const total = subtotal - discount;
@@ -31,7 +87,7 @@ const CartScreen = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <MobileLayout>
         <ScreenHeader title="Your Cart" />
@@ -64,48 +120,135 @@ const CartScreen = () => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-3 mt-4"
         >
-          {items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="soft-card"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
-                  {item.labName && (
-                    <p className="text-xs text-muted-foreground mt-1">Booked from: {item.labName}</p>
-                  )}
-                  <p className="text-primary font-bold mt-1">₹{item.price}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1">
+          {items && items.length > 0 ? (
+            items.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="soft-card"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground text-sm">{item.name}</h3>
+                    {item.labName && (
+                      <p className="text-xs text-muted-foreground mt-1">Booked from: {item.labName}</p>
+                    )}
+                    <p className="text-primary font-bold mt-1">₹{item.price}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-muted rounded-lg px-2 py-1">
+                      <button
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="w-6 h-6 rounded flex items-center justify-center"
+                      >
+                        <Minus className="w-3 h-3 text-foreground" />
+                      </button>
+                      <span className="w-4 text-center text-sm font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="w-6 h-6 rounded flex items-center justify-center"
+                      >
+                        <Plus className="w-3 h-3 text-foreground" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="w-6 h-6 rounded flex items-center justify-center"
+                      onClick={() => removeFromCart(item.id)}
+                      className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
                     >
-                      <Minus className="w-3 h-3 text-foreground" />
-                    </button>
-                    <span className="w-4 text-center text-sm font-medium">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="w-6 h-6 rounded flex items-center justify-center"
-                    >
-                      <Plus className="w-3 h-3 text-foreground" />
+                      <Trash2 className="w-4 h-4 text-destructive" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center"
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </button>
                 </div>
+              </motion.div>
+            ))
+          ) : null}
+        </motion.div>
+
+        {/* Select Address Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-6"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground">Select Address</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary text-xs h-auto p-0"
+              onClick={() => navigate("/saved-addresses")}
+            >
+              Manage
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+          
+          {loadingAddresses ? (
+            <div className="soft-card">
+              <p className="text-sm text-muted-foreground">Loading addresses...</p>
+            </div>
+          ) : addresses.length === 0 ? (
+            <div className="soft-card">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">No addresses saved</p>
+                </div>
+                <Button
+                  variant="soft"
+                  size="sm"
+                  onClick={() => navigate("/saved-addresses")}
+                >
+                  Add New
+                </Button>
               </div>
-            </motion.div>
-          ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {addresses.map((address) => (
+                <button
+                  key={address.id}
+                  onClick={() => setSelectedAddressId(address.id)}
+                  className={`w-full soft-card flex items-start gap-3 transition-all text-left ${
+                    selectedAddressId === address.id
+                      ? "ring-2 ring-primary"
+                      : ""
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground text-sm capitalize">{address.type || "Home"}</p>
+                      {address.is_default && (
+                        <Badge variant="soft" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {address.address_line1}
+                      {address.address_line2 && `, ${address.address_line2}`}
+                      , {address.city}, {address.state} - {address.pincode}
+                    </p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 ${
+                    selectedAddressId === address.id
+                      ? "border-primary bg-primary"
+                      : "border-muted-foreground"
+                  } flex items-center justify-center`}>
+                    {selectedAddressId === address.id && (
+                      <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Coupon section */}
@@ -226,7 +369,8 @@ const CartScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          onClick={() => navigate("/book")}
+          onClick={() => navigate("/book", { state: { selectedAddressId } })}
+          disabled={!selectedAddressId && addresses.length > 0}
         >
           Proceed to Book • ₹{total}
         </Button>

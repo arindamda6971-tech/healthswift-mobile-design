@@ -210,9 +210,9 @@ const FamilyScreen = () => {
       resetForm();
       setIsDialogOpen(false);
       fetchFamilyMembers();
-    } catch (error: any) {
-      console.error("Error saving family member:", error);
-      toast.error(error.message || "Failed to save family member");
+    } catch (error: unknown) {
+      if (import.meta.env.DEV) console.error("Error saving family member:", error);
+      toast.error("Failed to save family member. Please check your input and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -244,9 +244,9 @@ const FamilyScreen = () => {
       if (error) throw error;
       toast.success("Family member removed successfully");
       fetchFamilyMembers();
-    } catch (error: any) {
-      console.error("Error deleting family member:", error);
-      toast.error(error.message || "Failed to remove family member");
+    } catch (error: unknown) {
+      if (import.meta.env.DEV) console.error("Error deleting family member:", error);
+      toast.error("Failed to remove family member. Please try again.");
     } finally {
       setMemberToDelete(null);
     }

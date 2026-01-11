@@ -7,6 +7,7 @@ interface CartItem {
   labId?: string;
   labName?: string;
   quantity: number;
+  familyMemberId?: string;
 }
 
 interface CartContextType {
@@ -14,6 +15,7 @@ interface CartContextType {
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
+  updateFamilyMember: (id: string, familyMemberId: string | undefined) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -22,14 +24,15 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  // Use sessionStorage for sensitive health data - clears when browser tab closes
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem("healthswift-cart");
+    const saved = sessionStorage.getItem("healthswift-cart");
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    console.log("Cart items changed, saving to localStorage:", items);
-    localStorage.setItem("healthswift-cart", JSON.stringify(items));
+    if (import.meta.env.DEV) console.log("Cart items changed, saving to sessionStorage:", items);
+    sessionStorage.setItem("healthswift-cart", JSON.stringify(items));
   }, [items]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
@@ -63,6 +66,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const updateFamilyMember = (id: string, familyMemberId: string | undefined) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, familyMemberId }
+          : item
+      )
+    );
+  };
+
   const clearCart = () => setItems([]);
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -70,7 +83,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <CartContext.Provider
-      value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, itemCount, subtotal }}
+      value={{ items, addToCart, removeFromCart, updateQuantity, updateFamilyMember, clearCart, itemCount, subtotal }}
     >
       {children}
     </CartContext.Provider>

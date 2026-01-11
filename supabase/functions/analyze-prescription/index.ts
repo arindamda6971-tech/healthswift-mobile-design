@@ -1,11 +1,44 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// List of allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://healthswift.app',
+  'https://www.healthswift.app',
+];
+
+// Check if origin matches Lovable preview pattern
+const isLovablePreview = (origin: string): boolean => {
+  return /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin) ||
+         /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/.test(origin);
+};
+
+// Check if origin is localhost for development
+const isLocalhost = (origin: string): boolean => {
+  return /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+         /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+};
+
+const getCorsHeaders = (request: Request): Record<string, string> => {
+  const origin = request.headers.get('origin') || '';
+  
+  const isAllowed = 
+    ALLOWED_ORIGINS.includes(origin) ||
+    isLovablePreview(origin) ||
+    isLocalhost(origin);
+  
+  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://healthswift.app';
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -94,8 +127,7 @@ If you cannot identify any tests or the image is not a valid prescription, respo
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI gateway error:", response.status);
       
       if (response.status === 429) {
         return new Response(
@@ -105,7 +137,7 @@ If you cannot identify any tests or the image is not a valid prescription, respo
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
+          JSON.stringify({ error: "AI service temporarily unavailable." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -137,13 +169,12 @@ If you cannot identify any tests or the image is not a valid prescription, respo
         parsedResult = JSON.parse(aiResponse);
       }
     } catch (parseError) {
-      console.error("Failed to parse AI response:", aiResponse);
-      // Return a structured error with the raw response
+      console.error("Failed to parse AI response");
+      // Return a structured error with generic message
       parsedResult = {
         tests: [],
         confidence: "low",
-        notes: "Could not parse prescription. Please ensure the image is clear and contains medical test recommendations.",
-        rawResponse: aiResponse
+        notes: "Could not parse prescription. Please ensure the image is clear and contains medical test recommendations."
       };
     }
 
@@ -155,7 +186,7 @@ If you cannot identify any tests or the image is not a valid prescription, respo
   } catch (error) {
     console.error("Error in analyze-prescription:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Failed to analyze prescription. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

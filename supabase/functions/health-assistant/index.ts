@@ -1,11 +1,44 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// List of allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://healthswift.app',
+  'https://www.healthswift.app',
+];
+
+// Check if origin matches Lovable preview pattern
+const isLovablePreview = (origin: string): boolean => {
+  return /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin) ||
+         /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/.test(origin);
+};
+
+// Check if origin is localhost for development
+const isLocalhost = (origin: string): boolean => {
+  return /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+         /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+};
+
+const getCorsHeaders = (request: Request): Record<string, string> => {
+  const origin = request.headers.get('origin') || '';
+  
+  const isAllowed = 
+    ALLOWED_ORIGINS.includes(origin) ||
+    isLovablePreview(origin) ||
+    isLocalhost(origin);
+  
+  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://healthswift.app';
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -85,8 +118,7 @@ Remember: You're here to educate and support, not to replace medical professiona
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI gateway error:", response.status);
       return new Response(
         JSON.stringify({ error: "Unable to process your request. Please try again." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -99,7 +131,7 @@ Remember: You're here to educate and support, not to replace medical professiona
   } catch (error) {
     console.error("Health assistant error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error occurred" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

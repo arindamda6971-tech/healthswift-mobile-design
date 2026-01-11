@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Phone,
@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/contexts/CartContext";
 
 const phlebotomist = {
   name: "Rahul Sharma",
@@ -33,9 +36,98 @@ const trackingSteps = [
   { id: 5, title: "Delivered to Lab", time: "", completed: false },
 ];
 
+interface BookingState {
+  cartItems: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    familyMemberId?: string;
+    packageId?: string;
+  }>;
+  addressId: string;
+  scheduledDate: string;
+  scheduledTimeSlot: string;
+  subtotal: number;
+}
+
 const TrackingScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { supabaseUserId } = useAuth();
+  const { items: cartItems, clearCart } = useCart();
   const [eta, setEta] = useState(12);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const createOrder = async () => {
+      if (isCreatingOrder || orderId) return;
+
+      const bookingState = location.state as BookingState | undefined;
+      const stateCartItems = bookingState?.cartItems || cartItems;
+      
+      if (!stateCartItems || stateCartItems.length === 0 || !supabaseUserId) {
+        if (!supabaseUserId) setOrderError("Please log in to complete your booking");
+        else if (!stateCartItems || stateCartItems.length === 0) setOrderError("No items to book");
+        return;
+      }
+
+      setIsCreatingOrder(true);
+      setOrderError(null);
+      
+      try {
+        const subtotal = bookingState?.subtotal || stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+        
+        // Create order with booking details
+        const { data: orderData, error: orderError } = await supabase
+          .from("orders")
+          .insert({
+            user_id: supabaseUserId,
+            address_id: bookingState?.addressId || null,
+            scheduled_date: bookingState?.scheduledDate || null,
+            scheduled_time_slot: bookingState?.scheduledTimeSlot || null,
+            subtotal: subtotal,
+            total: subtotal,
+            status: "confirmed",
+            payment_status: "pending",
+          })
+          .select()
+          .single();
+
+        if (orderError) throw orderError;
+
+        setOrderId(orderData.id);
+
+        // Create order items with family_member_id
+        const orderItems = stateCartItems.map((item: any) => ({
+          order_id: orderData.id,
+          test_id: item.id,
+          package_id: item.packageId || null,
+          quantity: item.quantity,
+          price: item.price,
+          family_member_id: item.familyMemberId || null,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+
+        if (itemsError) throw itemsError;
+
+        // Clear cart after successful order creation
+        clearCart();
+      } catch (error) {
+        if (import.meta.env.DEV) console.error("Error creating order:", error);
+        setOrderError("Failed to create order. Please try again.");
+      } finally {
+        setIsCreatingOrder(false);
+      }
+    };
+
+    createOrder();
+  }, [supabaseUserId, location.state, isCreatingOrder, orderId, cartItems, clearCart]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,6 +135,40 @@ const TrackingScreen = () => {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Show loading or error state
+  if (isCreatingOrder) {
+    return (
+      <MobileLayout showNav={false}>
+        <ScreenHeader title="Processing..." />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4 animate-pulse">
+            <Clock className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Creating your order...</h2>
+          <p className="text-sm text-muted-foreground">Please wait while we confirm your booking</p>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  if (orderError) {
+    return (
+      <MobileLayout showNav={false}>
+        <ScreenHeader title="Booking Error" />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mb-4">
+            <Clock className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">{orderError}</h2>
+          <p className="text-sm text-muted-foreground mb-6">Please go back and try again</p>
+          <Button variant="soft" onClick={() => navigate("/cart")}>
+            Return to Cart
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout showNav={false}>

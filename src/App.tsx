@@ -39,6 +39,7 @@ import PartnerLabsScreen from "./pages/PartnerLabsScreen";
 import LabDetailScreen from "./pages/LabDetailScreen";
 import UploadPrescriptionScreen from "./pages/UploadPrescriptionScreen";
 import HealthAssistantScreen from "./pages/HealthAssistantScreen";
+import SupportScreen from "./pages/SupportScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +88,7 @@ const App = () => (
                   <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
                   <Route path="/upload-prescription" element={<ProtectedRoute><UploadPrescriptionScreen /></ProtectedRoute>} />
                   <Route path="/health-assistant" element={<ProtectedRoute><HealthAssistantScreen /></ProtectedRoute>} />
+                  <Route path="/support" element={<ProtectedRoute><SupportScreen /></ProtectedRoute>} />
                   
                   {/* Catch-all */}
                   <Route path="*" element={<NotFound />} />

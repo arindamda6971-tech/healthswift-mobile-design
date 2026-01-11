@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Sparkles, Loader2, ShoppingCart, Check } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, ShoppingCart, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
@@ -231,8 +231,8 @@ const HealthAssistantScreen = () => {
         }
       }
     } catch (error) {
-      console.error("Chat error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to get response");
+      if (import.meta.env.DEV) console.error("Chat error:", error);
+      toast.error("Unable to get a response. Please try again.");
       // Remove the last assistant placeholder if it's empty, but keep user messages
       setMessages((prev) => {
         const copy = [...prev];

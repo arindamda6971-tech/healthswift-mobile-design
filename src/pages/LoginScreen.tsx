@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { getAuthErrorMessage, checkRateLimit, recordAuthAttempt, resetRateLimit } from "@/utils/errorMessages";
 
 const emailSchema = z.string().trim().email("Please enter a valid email");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -39,6 +40,17 @@ const LoginScreen = () => {
 
   const handleEmailAuth = async () => {
     try {
+      // Check rate limiting first
+      const rateLimitCheck = checkRateLimit();
+      if (rateLimitCheck.blocked) {
+        toast({ 
+          title: "Too Many Attempts", 
+          description: `Please wait ${Math.ceil(rateLimitCheck.remainingSeconds / 60)} minute(s) before trying again.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
       // Validate inputs
       const emailResult = emailSchema.safeParse(email);
       if (!emailResult.success) {
@@ -54,21 +66,33 @@ const LoginScreen = () => {
 
       setIsLoading(true);
       
+      // Record attempt for rate limiting
+      const attemptResult = recordAuthAttempt();
+      if (attemptResult.blocked) {
+        toast({ 
+          title: "Too Many Attempts", 
+          description: `Please wait ${Math.ceil(attemptResult.remainingSeconds / 60)} minute(s) before trying again.`,
+          variant: "destructive" 
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       if (isSignUp) {
         const { error } = await signUpWithEmail(email, password, fullName || undefined);
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast({ title: "Account Exists", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
-          } else {
-            toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
-          }
+          const friendlyMessage = getAuthErrorMessage(error);
+          toast({ title: "Sign Up Failed", description: friendlyMessage, variant: "destructive" });
         } else {
+          resetRateLimit(); // Reset on success
           toast({ title: "Check Your Email", description: "We've sent you a confirmation link. Please check your email." });
         }
       } else {
         const { error } = await signInWithEmail(email, password);
         if (error) {
           toast({ title: "Sign In Failed", description: "Invalid email or password. Please try again.", variant: "destructive" });
+        } else {
+          resetRateLimit(); // Reset on success
         }
       }
     } finally {
@@ -78,6 +102,17 @@ const LoginScreen = () => {
 
   const handlePhoneAuth = async () => {
     try {
+      // Check rate limiting first
+      const rateLimitCheck = checkRateLimit();
+      if (rateLimitCheck.blocked) {
+        toast({ 
+          title: "Too Many Attempts", 
+          description: `Please wait ${Math.ceil(rateLimitCheck.remainingSeconds / 60)} minute(s) before trying again.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
       if (!otpSent) {
         // Validate phone
         const phoneResult = phoneSchema.safeParse(phoneNumber);
@@ -87,9 +122,23 @@ const LoginScreen = () => {
         }
 
         setIsLoading(true);
+        
+        // Record attempt for rate limiting
+        const attemptResult = recordAuthAttempt();
+        if (attemptResult.blocked) {
+          toast({ 
+            title: "Too Many Attempts", 
+            description: `Please wait ${Math.ceil(attemptResult.remainingSeconds / 60)} minute(s) before trying again.`,
+            variant: "destructive" 
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await signInWithPhone(phoneNumber);
         if (error) {
-          toast({ title: "OTP Failed", description: error.message, variant: "destructive" });
+          const friendlyMessage = getAuthErrorMessage(error);
+          toast({ title: "OTP Failed", description: friendlyMessage, variant: "destructive" });
         } else {
           setOtpSent(true);
           toast({ title: "OTP Sent", description: "Please check your phone for the verification code." });
@@ -102,9 +151,24 @@ const LoginScreen = () => {
         }
 
         setIsLoading(true);
+        
+        // Record attempt for rate limiting
+        const attemptResult = recordAuthAttempt();
+        if (attemptResult.blocked) {
+          toast({ 
+            title: "Too Many Attempts", 
+            description: `Please wait ${Math.ceil(attemptResult.remainingSeconds / 60)} minute(s) before trying again.`,
+            variant: "destructive" 
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await verifyOtp(phoneNumber, otp);
         if (error) {
           toast({ title: "Verification Failed", description: "Invalid or expired code. Please try again.", variant: "destructive" });
+        } else {
+          resetRateLimit(); // Reset on success
         }
       }
     } finally {
@@ -113,11 +177,38 @@ const LoginScreen = () => {
   };
 
   const handleGoogleAuth = async () => {
+    // Check rate limiting first
+    const rateLimitCheck = checkRateLimit();
+    if (rateLimitCheck.blocked) {
+      toast({ 
+        title: "Too Many Attempts", 
+        description: `Please wait ${Math.ceil(rateLimitCheck.remainingSeconds / 60)} minute(s) before trying again.`,
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setIsLoading(true);
+    
+    // Record attempt for rate limiting
+    const attemptResult = recordAuthAttempt();
+    if (attemptResult.blocked) {
+      toast({ 
+        title: "Too Many Attempts", 
+        description: `Please wait ${Math.ceil(attemptResult.remainingSeconds / 60)} minute(s) before trying again.`,
+        variant: "destructive" 
+      });
+      setIsLoading(false);
+      return;
+    }
+
     const { error } = await signInWithGoogle();
     if (error) {
-      toast({ title: "Google Sign In Failed", description: error.message, variant: "destructive" });
+      const friendlyMessage = getAuthErrorMessage(error);
+      toast({ title: "Google Sign In Failed", description: friendlyMessage, variant: "destructive" });
       setIsLoading(false);
+    } else {
+      resetRateLimit(); // Reset on success
     }
   };
 

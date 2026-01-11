@@ -31,19 +31,20 @@ const SavedAddressesScreen = () => {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      // Use sessionStorage for sensitive address data - clears when browser tab closes
+      const raw = sessionStorage.getItem(STORAGE_KEY);
       if (raw) setAddresses(JSON.parse(raw));
     } catch (err) {
-      console.error("Failed to load saved addresses", err);
+      if (import.meta.env.DEV) console.error("Failed to load saved addresses", err);
     }
   }, []);
 
   const persist = (items: AddressItem[]) => {
     setAddresses(items);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (err) {
-      console.error("Failed to save addresses", err);
+      if (import.meta.env.DEV) console.error("Failed to save addresses", err);
       toast.error("Failed to save addresses");
     }
   };

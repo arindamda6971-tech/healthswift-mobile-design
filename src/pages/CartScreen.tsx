@@ -56,8 +56,8 @@ const CartScreen = () => {
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.error("Error fetching family members:", error);
-          setMembersError(error.message);
+          if (import.meta.env.DEV) console.error("Error fetching family members:", error);
+          setMembersError("Unable to load family members. Please try again.");
           setFamilyMembers([]);
         } else if (data) {
           setFamilyMembers(data);
@@ -65,8 +65,8 @@ const CartScreen = () => {
           setFamilyMembers([]);
         }
       } catch (err) {
-        console.error("Exception fetching family members:", err);
-        setMembersError(err instanceof Error ? err.message : "Unknown error");
+        if (import.meta.env.DEV) console.error("Exception fetching family members:", err);
+        setMembersError("Unable to load family members. Please try again.");
         setFamilyMembers([]);
       } finally {
         setLoadingMembers(false);

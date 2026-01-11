@@ -415,33 +415,6 @@ const HomeScreen = () => {
         </div>
       </motion.section>
 
-      {/* AI Feature Banner */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="px-4 mt-8"
-      >
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary to-secondary/80 p-5">
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
-              <Badge variant="ai">AI Powered</Badge>
-            </div>
-            <h3 className="text-lg font-bold text-secondary-foreground mb-1">
-              Smart Health Assistant
-            </h3>
-            <p className="text-sm text-secondary-foreground/80 mb-4">
-              Get AI-powered answers to your health questions in simple language
-            </p>
-            <Button variant="glass" size="sm" onClick={() => navigate("/health-assistant")}>
-              Chat now
-            </Button>
-          </div>
-          <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
-          <Beaker className="absolute right-4 bottom-4 w-16 h-16 text-secondary-foreground/10" />
-        </div>
-      </motion.section>
 
       {/* Health Plans */}
       <motion.section

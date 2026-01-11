@@ -211,7 +211,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Clear sensitive localStorage data to prevent health information exposure on shared devices
+    localStorage.removeItem('healthswift-notifications');
+    localStorage.removeItem('healthswift-cart');
+    localStorage.removeItem('healthswift-theme');
+    localStorage.removeItem('healthswift-pwa-install-dismissed');
+    
+    // Sign out from both auth providers
     await firebaseSignOut(auth);
+    await supabase.auth.signOut();
   };
 
   return (

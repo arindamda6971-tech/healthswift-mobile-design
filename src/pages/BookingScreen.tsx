@@ -192,8 +192,7 @@ const BookingScreen = () => {
               cartItems: cartItems,
               selectedAddress,
               selectedDate,
-              selectedTime,
-              selectedMember
+              selectedTime
             } 
           })}
         >

@@ -30,9 +30,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Save to localStorage whenever notifications change
+  // Auto-expire old notifications (7 days) and save to localStorage
   useEffect(() => {
-    localStorage.setItem("healthswift-notifications", JSON.stringify(notifications));
+    const MAX_NOTIFICATION_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const now = Date.now();
+    const filtered = notifications.filter(n => {
+      const age = now - new Date(n.created_at).getTime();
+      return age < MAX_NOTIFICATION_AGE;
+    });
+    
+    // Only update if there are expired notifications to remove
+    if (filtered.length !== notifications.length) {
+      setNotifications(filtered);
+    }
+    
+    localStorage.setItem("healthswift-notifications", JSON.stringify(filtered));
   }, [notifications]);
 
   // Listen for new orders in real-time

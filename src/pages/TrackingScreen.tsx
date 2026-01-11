@@ -36,6 +36,21 @@ const trackingSteps = [
   { id: 5, title: "Delivered to Lab", time: "", completed: false },
 ];
 
+interface BookingState {
+  cartItems: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    familyMemberId?: string;
+    packageId?: string;
+  }>;
+  addressId: string;
+  scheduledDate: string;
+  scheduledTimeSlot: string;
+  subtotal: number;
+}
+
 const TrackingScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,24 +59,38 @@ const TrackingScreen = () => {
   const [eta, setEta] = useState(12);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   useEffect(() => {
     const createOrder = async () => {
       if (isCreatingOrder || orderId) return;
 
-      const stateCartItems = (location.state as any)?.cartItems || cartItems;
-      if (!stateCartItems || stateCartItems.length === 0 || !supabaseUserId) return;
+      const bookingState = location.state as BookingState | undefined;
+      const stateCartItems = bookingState?.cartItems || cartItems;
+      
+      if (!stateCartItems || stateCartItems.length === 0 || !supabaseUserId) {
+        if (!supabaseUserId) setOrderError("Please log in to complete your booking");
+        else if (!stateCartItems || stateCartItems.length === 0) setOrderError("No items to book");
+        return;
+      }
 
       setIsCreatingOrder(true);
+      setOrderError(null);
+      
       try {
-        // Create order
+        const subtotal = bookingState?.subtotal || stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+        
+        // Create order with booking details
         const { data: orderData, error: orderError } = await supabase
           .from("orders")
           .insert({
             user_id: supabaseUserId,
-            subtotal: stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0),
-            total: stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0),
-            status: "pending",
+            address_id: bookingState?.addressId || null,
+            scheduled_date: bookingState?.scheduledDate || null,
+            scheduled_time_slot: bookingState?.scheduledTimeSlot || null,
+            subtotal: subtotal,
+            total: subtotal,
+            status: "confirmed",
             payment_status: "pending",
           })
           .select()
@@ -90,7 +119,8 @@ const TrackingScreen = () => {
         // Clear cart after successful order creation
         clearCart();
       } catch (error) {
-        console.error("Error creating order:", error);
+        if (import.meta.env.DEV) console.error("Error creating order:", error);
+        setOrderError("Failed to create order. Please try again.");
       } finally {
         setIsCreatingOrder(false);
       }
@@ -105,6 +135,40 @@ const TrackingScreen = () => {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Show loading or error state
+  if (isCreatingOrder) {
+    return (
+      <MobileLayout showNav={false}>
+        <ScreenHeader title="Processing..." />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-4 animate-pulse">
+            <Clock className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Creating your order...</h2>
+          <p className="text-sm text-muted-foreground">Please wait while we confirm your booking</p>
+        </div>
+      </MobileLayout>
+    );
+  }
+
+  if (orderError) {
+    return (
+      <MobileLayout showNav={false}>
+        <ScreenHeader title="Booking Error" />
+        <div className="flex flex-col items-center justify-center h-[60vh] px-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mb-4">
+            <Clock className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">{orderError}</h2>
+          <p className="text-sm text-muted-foreground mb-6">Please go back and try again</p>
+          <Button variant="soft" onClick={() => navigate("/cart")}>
+            Return to Cart
+          </Button>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout showNav={false}>

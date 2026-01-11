@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Sparkles, Loader2, ShoppingCart, Check } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, ShoppingCart, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";

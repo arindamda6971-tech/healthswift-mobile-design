@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Edit2, Trash2 } from "lucide-react";
+import { MapPin, Edit2, Trash2, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,18 +22,21 @@ type AddressItem = {
 
 const SavedAddressesScreen = () => {
   const navigate = useNavigate();
-  const { addresses, addAddress, updateAddress, removeAddress } = useAddresses();
+  const { addresses, addAddress, updateAddress, removeAddress, loading } = useAddresses();
   const [editing, setEditing] = useState<null | AddressItem>(null);
   const [addressValue, setAddressValue] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
   const [locLoading, setLocLoading] = useState(false);
   const [tempCoords, setTempCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const startAdd = () => {
     setEditing(null);
     setAddressValue("");
     setPhoneValue("");
     setTempCoords(null);
+    setIsAdding(true);
   };
 
   const startEdit = (item: AddressItem) => {
@@ -41,6 +44,7 @@ const SavedAddressesScreen = () => {
     setAddressValue(item.address);
     setPhoneValue(item.phone);
     setTempCoords(item.lat != null && item.lon != null ? { lat: item.lat, lon: item.lon } : null);
+    setIsAdding(false);
   };
 
   const reverseGeocode = async (lat: number, lon: number) => {
@@ -90,7 +94,7 @@ const SavedAddressesScreen = () => {
     }, { enableHighAccuracy: true, timeout: 15000 });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!addressValue.trim()) {
       toast.error("Please enter an address");
       return;
@@ -101,23 +105,53 @@ const SavedAddressesScreen = () => {
       return;
     }
 
-    if (editing) {
-      updateAddress(editing.id, { address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? editing.lat ?? null, lon: tempCoords?.lon ?? editing.lon ?? null });
-      toast.success("Address updated");
-    } else {
-      addAddress({ address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? null, lon: tempCoords?.lon ?? null });
-      toast.success("Address added");
-    }
+    setSaving(true);
 
-    setEditing(null);
-    setAddressValue("");
-    setPhoneValue("");
-    setTempCoords(null);
+    try {
+      if (editing) {
+        await updateAddress(editing.id, {
+          address: addressValue,
+          phone: phoneValue,
+          lat: tempCoords?.lat ?? editing.lat ?? null,
+          lon: tempCoords?.lon ?? editing.lon ?? null,
+        });
+        toast.success("Address updated");
+      } else {
+        const result = await addAddress({
+          address: addressValue,
+          phone: phoneValue,
+          lat: tempCoords?.lat ?? null,
+          lon: tempCoords?.lon ?? null,
+        });
+        if (!result) {
+          toast.error("Failed to save address");
+          setSaving(false);
+          return;
+        }
+        toast.success("Address added");
+      }
+
+      setEditing(null);
+      setAddressValue("");
+      setPhoneValue("");
+      setTempCoords(null);
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error(err?.message || "Failed to save address");
+    } finally {
+      setSaving(false);
+      setIsAdding(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    removeAddress(id);
-    toast.success("Address removed");
+  const handleDelete = async (id: string) => {
+    try {
+      await removeAddress(id);
+      toast.success("Address removed");
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Failed to delete address");
+    }
   };
 
   return (
@@ -129,7 +163,7 @@ const SavedAddressesScreen = () => {
           <p className="text-sm text-muted-foreground">Save your frequently used addresses and phone numbers for faster bookings and deliveries.</p>
         </motion.div>
 
-        {editing !== null || addressValue !== "" ? (
+        {editing !== null || isAdding ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 space-y-3">
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
@@ -151,17 +185,29 @@ const SavedAddressesScreen = () => {
             </div>
 
             <div className="flex gap-3 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => { setEditing(null); setAddressValue(""); setPhoneValue(""); setTempCoords(null); }}>
+              <Button variant="outline" className="flex-1" onClick={() => { setEditing(null); setAddressValue(""); setPhoneValue(""); setTempCoords(null); setIsAdding(false); }} disabled={saving}>
                 Cancel
               </Button>
-              <Button variant="hero" className="flex-1" onClick={handleSave}>
-                Save Address
+              <Button variant="hero" className="flex-1" onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Address"
+                )}
               </Button>
             </div>
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
-            {addresses.length === 0 ? (
+            {loading ? (
+              <div className="soft-card p-6 text-center text-muted-foreground">
+                <Loader className="mx-auto w-8 h-8 text-muted-foreground animate-spin" />
+                <p className="mt-3">Loading addresses...</p>
+              </div>
+            ) : addresses.length === 0 ? (
               <div className="soft-card p-6 text-center text-muted-foreground">
                 <MapPin className="mx-auto w-8 h-8 text-muted-foreground" />
                 <p className="mt-3">No saved addresses yet.</p>

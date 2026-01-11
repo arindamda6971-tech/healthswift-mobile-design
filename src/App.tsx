@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { AddressProvider } from "@/contexts/AddressContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import InstallPrompt from "@/components/InstallPrompt";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -48,7 +49,8 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
-          <NotificationProvider>
+          <AddressProvider>
+            <NotificationProvider>
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -95,6 +97,7 @@ const App = () => (
               </BrowserRouter>
             </TooltipProvider>
           </NotificationProvider>
+          </AddressProvider>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -10,6 +10,8 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { toast } from "sonner";
 
+import { useAddresses } from "@/contexts/AddressContext";
+
 type AddressItem = {
   id: string;
   address: string;
@@ -18,36 +20,14 @@ type AddressItem = {
   lon?: number | null;
 };
 
-const STORAGE_KEY = "saved_addresses";
-
 const SavedAddressesScreen = () => {
   const navigate = useNavigate();
-  const [addresses, setAddresses] = useState<AddressItem[]>([]);
+  const { addresses, addAddress, updateAddress, removeAddress } = useAddresses();
   const [editing, setEditing] = useState<null | AddressItem>(null);
   const [addressValue, setAddressValue] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
   const [locLoading, setLocLoading] = useState(false);
   const [tempCoords, setTempCoords] = useState<{ lat: number; lon: number } | null>(null);
-
-  useEffect(() => {
-    try {
-      // Use sessionStorage for sensitive address data - clears when browser tab closes
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      if (raw) setAddresses(JSON.parse(raw));
-    } catch (err) {
-      if (import.meta.env.DEV) console.error("Failed to load saved addresses", err);
-    }
-  }, []);
-
-  const persist = (items: AddressItem[]) => {
-    setAddresses(items);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (err) {
-      if (import.meta.env.DEV) console.error("Failed to save addresses", err);
-      toast.error("Failed to save addresses");
-    }
-  };
 
   const startAdd = () => {
     setEditing(null);
@@ -122,13 +102,10 @@ const SavedAddressesScreen = () => {
     }
 
     if (editing) {
-      const updated = addresses.map((a) => (a.id === editing.id ? { ...a, address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? a.lat ?? null, lon: tempCoords?.lon ?? a.lon ?? null } : a));
-      persist(updated);
+      updateAddress(editing.id, { address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? editing.lat ?? null, lon: tempCoords?.lon ?? editing.lon ?? null });
       toast.success("Address updated");
     } else {
-      const id = typeof crypto !== "undefined" && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.floor(Math.random()*10000)}`;
-      const newItem: AddressItem = { id, address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? null, lon: tempCoords?.lon ?? null };
-      persist([newItem, ...addresses]);
+      addAddress({ address: addressValue, phone: phoneValue, lat: tempCoords?.lat ?? null, lon: tempCoords?.lon ?? null });
       toast.success("Address added");
     }
 
@@ -139,8 +116,7 @@ const SavedAddressesScreen = () => {
   };
 
   const handleDelete = (id: string) => {
-    const filtered = addresses.filter((a) => a.id !== id);
-    persist(filtered);
+    removeAddress(id);
     toast.success("Address removed");
   };
 

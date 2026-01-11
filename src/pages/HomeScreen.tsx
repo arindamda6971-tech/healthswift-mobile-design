@@ -415,7 +415,6 @@ const HomeScreen = () => {
         </div>
       </motion.section>
 
-
       {/* Health Plans */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}

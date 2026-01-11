@@ -74,9 +74,13 @@ const BookingScreen = () => {
           transition={{ delay: 0.1 }}
           className="mt-6"
         >
-          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-foreground">Select Address</h3>
-            <button className="flex items-center gap-1 text-primary text-sm font-medium">
+            <button
+              onClick={() => navigate('/saved-addresses')}
+              className="flex items-center gap-1 text-primary text-sm font-medium"
+              aria-label="Add new address"
+            >
               <Plus className="w-4 h-4" /> Add New
             </button>
           </div>

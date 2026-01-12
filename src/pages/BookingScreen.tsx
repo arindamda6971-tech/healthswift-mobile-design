@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -20,6 +20,10 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Address = Tables<"addresses">;
 
+interface LocationState {
+  selectedAddressId?: string;
+}
+
 const timeSlots = [
   { id: 1, time: "6:00 AM - 8:00 AM", available: true, phlebotomists: 5 },
   { id: 2, time: "8:00 AM - 10:00 AM", available: true, phlebotomists: 8 },
@@ -33,6 +37,8 @@ const timeSlots = [
 
 const BookingScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as LocationState | null;
   const { items: cartItems, subtotal } = useCart();
   const { supabaseUserId } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -60,9 +66,13 @@ const BookingScreen = () => {
           if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
         } else if (data && data.length > 0) {
           setAddresses(data);
-          // Auto-select default address or first one
-          const defaultAddr = data.find(a => a.is_default) || data[0];
-          setSelectedAddress(defaultAddr.id);
+          // Use pre-selected address from cart if provided, otherwise auto-select default or first
+          if (locationState?.selectedAddressId && data.find(a => a.id === locationState.selectedAddressId)) {
+            setSelectedAddress(locationState.selectedAddressId);
+          } else {
+            const defaultAddr = data.find(a => a.is_default) || data[0];
+            setSelectedAddress(defaultAddr.id);
+          }
         }
       } catch (err) {
         if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
@@ -72,7 +82,7 @@ const BookingScreen = () => {
     };
 
     fetchAddresses();
-  }, [supabaseUserId]);
+  }, [supabaseUserId, locationState?.selectedAddressId]);
 
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();

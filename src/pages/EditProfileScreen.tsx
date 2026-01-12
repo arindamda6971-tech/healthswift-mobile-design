@@ -53,18 +53,18 @@ const EditProfileScreen = () => {
 
     if (data) {
       setProfile({
-        full_name: data.full_name || user?.displayName || "",
+        full_name: data.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "",
         email: data.email || user?.email || "",
-        phone: data.phone || user?.phoneNumber || "",
+        phone: data.phone || user?.phone || "",
         date_of_birth: data.date_of_birth || "",
         gender: data.gender || "",
         blood_group: data.blood_group || "",
       });
     } else {
       setProfile({
-        full_name: user?.displayName || "",
+        full_name: user?.user_metadata?.full_name || user?.user_metadata?.name || "",
         email: user?.email || "",
-        phone: user?.phoneNumber || "",
+        phone: user?.phone || "",
         date_of_birth: "",
         gender: "",
         blood_group: "",
@@ -112,9 +112,9 @@ const EditProfileScreen = () => {
           className="mt-6 flex justify-center"
         >
           <div className="relative">
-            {user?.photoURL ? (
+            {user?.user_metadata?.avatar_url ? (
               <img 
-                src={user.photoURL} 
+                src={user.user_metadata.avatar_url} 
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover"
               />

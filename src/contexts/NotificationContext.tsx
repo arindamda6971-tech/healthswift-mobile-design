@@ -60,7 +60,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           event: "INSERT",
           schema: "public",
           table: "orders",
-          filter: `user_id=eq.${user.uid}`,
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const order = payload.new as { order_number: string; status: string };
@@ -78,7 +78,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           event: "UPDATE",
           schema: "public",
           table: "orders",
-          filter: `user_id=eq.${user.uid}`,
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const order = payload.new as { order_number: string; status: string };
@@ -123,7 +123,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           event: "UPDATE",
           schema: "public",
           table: "reports",
-          filter: `user_id=eq.${user.uid}`,
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const report = payload.new as { status: string };

@@ -34,7 +34,7 @@ const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.photoURL || null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
 
   useEffect(() => {
     const loadProfileImage = async () => {
@@ -65,8 +65,8 @@ const ProfileScreen = () => {
 
   const { addresses, defaultAddressId } = useAddresses();
 
-  const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
-  const contactInfo = user?.phoneNumber || user?.email || "";
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
+  const contactInfo = user?.phone || user?.email || "";
 
   return (
     <MobileLayout>
@@ -85,9 +85,9 @@ const ProfileScreen = () => {
               alt={displayName}
               className="w-16 h-16 rounded-2xl object-cover"
             />
-          ) : user?.photoURL ? (
+          ) : user?.user_metadata?.avatar_url ? (
             <img 
-              src={user.photoURL} 
+              src={user.user_metadata.avatar_url} 
               alt={displayName}
               className="w-16 h-16 rounded-2xl object-cover"
             />

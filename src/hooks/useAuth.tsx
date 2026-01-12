@@ -94,7 +94,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         phone: phone,
-        channel: 'sms'
       });
       return { error };
     } catch (error) {

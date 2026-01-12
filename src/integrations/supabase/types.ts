@@ -159,51 +159,6 @@ export type Database = {
         }
         Relationships: []
       }
-      health_scores: {
-        Row: {
-          ai_insights: string | null
-          blood_health: number | null
-          bone_health: number | null
-          created_at: string
-          heart_health: number | null
-          id: string
-          last_calculated_at: string | null
-          metabolic_health: number | null
-          overall_score: number | null
-          updated_at: string
-          user_id: string
-          vitamin_levels: number | null
-        }
-        Insert: {
-          ai_insights?: string | null
-          blood_health?: number | null
-          bone_health?: number | null
-          created_at?: string
-          heart_health?: number | null
-          id?: string
-          last_calculated_at?: string | null
-          metabolic_health?: number | null
-          overall_score?: number | null
-          updated_at?: string
-          user_id: string
-          vitamin_levels?: number | null
-        }
-        Update: {
-          ai_insights?: string | null
-          blood_health?: number | null
-          bone_health?: number | null
-          created_at?: string
-          heart_health?: number | null
-          id?: string
-          last_calculated_at?: string | null
-          metabolic_health?: number | null
-          overall_score?: number | null
-          updated_at?: string
-          user_id?: string
-          vitamin_levels?: number | null
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string

@@ -172,7 +172,7 @@ const MedicalHistoryScreen = () => {
 
   const getSelectedName = () => {
     if (!selectedMember) {
-      return userProfile?.full_name || user?.displayName || "You";
+      return userProfile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "You";
     }
     const member = familyMembers.find((m) => m.id === selectedMember);
     return member?.name || "Unknown";

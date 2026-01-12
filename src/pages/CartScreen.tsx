@@ -5,6 +5,14 @@ import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart,
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,6 +25,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Address = Tables<"addresses">;
@@ -37,44 +46,57 @@ const CartScreen = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  
+  // Add Address Modal State
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    type: "Home",
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    is_default: false,
+  });
+
+  const fetchAddresses = async () => {
+    if (!supabaseUserId) {
+      setLoadingAddresses(false);
+      return;
+    }
+    
+    setLoadingAddresses(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", supabaseUserId)
+        .order("is_default", { ascending: false });
+
+      if (error) {
+        if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
+        setAddresses([]);
+      } else if (data) {
+        setAddresses(data);
+        // Auto-select default address or first address
+        const defaultAddress = data.find(addr => addr.is_default) || data[0];
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+        }
+      } else {
+        setAddresses([]);
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
+      setAddresses([]);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAddresses = async () => {
-      if (!supabaseUserId) {
-        setLoadingAddresses(false);
-        return;
-      }
-      
-      setLoadingAddresses(true);
-      
-      try {
-        const { data, error } = await supabase
-          .from("addresses")
-          .select("*")
-          .eq("user_id", supabaseUserId)
-          .order("is_default", { ascending: false });
-
-        if (error) {
-          if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
-          setAddresses([]);
-        } else if (data) {
-          setAddresses(data);
-          // Auto-select default address or first address
-          const defaultAddress = data.find(addr => addr.is_default) || data[0];
-          if (defaultAddress) {
-            setSelectedAddressId(defaultAddress.id);
-          }
-        } else {
-          setAddresses([]);
-        }
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
-        setAddresses([]);
-      } finally {
-        setLoadingAddresses(false);
-      }
-    };
-
     fetchAddresses();
   }, [supabaseUserId]);
 
@@ -84,6 +106,61 @@ const CartScreen = () => {
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === "HEALTH100") {
       setCouponApplied(true);
+    }
+  };
+
+  const handleSaveAddress = async () => {
+    if (!supabaseUserId) {
+      toast.error("Please log in to add an address");
+      return;
+    }
+
+    if (!newAddress.address_line1 || !newAddress.city || !newAddress.state || !newAddress.pincode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert({
+          user_id: supabaseUserId,
+          type: newAddress.type,
+          address_line1: newAddress.address_line1,
+          address_line2: newAddress.address_line2 || null,
+          city: newAddress.city,
+          state: newAddress.state,
+          pincode: newAddress.pincode,
+          is_default: newAddress.is_default || addresses.length === 0,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Address added successfully");
+      setShowAddAddressModal(false);
+      setNewAddress({
+        type: "Home",
+        address_line1: "",
+        address_line2: "",
+        city: "",
+        state: "",
+        pincode: "",
+        is_default: false,
+      });
+      
+      // Refresh addresses and auto-select the new one
+      await fetchAddresses();
+      if (data) {
+        setSelectedAddressId(data.id);
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) console.error("Error saving address:", error);
+      toast.error("Failed to add address");
+    } finally {
+      setSavingAddress(false);
     }
   };
 
@@ -175,15 +252,26 @@ const CartScreen = () => {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-foreground">Select Address</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary text-xs h-auto p-0"
-              onClick={() => navigate("/saved-addresses")}
-            >
-              Manage
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="soft"
+                size="sm"
+                className="text-xs h-7 px-2"
+                onClick={() => setShowAddAddressModal(true)}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add New
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary text-xs h-auto p-0"
+                onClick={() => navigate("/saved-addresses")}
+              >
+                Manage
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
           
           {loadingAddresses ? (
@@ -202,7 +290,7 @@ const CartScreen = () => {
                 <Button
                   variant="soft"
                   size="sm"
-                  onClick={() => navigate("/saved-addresses")}
+                  onClick={() => setShowAddAddressModal(true)}
                 >
                   Add New
                 </Button>
@@ -375,6 +463,101 @@ const CartScreen = () => {
           Proceed to Book • ₹{total}
         </Button>
       </motion.div>
+
+      {/* Add Address Modal */}
+      <Dialog open={showAddAddressModal} onOpenChange={setShowAddAddressModal}>
+        <DialogContent className="max-w-[400px] mx-4 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Address</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="address_type">Address Type</Label>
+              <Select
+                value={newAddress.type}
+                onValueChange={(value) => setNewAddress({ ...newAddress, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Home">Home</SelectItem>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address_line1">Address Line 1 *</Label>
+              <Input
+                id="address_line1"
+                placeholder="House/Flat No., Building Name"
+                value={newAddress.address_line1}
+                onChange={(e) => setNewAddress({ ...newAddress, address_line1: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address_line2">Address Line 2</Label>
+              <Input
+                id="address_line2"
+                placeholder="Street, Area (Optional)"
+                value={newAddress.address_line2}
+                onChange={(e) => setNewAddress({ ...newAddress, address_line2: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <Input
+                  id="city"
+                  placeholder="City"
+                  value={newAddress.city}
+                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">State *</Label>
+                <Input
+                  id="state"
+                  placeholder="State"
+                  value={newAddress.state}
+                  onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pincode">Pincode *</Label>
+              <Input
+                id="pincode"
+                placeholder="6-digit Pincode"
+                value={newAddress.pincode}
+                onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                maxLength={6}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddAddressModal(false)}
+              disabled={savingAddress}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="hero"
+              onClick={handleSaveAddress}
+              disabled={savingAddress}
+            >
+              {savingAddress ? "Saving..." : "Save Address"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MobileLayout>
   );
 };

@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  MapPin,
   Clock,
   Calendar,
-  Plus,
-  ChevronRight,
   Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,11 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Address = Tables<"addresses">;
 
 interface LocationState {
   selectedAddressId?: string;
@@ -40,49 +32,11 @@ const BookingScreen = () => {
   const location = useLocation();
   const locationState = location.state as LocationState | null;
   const { items: cartItems, subtotal } = useCart();
-  const { supabaseUserId } = useAuth();
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(true);
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedTime, setSelectedTime] = useState(2);
 
-  // Fetch addresses from Supabase
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      if (!supabaseUserId) {
-        setLoadingAddresses(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("addresses")
-          .select("*")
-          .eq("user_id", supabaseUserId)
-          .order("is_default", { ascending: false });
-
-        if (error) {
-          if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
-        } else if (data && data.length > 0) {
-          setAddresses(data);
-          // Use pre-selected address from cart if provided, otherwise auto-select default or first
-          if (locationState?.selectedAddressId && data.find(a => a.id === locationState.selectedAddressId)) {
-            setSelectedAddress(locationState.selectedAddressId);
-          } else {
-            const defaultAddr = data.find(a => a.is_default) || data[0];
-            setSelectedAddress(defaultAddr.id);
-          }
-        }
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
-      } finally {
-        setLoadingAddresses(false);
-      }
-    };
-
-    fetchAddresses();
-  }, [supabaseUserId, locationState?.selectedAddressId]);
+  // Get addressId from cart navigation
+  const selectedAddressId = locationState?.selectedAddressId || null;
 
   const dates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
@@ -116,67 +70,12 @@ const BookingScreen = () => {
           </Badge>
         </motion.div>
 
-        {/* Address selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mt-6"
-        >
-            <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-foreground">Select Address</h3>
-            <button
-              onClick={() => navigate('/saved-addresses')}
-              className="flex items-center gap-1 text-primary text-sm font-medium"
-              aria-label="Add new address"
-            >
-              <Plus className="w-4 h-4" /> Add New
-            </button>
-          </div>
-          {loadingAddresses ? (
-            <div className="soft-card animate-pulse h-20" />
-          ) : addresses.length === 0 ? (
-            <div className="soft-card text-center py-6">
-              <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-3">No saved addresses</p>
-              <Button variant="soft" size="sm" onClick={() => navigate("/addresses")}>
-                Add Address
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {addresses.map((addr) => (
-                <button
-                  key={addr.id}
-                  onClick={() => setSelectedAddress(addr.id)}
-                  className={`w-full soft-card flex items-start gap-3 text-left transition-all ${
-                    selectedAddress === addr.id ? "ring-2 ring-primary" : ""
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MapPin className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-foreground text-sm">{addr.type || "Address"}</p>
-                      {addr.is_default && <Badge variant="soft">Default</Badge>}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ""}, {addr.city} {addr.pincode}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-          )}
-        </motion.div>
 
         {/* Date selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.1 }}
           className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
@@ -206,7 +105,7 @@ const BookingScreen = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.2 }}
           className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
@@ -252,11 +151,11 @@ const BookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          disabled={!selectedAddress || cartItems.length === 0}
-          onClick={() => navigate("/tracking", { 
+          disabled={!selectedAddressId || cartItems.length === 0}
+          onClick={() => navigate("/tracking", {
             state: { 
               cartItems: cartItems,
-              addressId: selectedAddress,
+              addressId: selectedAddressId,
               scheduledDate: dates[selectedDate].fullDate,
               scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
               subtotal: subtotal,

@@ -1,49 +1,114 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Edit2, Trash2, Loader } from "lucide-react";
+import { MapPin, Edit2, Trash2, Loader, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { Tables } from "@/integrations/supabase/types";
 
-import { useAddresses } from "@/contexts/AddressContext";
-
-type AddressItem = {
-  id: string;
-  address: string;
-  phone: string;
-  lat?: number | null;
-  lon?: number | null;
-};
+type Address = Tables<"addresses">;
 
 const SavedAddressesScreen = () => {
   const navigate = useNavigate();
-  const { addresses, addAddress, updateAddress, removeAddress, loading } = useAddresses();
-  const [editing, setEditing] = useState<null | AddressItem>(null);
-  const [addressValue, setAddressValue] = useState("");
-  const [phoneValue, setPhoneValue] = useState("");
-  const [locLoading, setLocLoading] = useState(false);
-  const [tempCoords, setTempCoords] = useState<{ lat: number; lon: number } | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { supabaseUserId } = useAuth();
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Address | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    type: "Home",
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
+  });
+
+  // Fetch addresses from Supabase
+  const fetchAddresses = async () => {
+    if (!supabaseUserId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", supabaseUserId)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching addresses:", error);
+        setAddresses([]);
+      } else {
+        setAddresses(data || []);
+      }
+    } catch (err) {
+      console.error("Exception fetching addresses:", err);
+      setAddresses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+  }, [supabaseUserId]);
+
+  const resetForm = () => {
+    setFormData({
+      type: "Home",
+      address_line1: "",
+      address_line2: "",
+      city: "",
+      state: "",
+      pincode: "",
+      latitude: null,
+      longitude: null,
+    });
+  };
 
   const startAdd = () => {
     setEditing(null);
-    setAddressValue("");
-    setPhoneValue("");
-    setTempCoords(null);
+    resetForm();
     setIsAdding(true);
   };
 
-  const startEdit = (item: AddressItem) => {
-    setEditing(item);
-    setAddressValue(item.address);
-    setPhoneValue(item.phone);
-    setTempCoords(item.lat != null && item.lon != null ? { lat: item.lat, lon: item.lon } : null);
+  const startEdit = (address: Address) => {
+    setEditing(address);
+    setFormData({
+      type: address.type || "Home",
+      address_line1: address.address_line1,
+      address_line2: address.address_line2 || "",
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      latitude: address.latitude,
+      longitude: address.longitude,
+    });
     setIsAdding(false);
   };
 
@@ -57,10 +122,10 @@ const SavedAddressesScreen = () => {
         }
       });
       const data = await res.json();
-      return data.display_name || "";
+      return data;
     } catch (err) {
       console.error("Reverse geocode failed", err);
-      return "";
+      return null;
     }
   };
 
@@ -75,14 +140,25 @@ const SavedAddressesScreen = () => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
-      setTempCoords({ lat, lon });
 
-      const addr = await reverseGeocode(lat, lon);
-      if (addr) {
-        setAddressValue(addr);
+      setFormData(prev => ({
+        ...prev,
+        latitude: lat,
+        longitude: lon,
+      }));
+
+      const geoData = await reverseGeocode(lat, lon);
+      if (geoData && geoData.address) {
+        setFormData(prev => ({
+          ...prev,
+          address_line1: geoData.address.road || geoData.address.suburb || "",
+          city: geoData.address.city || geoData.address.town || geoData.address.village || "",
+          state: geoData.address.state || "",
+          pincode: geoData.address.postcode || "",
+        }));
         toast.success("Location found");
       } else {
-        toast.success("Coordinates obtained — you can save them");
+        toast.success("Coordinates obtained");
       }
 
       setLocLoading(false);
@@ -95,13 +171,18 @@ const SavedAddressesScreen = () => {
   };
 
   const handleSave = async () => {
-    if (!addressValue.trim()) {
+    if (!supabaseUserId) {
+      toast.error("Please log in to save addresses");
+      return;
+    }
+
+    if (!formData.address_line1.trim()) {
       toast.error("Please enter an address");
       return;
     }
 
-    if (!phoneValue.trim()) {
-      toast.error("Please enter a phone number");
+    if (!formData.city.trim() || !formData.state.trim() || !formData.pincode.trim()) {
+      toast.error("Please fill in city, state, and pincode");
       return;
     }
 
@@ -109,48 +190,99 @@ const SavedAddressesScreen = () => {
 
     try {
       if (editing) {
-        await updateAddress(editing.id, {
-          address: addressValue,
-          phone: phoneValue,
-          lat: tempCoords?.lat ?? editing.lat ?? null,
-          lon: tempCoords?.lon ?? editing.lon ?? null,
-        });
+        // Update existing address
+        const { error } = await supabase
+          .from("addresses")
+          .update({
+            type: formData.type,
+            address_line1: formData.address_line1,
+            address_line2: formData.address_line2 || null,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+          })
+          .eq("id", editing.id)
+          .eq("user_id", supabaseUserId);
+
+        if (error) throw error;
         toast.success("Address updated");
       } else {
-        const result = await addAddress({
-          address: addressValue,
-          phone: phoneValue,
-          lat: tempCoords?.lat ?? null,
-          lon: tempCoords?.lon ?? null,
-        });
-        if (!result) {
-          toast.error("Failed to save address");
-          setSaving(false);
-          return;
-        }
+        // Add new address
+        const { error } = await supabase
+          .from("addresses")
+          .insert({
+            user_id: supabaseUserId,
+            type: formData.type,
+            address_line1: formData.address_line1,
+            address_line2: formData.address_line2 || null,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+            is_default: addresses.length === 0,
+          });
+
+        if (error) throw error;
         toast.success("Address added");
       }
 
       setEditing(null);
-      setAddressValue("");
-      setPhoneValue("");
-      setTempCoords(null);
+      setIsAdding(false);
+      resetForm();
+      await fetchAddresses();
     } catch (err: any) {
       console.error("Save error:", err);
       toast.error(err?.message || "Failed to save address");
     } finally {
       setSaving(false);
-      setIsAdding(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!supabaseUserId) return;
+
     try {
-      await removeAddress(id);
+      const { error } = await supabase
+        .from("addresses")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", supabaseUserId);
+
+      if (error) throw error;
       toast.success("Address removed");
+      await fetchAddresses();
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Failed to delete address");
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    if (!supabaseUserId) return;
+
+    try {
+      // Clear all defaults first
+      await supabase
+        .from("addresses")
+        .update({ is_default: false })
+        .eq("user_id", supabaseUserId);
+
+      // Set new default
+      const { error } = await supabase
+        .from("addresses")
+        .update({ is_default: true })
+        .eq("id", id)
+        .eq("user_id", supabaseUserId);
+
+      if (error) throw error;
+      toast.success("Default address updated");
+      await fetchAddresses();
+    } catch (err) {
+      console.error("Set default error:", err);
+      toast.error("Failed to set default address");
     }
   };
 
@@ -160,32 +292,106 @@ const SavedAddressesScreen = () => {
 
       <div className="px-4 pb-32">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
-          <p className="text-sm text-muted-foreground">Save your frequently used addresses and phone numbers for faster bookings and deliveries.</p>
+          <p className="text-sm text-muted-foreground">
+            Manage your saved addresses for faster bookings and sample collection.
+          </p>
         </motion.div>
 
         {editing !== null || isAdding ? (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 space-y-3">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea id="address" value={addressValue} onChange={(e) => setAddressValue(e.target.value)} placeholder="Flat / Building, Street, City, State" />
+              <Label>Address Type</Label>
+              <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger className="bg-muted border-0">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Home">Home</SelectItem>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" value={phoneValue} onChange={(e) => setPhoneValue(e.target.value)} placeholder="Mobile number" />
+              <Label htmlFor="address_line1">Address Line 1 *</Label>
+              <Input
+                id="address_line1"
+                value={formData.address_line1}
+                onChange={(e) => setFormData(prev => ({ ...prev, address_line1: e.target.value }))}
+                placeholder="House/Flat No., Building, Street"
+                className="bg-muted border-0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address_line2">Address Line 2</Label>
+              <Input
+                id="address_line2"
+                value={formData.address_line2}
+                onChange={(e) => setFormData(prev => ({ ...prev, address_line2: e.target.value }))}
+                placeholder="Landmark, Area (Optional)"
+                className="bg-muted border-0"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                  className="bg-muted border-0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">State *</Label>
+                <Input
+                  id="state"
+                  value={formData.state}
+                  onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+                  placeholder="State"
+                  className="bg-muted border-0"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pincode">Pincode *</Label>
+              <Input
+                id="pincode"
+                value={formData.pincode}
+                onChange={(e) => setFormData(prev => ({ ...prev, pincode: e.target.value }))}
+                placeholder="6-digit pincode"
+                className="bg-muted border-0"
+                maxLength={6}
+              />
             </div>
 
             <div className="mt-2">
               <Button variant="outline" className="w-full mb-2" onClick={handleUseCurrentLocation} disabled={locLoading}>
                 {locLoading ? "Locating..." : "Use my current location"}
               </Button>
-              {tempCoords && (
-                <p className="text-sm text-muted-foreground">Lat: {tempCoords.lat.toFixed(6)}, Lon: {tempCoords.lon.toFixed(6)}</p>
+              {formData.latitude && formData.longitude && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Location: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                </p>
               )}
             </div>
 
-            <div className="flex gap-3 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => { setEditing(null); setAddressValue(""); setPhoneValue(""); setTempCoords(null); setIsAdding(false); }} disabled={saving}>
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setEditing(null);
+                  setIsAdding(false);
+                  resetForm();
+                }}
+                disabled={saving}
+              >
                 Cancel
               </Button>
               <Button variant="hero" className="flex-1" onClick={handleSave} disabled={saving}>
@@ -215,24 +421,50 @@ const SavedAddressesScreen = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {addresses.map((a) => (
-                  <div key={a.id} className="soft-card p-4 flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-foreground" />
+                {addresses.map((address) => (
+                  <div key={address.id} className="soft-card p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-foreground capitalize">{address.type || "Home"}</p>
+                          {address.is_default && <Badge variant="soft" className="text-xs">Default</Badge>}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {address.address_line1}
+                          {address.address_line2 && `, ${address.address_line2}`}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {address.city}, {address.state} - {address.pincode}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{a.address}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{a.phone}</p>
-                      {a.lat != null && a.lon != null && (
-                        <p className="text-xs text-muted-foreground mt-1">Lat: {a.lat.toFixed(6)}, Lon: {a.lon.toFixed(6)}</p>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
+                      {!address.is_default && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs flex-1"
+                          onClick={() => handleSetDefault(address.id)}
+                        >
+                          <Star className="w-3 h-3 mr-1" />
+                          Set Default
+                        </Button>
                       )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => startEdit(a)}>
-                        <Edit2 className="w-4 h-4" />
+                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => startEdit(address)}>
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(a.id)}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(address.id)}
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>
@@ -243,17 +475,23 @@ const SavedAddressesScreen = () => {
         )}
       </div>
 
-      {/* Add button fixed to bottom */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom">
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => startAdd()}>
-            Add Address
-          </Button>
-          <Button variant="ghost" className="flex-1" onClick={() => navigate(-1)}>
-            Done
-          </Button>
-        </div>
-      </motion.div>
+      {/* Bottom buttons */}
+      {!isAdding && !editing && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
+        >
+          <div className="flex gap-3">
+            <Button variant="hero" className="flex-1" onClick={startAdd}>
+              Add Address
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+              Done
+            </Button>
+          </div>
+        </motion.div>
+      )}
     </MobileLayout>
   );
 };

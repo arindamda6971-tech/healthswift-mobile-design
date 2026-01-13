@@ -41,19 +41,30 @@ import {
 } from "@/components/ui/alert-dialog";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { format, differenceInYears } from "date-fns";
-import type { Tables } from "@/integrations/supabase/types";
 
-type FamilyMember = Tables<"family_members">;
+interface FamilyMember {
+  id: string;
+  user_id: string;
+  name: string;
+  relation: string;
+  gender: string | null;
+  date_of_birth: string | null;
+  blood_group: string | null;
+  phone: string | null;
+  medical_conditions: string[] | null;
+  is_primary: boolean;
+  created_at: string;
+}
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const genders = ["Male", "Female", "Other"];
 const relations = ["Self", "Spouse", "Father", "Mother", "Son", "Daughter", "Brother", "Sister", "Other"];
 
 const PHONE_REGEX = /^\+?[0-9]{10,15}$/;
+const STORAGE_KEY = "healthswift_family_members";
 
 const normalizePhone = (raw: string): string | null => {
   const trimmed = raw.trim();
@@ -112,27 +123,42 @@ const FamilyScreen = () => {
     setEditingMember(null);
   };
 
-  const fetchFamilyMembers = async () => {
-    if (!supabaseUserId) {
-      setLoading(false);
-      return;
-    }
-    
+  const fetchFamilyMembers = () => {
     try {
-      const { data, error } = await supabase
-        .from("family_members")
-        .select("*")
-        .eq("user_id", supabaseUserId)
-        .order("is_primary", { ascending: false })
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-      setMembers(data || []);
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const allMembers: FamilyMember[] = JSON.parse(stored);
+        // Filter by user_id if logged in
+        const userMembers = supabaseUserId 
+          ? allMembers.filter(m => m.user_id === supabaseUserId)
+          : allMembers;
+        setMembers(userMembers);
+      } else {
+        setMembers([]);
+      }
     } catch (error) {
-      console.error("Error fetching family members:", error);
-      toast.error("Failed to load family members");
+      console.error("Error loading family members:", error);
+      setMembers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveMembersToStorage = (updatedMembers: FamilyMember[]) => {
+    try {
+      // Get all members from storage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let allMembers: FamilyMember[] = stored ? JSON.parse(stored) : [];
+      
+      // Remove current user's members
+      allMembers = allMembers.filter(m => m.user_id !== supabaseUserId);
+      
+      // Add updated members
+      allMembers = [...allMembers, ...updatedMembers];
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allMembers));
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
     }
   };
 
@@ -142,10 +168,6 @@ const FamilyScreen = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabaseUserId) {
-      toast.error("Please login to add family members");
-      return;
-    }
 
     const name = formData.name.trim();
     const relation = formData.relation;
@@ -178,8 +200,9 @@ const FamilyScreen = () => {
     setIsSubmitting(true);
 
     try {
-      const memberData = {
-        user_id: supabaseUserId,
+      const memberData: FamilyMember = {
+        id: editingMember?.id || crypto.randomUUID(),
+        user_id: supabaseUserId || "guest",
         name,
         relation,
         gender,
@@ -188,31 +211,26 @@ const FamilyScreen = () => {
         phone,
         medical_conditions: medicalConditions,
         is_primary: relation === "Self",
+        created_at: editingMember?.created_at || new Date().toISOString(),
       };
 
+      let updatedMembers: FamilyMember[];
+      
       if (editingMember) {
-        const { error } = await supabase
-          .from("family_members")
-          .update(memberData)
-          .eq("id", editingMember.id);
-
-        if (error) throw error;
+        updatedMembers = members.map(m => m.id === editingMember.id ? memberData : m);
         toast.success("Family member updated successfully");
       } else {
-        const { error } = await supabase
-          .from("family_members")
-          .insert(memberData);
-
-        if (error) throw error;
+        updatedMembers = [...members, memberData];
         toast.success("Family member added successfully");
       }
 
+      setMembers(updatedMembers);
+      saveMembersToStorage(updatedMembers);
       resetForm();
       setIsDialogOpen(false);
-      fetchFamilyMembers();
     } catch (error: unknown) {
       if (import.meta.env.DEV) console.error("Error saving family member:", error);
-      toast.error("Failed to save family member. Please check your input and try again.");
+      toast.error("Failed to save family member. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -236,14 +254,10 @@ const FamilyScreen = () => {
     if (!memberToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from("family_members")
-        .delete()
-        .eq("id", memberToDelete.id);
-
-      if (error) throw error;
+      const updatedMembers = members.filter(m => m.id !== memberToDelete.id);
+      setMembers(updatedMembers);
+      saveMembersToStorage(updatedMembers);
       toast.success("Family member removed successfully");
-      fetchFamilyMembers();
     } catch (error: unknown) {
       if (import.meta.env.DEV) console.error("Error deleting family member:", error);
       toast.error("Failed to remove family member. Please try again.");
@@ -496,19 +510,13 @@ const FamilyScreen = () => {
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => navigate("/reports")}>
                       <Heart className="w-4 h-4" />
-                      Reports
                     </Button>
-                    <Button variant="ghost" size="icon" className="w-9 h-9" onClick={() => handleEdit(member)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
                       <Edit className="w-4 h-4" />
                     </Button>
                     {!member.is_primary && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="w-9 h-9 text-destructive hover:text-destructive"
-                        onClick={() => setMemberToDelete(member)}
-                      >
-                        <Trash2 className="w-4 h-4" />
+                      <Button variant="ghost" size="sm" onClick={() => setMemberToDelete(member)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     )}
                   </div>
@@ -517,35 +525,15 @@ const FamilyScreen = () => {
             })}
           </motion.div>
         )}
-
-        {/* Add member button at bottom */}
-        {members.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-6"
-          >
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              size="lg"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="w-5 h-5" />
-              Add Family Member
-            </Button>
-          </motion.div>
-        )}
       </div>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!memberToDelete} onOpenChange={() => setMemberToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Family Member</AlertDialogTitle>
+            <AlertDialogTitle>Remove Family Member?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {memberToDelete?.name} from your family list? This action cannot be undone.
+              Are you sure you want to remove {memberToDelete?.name} from your family members? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

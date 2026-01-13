@@ -44,6 +44,8 @@ interface MedicalCondition {
   status: "active" | "managed" | "resolved";
 }
 
+const STORAGE_KEY = "healthswift_family_members";
+
 const MedicalHistoryScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -92,16 +94,21 @@ const MedicalHistoryScreen = () => {
     }
   };
 
-  const fetchFamilyMembers = async () => {
-    if (!supabaseUserId) return;
-
-    const { data, error } = await supabase
-      .from("family_members")
-      .select("id, name, relation, gender, medical_conditions")
-      .eq("user_id", supabaseUserId);
-
-    if (data) {
-      setFamilyMembers(data);
+  const fetchFamilyMembers = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const allMembers = JSON.parse(stored);
+        const userMembers = supabaseUserId 
+          ? allMembers.filter((m: FamilyMember & { user_id: string }) => m.user_id === supabaseUserId)
+          : [];
+        setFamilyMembers(userMembers);
+      } else {
+        setFamilyMembers([]);
+      }
+    } catch (error) {
+      console.error("Error loading family members:", error);
+      setFamilyMembers([]);
     }
   };
 

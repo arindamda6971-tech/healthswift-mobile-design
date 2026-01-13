@@ -216,7 +216,7 @@ const MedicalHistoryScreen = () => {
             <span className="text-sm font-medium text-muted-foreground">Select Member</span>
           </div>
           
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {/* Self */}
             <button
               onClick={() => setSelectedMember(null)}
@@ -261,16 +261,16 @@ const MedicalHistoryScreen = () => {
               </button>
             ))}
 
-            {/* Add Family Member */}
-            <button
-              onClick={() => navigate("/family")}
-              className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl bg-muted/50 border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-all"
+            {/* Add Family Member (feature removed) */}
+            <div
+              className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl bg-muted/50 border-2 border-dashed border-muted-foreground/30 transition-all opacity-60"
+              title="Family feature removed"
             >
               <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center">
                 <Plus className="w-5 h-5 text-muted-foreground" />
               </div>
               <span className="text-xs text-muted-foreground whitespace-nowrap">Add</span>
-            </button>
+            </div>
           </div>
         </motion.div>
 

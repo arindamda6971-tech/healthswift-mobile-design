@@ -34,11 +34,9 @@ import HealthScoreScreen from "./pages/HealthScoreScreen";
 import SavedAddressesScreen from "./pages/SavedAddressesScreen";
 import DoctorConsultScreen from "./pages/DoctorConsultScreen";
 import RewardsScreen from "./pages/RewardsScreen";
-import FamilyScreen from "./pages/FamilyScreen";
 import PartnerLabsScreen from "./pages/PartnerLabsScreen";
 import LabDetailScreen from "./pages/LabDetailScreen";
 import UploadPrescriptionScreen from "./pages/UploadPrescriptionScreen";
-import HealthAssistantScreen from "./pages/HealthAssistantScreen";
 import SupportScreen from "./pages/SupportScreen";
 import PhysioConsultScreen from "./pages/PhysioConsultScreen";
 import ECGTestScreen from "./pages/ECGTestScreen";
@@ -85,11 +83,10 @@ const App = () => (
                   <Route path="/health-score" element={<ProtectedRoute><HealthScoreScreen /></ProtectedRoute>} />
                   <Route path="/doctor-consult" element={<ProtectedRoute><DoctorConsultScreen /></ProtectedRoute>} />
                   <Route path="/rewards" element={<ProtectedRoute><RewardsScreen /></ProtectedRoute>} />
-                  <Route path="/family" element={<ProtectedRoute><FamilyScreen /></ProtectedRoute>} />
+                  {/* Family screen removed */}
                   <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
                   <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
                   <Route path="/upload-prescription" element={<ProtectedRoute><UploadPrescriptionScreen /></ProtectedRoute>} />
-                  <Route path="/health-assistant" element={<ProtectedRoute><HealthAssistantScreen /></ProtectedRoute>} />
                   <Route path="/support" element={<ProtectedRoute><SupportScreen /></ProtectedRoute>} />
                   <Route path="/physio-consult" element={<ProtectedRoute><PhysioConsultScreen /></ProtectedRoute>} />
                   <Route path="/ecg-test" element={<ProtectedRoute><ECGTestScreen /></ProtectedRoute>} />

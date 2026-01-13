@@ -30,7 +30,6 @@ import EditProfileScreen from "./pages/EditProfileScreen";
 import MedicalHistoryScreen from "./pages/MedicalHistoryScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import SubscriptionScreen from "./pages/SubscriptionScreen";
-import HealthScoreScreen from "./pages/HealthScoreScreen";
 import SavedAddressesScreen from "./pages/SavedAddressesScreen";
 import DoctorConsultScreen from "./pages/DoctorConsultScreen";
 import RewardsScreen from "./pages/RewardsScreen";
@@ -80,7 +79,6 @@ const App = () => (
                   <Route path="/saved-addresses" element={<ProtectedRoute><SavedAddressesScreen /></ProtectedRoute>} />
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
                   <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />
-                  <Route path="/health-score" element={<ProtectedRoute><HealthScoreScreen /></ProtectedRoute>} />
                   <Route path="/doctor-consult" element={<ProtectedRoute><DoctorConsultScreen /></ProtectedRoute>} />
                   <Route path="/rewards" element={<ProtectedRoute><RewardsScreen /></ProtectedRoute>} />
                   {/* Family screen removed */}

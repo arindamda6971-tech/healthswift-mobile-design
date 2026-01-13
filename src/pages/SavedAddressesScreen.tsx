@@ -260,30 +260,61 @@ const SavedAddressesScreen = () => {
     }
   };
 
-  const handleSetDefault = async (id: string) => {
-    if (!supabaseUserId) return;
-
-    try {
-      // Clear all defaults first
-      await supabase
-        .from("addresses")
-        .update({ is_default: false })
-        .eq("user_id", supabaseUserId);
-
-      // Set new default
-      const { error } = await supabase
-        .from("addresses")
-        .update({ is_default: true })
-        .eq("id", id)
-        .eq("user_id", supabaseUserId);
-
-      if (error) throw error;
-      toast.success("Default address updated");
-      await fetchAddresses();
-    } catch (err) {
-      console.error("Set default error:", err);
-      toast.error("Failed to set default address");
+  const handleAutoAddAddress = async () => {
+    if (!supabaseUserId) {
+      toast.error("Please log in to save addresses");
+      return;
     }
+
+    if (!navigator?.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setSaving(true);
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      const geoData = await reverseGeocode(lat, lon);
+      if (geoData && geoData.address) {
+        const addressData = {
+          user_id: supabaseUserId,
+          type: "Home",
+          address_line1: geoData.address.road || geoData.address.suburb || geoData.address.residential || "Current Location",
+          address_line2: geoData.address.neighbourhood || null,
+          city: geoData.address.city || geoData.address.town || geoData.address.village || "",
+          state: geoData.address.state || "",
+          pincode: geoData.address.postcode || "",
+          latitude: lat,
+          longitude: lon,
+          is_default: addresses.length === 0,
+        };
+
+        try {
+          const { error } = await supabase
+            .from("addresses")
+            .insert(addressData);
+
+          if (error) throw error;
+          toast.success("Address added automatically");
+          await fetchAddresses();
+        } catch (err: any) {
+          console.error("Auto save error:", err);
+          toast.error(err?.message || "Failed to save address");
+        }
+      } else {
+        toast.error("Could not determine address from location");
+      }
+
+      setSaving(false);
+    }, (err) => {
+      console.error("Geolocation error", err);
+      if (err.code === 1) toast.error("Location permission denied");
+      else toast.error("Failed to get location");
+      setSaving(false);
+    }, { enableHighAccuracy: true, timeout: 15000 });
   };
 
   return (
@@ -482,14 +513,9 @@ const SavedAddressesScreen = () => {
           animate={{ y: 0 }}
           className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
         >
-          <div className="flex gap-3">
-            <Button variant="hero" className="flex-1" onClick={startAdd}>
-              Add Address
-            </Button>
-            <Button variant="outline" className="flex-1" onClick={() => navigate(-1)}>
-              Done
-            </Button>
-          </div>
+          <Button variant="hero" className="w-full" onClick={handleAutoAddAddress}>
+            Add Address
+          </Button>
         </motion.div>
       )}
     </MobileLayout>

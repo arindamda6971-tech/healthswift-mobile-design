@@ -27,7 +27,6 @@ import ReportsScreen from "./pages/ReportsScreen";
 import ReportDetailScreen from "./pages/ReportDetailScreen";
 import ProfileScreen from "./pages/ProfileScreen";
 import EditProfileScreen from "./pages/EditProfileScreen";
-import MedicalHistoryScreen from "./pages/MedicalHistoryScreen";
 import NotificationsScreen from "./pages/NotificationsScreen";
 import SubscriptionScreen from "./pages/SubscriptionScreen";
 import SavedAddressesScreen from "./pages/SavedAddressesScreen";

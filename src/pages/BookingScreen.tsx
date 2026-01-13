@@ -152,7 +152,7 @@ const BookingScreen = () => {
           className="w-full"
           size="lg"
           disabled={!selectedAddressId || cartItems.length === 0}
-          onClick={() => navigate("/tracking", {
+          onClick={() => navigate("/payment", {
             state: { 
               cartItems: cartItems,
               addressId: selectedAddressId,

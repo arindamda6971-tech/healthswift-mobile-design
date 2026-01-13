@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, Tag, CreditCard, Wallet, Smartphone, ShoppingCart, MapPin, ChevronRight } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -30,22 +30,26 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Address = Tables<"addresses">;
 
-const paymentMethods = [
-  { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
-  { id: "card", icon: CreditCard, name: "Card", subtitle: "Credit / Debit Card" },
-  { id: "wallet", icon: Wallet, name: "Wallet", subtitle: "Paytm, Amazon Pay" },
+const timeSlots = [
+  { id: 1, time: "6:00 AM - 8:00 AM", available: true, phlebotomists: 5 },
+  { id: 2, time: "8:00 AM - 10:00 AM", available: true, phlebotomists: 8 },
+  { id: 3, time: "10:00 AM - 12:00 PM", available: true, phlebotomists: 6 },
+  { id: 4, time: "12:00 PM - 2:00 PM", available: false, phlebotomists: 0 },
+  { id: 5, time: "2:00 PM - 4:00 PM", available: true, phlebotomists: 4 },
+  { id: 6, time: "4:00 PM - 6:00 PM", available: true, phlebotomists: 7 },
+  { id: 7, time: "6:00 PM - 8:00 PM", available: true, phlebotomists: 3 },
+  { id: 8, time: "8:00 PM - 10:00 PM", available: true, phlebotomists: 2 },
 ];
 
 const CartScreen = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, subtotal } = useCart();
   const { supabaseUserId } = useAuth();
-  const [couponCode, setCouponCode] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState("upi");
-  const [couponApplied, setCouponApplied] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(0);
+  const [selectedTime, setSelectedTime] = useState(2);
   
   // Add Address Modal State
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
@@ -100,14 +104,16 @@ const CartScreen = () => {
     fetchAddresses();
   }, [supabaseUserId]);
 
-  const discount = couponApplied ? 100 : 0;
-  const total = subtotal - discount;
-
-  const applyCoupon = () => {
-    if (couponCode.toUpperCase() === "HEALTH100") {
-      setCouponApplied(true);
-    }
-  };
+  const dates = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() + i);
+    return {
+      day: date.toLocaleDateString("en-US", { weekday: "short" }),
+      date: date.getDate(),
+      month: date.toLocaleDateString("en-US", { month: "short" }),
+      fullDate: date.toISOString().split("T")[0], // YYYY-MM-DD format for DB
+    };
+  });
 
   const handleSaveAddress = async () => {
     if (!supabaseUserId) {
@@ -339,111 +345,66 @@ const CartScreen = () => {
           )}
         </motion.div>
 
-        {/* Coupon section */}
+        {/* Date selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="soft-card mt-6"
+          className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
-            <Tag className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Apply Coupon</h3>
+            <Calendar className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Select Date</h3>
           </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter coupon code"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-              className="flex-1 bg-muted border-0 rounded-xl"
-            />
-            <Button
-              variant="soft"
-              onClick={applyCoupon}
-              disabled={couponApplied}
-            >
-              {couponApplied ? "Applied" : "Apply"}
-            </Button>
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+            {dates.map((date, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedDate(index)}
+                className={`flex-shrink-0 w-16 py-3 rounded-2xl text-center transition-all ${
+                  selectedDate === index
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground"
+                }`}
+              >
+                <p className="text-xs opacity-80">{date.day}</p>
+                <p className="text-lg font-bold">{date.date}</p>
+                <p className="text-xs opacity-80">{date.month}</p>
+              </button>
+            ))}
           </div>
-          {couponApplied && (
-            <Badge variant="softSuccess" className="mt-2">
-              Coupon HEALTH100 applied - ₹100 off
-            </Badge>
-          )}
         </motion.div>
 
-        {/* Payment methods */}
+        {/* Time slot selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="mt-6"
         >
-          <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
-          <div className="space-y-2">
-            {paymentMethods.map((method) => (
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Select Time Slot</h3>
+            <Badge variant="soft">24/7 Available</Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {timeSlots.map((slot) => (
               <button
-                key={method.id}
-                onClick={() => setSelectedPayment(method.id)}
-                className={`w-full soft-card flex items-center gap-4 transition-all ${
-                  selectedPayment === method.id
-                    ? "ring-2 ring-primary"
-                    : ""
+                key={slot.id}
+                onClick={() => slot.available && setSelectedTime(slot.id)}
+                disabled={!slot.available}
+                className={`py-3 px-4 rounded-xl text-center transition-all ${
+                  !slot.available
+                    ? "bg-muted/50 text-muted-foreground opacity-50"
+                    : selectedTime === slot.id
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground"
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <method.icon className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-semibold text-foreground text-sm">{method.name}</p>
-                  <p className="text-xs text-muted-foreground">{method.subtitle}</p>
-                </div>
-                <div className={`w-5 h-5 rounded-full border-2 ${
-                  selectedPayment === method.id
-                    ? "border-primary bg-primary"
-                    : "border-muted-foreground"
-                } flex items-center justify-center`}>
-                  {selectedPayment === method.id && (
-                    <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                  )}
-                </div>
+                <p className="text-sm font-medium">{slot.time}</p>
               </button>
             ))}
           </div>
-        </motion.div>
-
-        {/* Price breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="soft-card mt-6"
-        >
-          <h3 className="font-semibold text-foreground mb-3">Price Details</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="text-foreground">₹{subtotal}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Home Collection</span>
-              <span className="text-success">FREE</span>
-            </div>
-            {couponApplied && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Coupon Discount</span>
-                <span className="text-success">-₹{discount}</span>
-              </div>
-            )}
-            <div className="h-px bg-border my-3" />
-            <div className="flex justify-between">
-              <span className="font-semibold text-foreground">Total</span>
-              <span className="font-bold text-lg text-foreground">₹{total}</span>
-            </div>
-          </div>
-          <Badge variant="softSuccess" className="mt-3">
-            No hidden charges
-          </Badge>
         </motion.div>
       </div>
 
@@ -457,10 +418,18 @@ const CartScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          onClick={() => navigate("/book", { state: { selectedAddressId } })}
+          onClick={() => navigate("/payment", { 
+            state: { 
+              cartItems: items, 
+              addressId: selectedAddressId, 
+              scheduledDate: dates[selectedDate].fullDate,
+              scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
+              subtotal 
+            } 
+          })}
           disabled={!selectedAddressId && addresses.length > 0}
         >
-          Proceed to Book • ₹{total}
+          Proceed to Payment • ₹{subtotal}
         </Button>
       </motion.div>
 

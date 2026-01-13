@@ -9,7 +9,7 @@ const FloatingCartButton = () => {
   const { itemCount } = useCart();
   
   // Hide on certain pages where it's not needed
-  const hiddenPaths = ["/login", "/onboarding", "/splash", "/cart", "/book", "/tracking"];
+  const hiddenPaths = ["/login", "/onboarding", "/splash", "/cart", "/tracking"];
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
   
   if (shouldHide) return null;

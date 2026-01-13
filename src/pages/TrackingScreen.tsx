@@ -49,6 +49,10 @@ interface BookingState {
   scheduledDate: string;
   scheduledTimeSlot: string;
   subtotal: number;
+  couponApplied?: boolean;
+  discount?: number;
+  total?: number;
+  selectedPayment?: string;
 }
 
 const TrackingScreen = () => {
@@ -79,6 +83,8 @@ const TrackingScreen = () => {
       
       try {
         const subtotal = bookingState?.subtotal || stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+        const discount = bookingState?.discount || 0;
+        const total = bookingState?.total || subtotal;
         
         // Create order with booking details
         const { data: orderData, error: orderError } = await supabase
@@ -89,9 +95,11 @@ const TrackingScreen = () => {
             scheduled_date: bookingState?.scheduledDate || null,
             scheduled_time_slot: bookingState?.scheduledTimeSlot || null,
             subtotal: subtotal,
-            total: subtotal,
+            discount: discount,
+            total: total,
+            payment_method: bookingState?.selectedPayment || null,
             status: "confirmed",
-            payment_status: "pending",
+            payment_status: "completed", // Since payment is done
           })
           .select()
           .single();

@@ -1,4 +1,7 @@
 project_id = "dmfqfswgnfpqeseqswhl"
 
-[functions.firebase-auth-bridge]
+[functions.analyze-prescription]
+verify_jwt = false
+
+[functions.health-assistant]
 verify_jwt = false

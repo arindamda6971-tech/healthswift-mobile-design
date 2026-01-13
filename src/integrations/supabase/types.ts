@@ -92,13 +92,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cart_items_family_member_id_fkey"
-            columns: ["family_member_id"]
-            isOneToOne: false
-            referencedRelation: "family_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "cart_items_package_id_fkey"
             columns: ["package_id"]
             isOneToOne: false
@@ -113,51 +106,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      family_members: {
-        Row: {
-          blood_group: string | null
-          created_at: string
-          date_of_birth: string | null
-          gender: string | null
-          id: string
-          is_primary: boolean | null
-          medical_conditions: string[] | null
-          name: string
-          phone: string | null
-          relation: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          blood_group?: string | null
-          created_at?: string
-          date_of_birth?: string | null
-          gender?: string | null
-          id?: string
-          is_primary?: boolean | null
-          medical_conditions?: string[] | null
-          name: string
-          phone?: string | null
-          relation: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          blood_group?: string | null
-          created_at?: string
-          date_of_birth?: string | null
-          gender?: string | null
-          id?: string
-          is_primary?: boolean | null
-          medical_conditions?: string[] | null
-          name?: string
-          phone?: string | null
-          relation?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       order_items: {
         Row: {
@@ -191,13 +139,6 @@ export type Database = {
           test_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "order_items_family_member_id_fkey"
-            columns: ["family_member_id"]
-            isOneToOne: false
-            referencedRelation: "family_members"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
@@ -288,13 +229,6 @@ export type Database = {
             columns: ["address_id"]
             isOneToOne: false
             referencedRelation: "addresses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_family_member_id_fkey"
-            columns: ["family_member_id"]
-            isOneToOne: false
-            referencedRelation: "family_members"
             referencedColumns: ["id"]
           },
         ]
@@ -493,13 +427,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "reports_family_member_id_fkey"
-            columns: ["family_member_id"]
-            isOneToOne: false
-            referencedRelation: "family_members"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "reports_order_id_fkey"
             columns: ["order_id"]

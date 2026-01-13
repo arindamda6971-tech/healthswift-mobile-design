@@ -1,20 +1,9 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-declare global {
-  interface Window {
-    confirmationResult?: any;
-  }
-}
-
-// Extended user type that includes Supabase info
-interface ExtendedUser extends SupabaseUser {
-  supabaseId?: string;
-}
-
 interface AuthContextType {
-  user: ExtendedUser | null;
+  user: User | null;
   loading: boolean;
   supabaseUserId: string | null;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -28,21 +17,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Listen to Supabase auth state changes
+    // Set up auth listener BEFORE checking session
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const supabaseUser = session.user as ExtendedUser;
-        supabaseUser.supabaseId = session.user.id;
-        setUser(supabaseUser);
+        setUser(session.user);
         setSupabaseUserId(session.user.id);
       } else {
         setUser(null);
         setSupabaseUserId(null);
+      }
+      setLoading(false);
+    });
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setSupabaseUserId(session.user.id);
       }
       setLoading(false);
     });
@@ -59,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       authListener?.subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, [loading]);
+  }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
@@ -79,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
         options: {
+          emailRedirectTo: window.location.origin,
           data: {
             full_name: fullName
           }
@@ -101,10 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const verifyOtp = async (_phone: string, token: string) => {
+  const verifyOtp = async (phone: string, token: string) => {
     try {
       const { error } = await supabase.auth.verifyOtp({
-        phone: _phone,
+        phone: phone,
         token,
         type: 'sms'
       });
@@ -117,7 +114,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
       });
       return { error };
     } catch (error) {

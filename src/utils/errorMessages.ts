@@ -1,69 +1,77 @@
 /**
- * Maps Firebase Auth error codes to user-friendly messages.
+ * Maps Supabase Auth error codes/messages to user-friendly messages.
  * This prevents exposing internal system information through error messages.
  */
 
 const authErrorMessages: Record<string, string> = {
   // Email/Password errors
-  'auth/email-already-in-use': 'This email is already registered.',
-  'auth/invalid-email': 'Please enter a valid email address.',
-  'auth/weak-password': 'Password must be at least 6 characters.',
-  'auth/user-not-found': 'Invalid email or password.',
-  'auth/wrong-password': 'Invalid email or password.',
-  'auth/invalid-credential': 'Invalid email or password.',
-  'auth/user-disabled': 'This account has been disabled.',
+  'user_already_exists': 'This email is already registered.',
+  'invalid_credentials': 'Invalid email or password.',
+  'invalid_email': 'Please enter a valid email address.',
+  'weak_password': 'Password must be at least 6 characters.',
+  'email_not_confirmed': 'Please verify your email before signing in.',
+  'user_not_found': 'Invalid email or password.',
+  'user_banned': 'This account has been disabled.',
   
   // Rate limiting
-  'auth/too-many-requests': 'Too many attempts. Please try again later.',
-  
-  // Network errors
-  'auth/network-request-failed': 'Network error. Please check your connection.',
-  'auth/internal-error': 'Something went wrong. Please try again.',
+  'over_request_rate_limit': 'Too many attempts. Please try again later.',
+  'over_email_send_rate_limit': 'Too many email requests. Please try again later.',
+  'over_sms_send_rate_limit': 'Too many SMS requests. Please try again later.',
   
   // Phone/OTP errors
-  'auth/invalid-phone-number': 'Please enter a valid phone number.',
-  'auth/invalid-verification-code': 'Invalid or expired code.',
-  'auth/missing-phone-number': 'Please enter a phone number.',
-  'auth/quota-exceeded': 'SMS quota exceeded. Please try again later.',
-  'auth/captcha-check-failed': 'Verification failed. Please try again.',
-  'auth/missing-verification-code': 'Please enter the verification code.',
-  'auth/code-expired': 'Verification code has expired. Please request a new one.',
+  'invalid_phone': 'Please enter a valid phone number.',
+  'otp_expired': 'Verification code has expired. Please request a new one.',
+  'otp_disabled': 'Phone authentication is not enabled.',
   
   // OAuth errors
-  'auth/popup-blocked': 'Please allow popups for this site.',
-  'auth/popup-closed-by-user': 'Sign-in was cancelled.',
-  'auth/cancelled-popup-request': 'Sign-in was cancelled.',
-  'auth/account-exists-with-different-credential': 'An account already exists with this email.',
-  'auth/credential-already-in-use': 'This credential is already linked to another account.',
+  'provider_disabled': 'This sign-in method is not available.',
+  'unexpected_failure': 'Sign-in was cancelled or failed.',
   
   // Session errors
-  'auth/requires-recent-login': 'Please sign in again to continue.',
-  'auth/session-expired': 'Your session has expired. Please sign in again.',
+  'session_expired': 'Your session has expired. Please sign in again.',
+  'refresh_token_not_found': 'Your session has expired. Please sign in again.',
 };
 
 /**
- * Get a user-friendly error message from a Firebase Auth error.
+ * Get a user-friendly error message from a Supabase Auth error.
  * Falls back to a generic message if the error code is not recognized.
  */
-export const getAuthErrorMessage = (error: Error): string => {
-  const code = (error as any).code;
+export const getAuthErrorMessage = (error: Error | any): string => {
+  // Supabase errors often have error_code or code property
+  const code = error?.code || error?.error_code || '';
+  const message = error?.message?.toLowerCase() || '';
   
+  // Check direct code match
   if (code && authErrorMessages[code]) {
     return authErrorMessages[code];
   }
   
-  // Check for common error message patterns and sanitize
-  const message = error.message?.toLowerCase() || '';
-  
-  if (message.includes('already registered') || message.includes('already in use')) {
+  // Check for common Supabase error message patterns
+  if (message.includes('user already registered') || message.includes('already in use')) {
     return 'This email is already registered.';
   }
   
-  if (message.includes('invalid') && message.includes('password')) {
+  if (message.includes('invalid login credentials') || message.includes('invalid credentials')) {
     return 'Invalid email or password.';
   }
   
-  if (message.includes('network') || message.includes('connection')) {
+  if (message.includes('email not confirmed')) {
+    return 'Please verify your email before signing in.';
+  }
+  
+  if (message.includes('rate limit') || message.includes('too many requests')) {
+    return 'Too many attempts. Please try again later.';
+  }
+  
+  if (message.includes('invalid phone') || message.includes('phone number')) {
+    return 'Please enter a valid phone number.';
+  }
+  
+  if (message.includes('otp') || message.includes('token')) {
+    return 'Invalid or expired verification code.';
+  }
+  
+  if (message.includes('network') || message.includes('connection') || message.includes('fetch')) {
     return 'Network error. Please check your connection.';
   }
   

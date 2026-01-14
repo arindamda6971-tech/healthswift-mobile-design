@@ -2,6 +2,27 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Force update service worker and clear old caches on load
+async function updateServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.update();
+      }
+      // Clear all caches to remove any old Firebase code
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+    } catch (error) {
+      console.log('Service worker update:', error);
+    }
+  }
+}
+
 // Remove any debug controls injected at runtime (e.g. "Hide debug" button)
 // This operates at the DOM level so we don't change UI component files.
 function removeDebugControls() {
@@ -28,6 +49,9 @@ function removeDebugControls() {
 		mo.observe(document.body, { childList: true, subtree: true });
 	}
 }
+
+// Update service worker first
+updateServiceWorker();
 
 createRoot(document.getElementById("root")!).render(<App />);
 

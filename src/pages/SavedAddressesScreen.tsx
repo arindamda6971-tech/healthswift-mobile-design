@@ -260,6 +260,32 @@ const SavedAddressesScreen = () => {
     }
   };
 
+  const handleSetDefault = async (id: string) => {
+    if (!supabaseUserId) return;
+
+    try {
+      // First, remove default from all addresses
+      await supabase
+        .from("addresses")
+        .update({ is_default: false })
+        .eq("user_id", supabaseUserId);
+
+      // Then set the selected address as default
+      const { error } = await supabase
+        .from("addresses")
+        .update({ is_default: true })
+        .eq("id", id)
+        .eq("user_id", supabaseUserId);
+
+      if (error) throw error;
+      toast.success("Default address updated");
+      await fetchAddresses();
+    } catch (err) {
+      console.error("Set default error:", err);
+      toast.error("Failed to set default address");
+    }
+  };
+
   const handleAutoAddAddress = async () => {
     if (!supabaseUserId) {
       toast.error("Please log in to save addresses");

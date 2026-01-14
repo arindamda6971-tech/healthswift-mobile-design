@@ -46,6 +46,11 @@ export const getAuthErrorMessage = (error: Error | any): string => {
     return authErrorMessages[code];
   }
   
+  // Handle Firebase errors (from cached old app versions) - redirect to Supabase
+  if (message.includes('firebase') || message.includes('api-key-not-valid')) {
+    return 'Please clear your browser cache and refresh the page, then try again.';
+  }
+  
   // Check for common Supabase error message patterns
   if (message.includes('user already registered') || message.includes('already in use')) {
     return 'This email is already registered.';

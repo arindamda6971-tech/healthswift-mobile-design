@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { getAuthErrorMessage, checkRateLimit, recordAuthAttempt, resetRateLimit } from "@/utils/errorMessages";
+import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().trim().email("Please enter a valid email");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -356,6 +357,30 @@ const LoginScreen = () => {
             <Button onClick={handleEmailAuth} className="w-full" variant="hero" size="lg" disabled={isLoading}>
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isSignUp ? "Create Account" : "Sign In"}
             </Button>
+            {!isSignUp && (
+              <button
+                onClick={async () => {
+                  const emailResult = emailSchema.safeParse(email);
+                  if (!emailResult.success) {
+                    toast({ title: "Enter Email", description: "Please enter your email address first", variant: "destructive" });
+                    return;
+                  }
+                  setIsLoading(true);
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin
+                  });
+                  setIsLoading(false);
+                  if (error) {
+                    toast({ title: "Error", description: error.message, variant: "destructive" });
+                  } else {
+                    toast({ title: "Check Your Email", description: "Password reset link sent to your email." });
+                  }
+                }}
+                className="text-sm text-primary font-medium w-full text-center"
+              >
+                Forgot Password?
+              </button>
+            )}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-sm text-muted-foreground w-full text-center"

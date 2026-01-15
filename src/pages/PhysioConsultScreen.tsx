@@ -6,7 +6,6 @@ import {
   Clock,
   Video,
   Phone,
-  MessageCircle,
   Shield,
   ChevronRight,
   Activity,
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { toast } from "sonner";
 
 const physiotherapists = [
   {
@@ -80,7 +80,6 @@ const specializations = [
 const consultTypes = [
   { id: "video", icon: Video, label: "Video Call", price: "+₹0" },
   { id: "audio", icon: Phone, label: "Audio Call", price: "+₹0" },
-  { id: "chat", icon: MessageCircle, label: "Chat", price: "-₹50" },
 ];
 
 const PhysioConsultScreen = () => {
@@ -256,9 +255,27 @@ const PhysioConsultScreen = () => {
             variant="hero"
             className="w-full"
             size="lg"
-            onClick={() => navigate("/home")}
+            onClick={() => {
+              const physio = physiotherapists.find(p => p.id === selectedPhysio);
+              if (physio) {
+                if (!physio.available) {
+                  toast.error("Physiotherapist is currently offline", {
+                    description: `Next available: ${physio.nextSlot}`,
+                  });
+                  return;
+                }
+                navigate("/consultation-call", {
+                  state: {
+                    type: selectedType,
+                    professional: physio,
+                    professionalType: "physiotherapist",
+                  },
+                });
+              }
+            }}
           >
-            Book Consultation • ₹{physiotherapists.find(p => p.id === selectedPhysio)?.consultationFee}
+            {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
+            Start {selectedType === "video" ? "Video" : "Audio"} Call • ₹{physiotherapists.find(p => p.id === selectedPhysio)?.consultationFee}
           </Button>
         </motion.div>
       )}

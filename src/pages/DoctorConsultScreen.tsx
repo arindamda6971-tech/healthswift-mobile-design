@@ -6,7 +6,6 @@ import {
   Clock,
   Video,
   Phone,
-  MessageCircle,
   Calendar,
   Shield,
   ChevronRight,
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { toast } from "sonner";
 
 const doctors = [
   {
@@ -57,8 +57,7 @@ const doctors = [
 
 const consultTypes = [
   { id: "video", icon: Video, label: "Video Call", price: "+₹0" },
-  { id: "audio", icon: Phone, label: "Audio Call", price: "+₀" },
-  { id: "chat", icon: MessageCircle, label: "Chat", price: "-₹50" },
+  { id: "audio", icon: Phone, label: "Audio Call", price: "+₹0" },
 ];
 
 const DoctorConsultScreen = () => {
@@ -197,9 +196,27 @@ const DoctorConsultScreen = () => {
             variant="hero"
             className="w-full"
             size="lg"
-            onClick={() => navigate("/home")}
+            onClick={() => {
+              const doctor = doctors.find(d => d.id === selectedDoctor);
+              if (doctor) {
+                if (!doctor.available) {
+                  toast.error("Doctor is currently offline", {
+                    description: `Next available: ${doctor.nextSlot}`,
+                  });
+                  return;
+                }
+                navigate("/consultation-call", {
+                  state: {
+                    type: selectedType,
+                    professional: doctor,
+                    professionalType: "doctor",
+                  },
+                });
+              }
+            }}
           >
-            Book Consultation • ₹{doctors.find(d => d.id === selectedDoctor)?.consultationFee}
+            {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
+            Start {selectedType === "video" ? "Video" : "Audio"} Call • ₹{doctors.find(d => d.id === selectedDoctor)?.consultationFee}
           </Button>
         </motion.div>
       )}

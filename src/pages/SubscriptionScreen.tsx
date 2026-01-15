@@ -20,17 +20,17 @@ const plans = [
   {
     id: "monthly",
     name: "Monthly",
-    price: 299,
+    price: 29,
     period: "per month",
     popular: false,
   },
   {
     id: "yearly",
     name: "Yearly",
-    price: 2499,
+    price: 299,
     period: "per year",
     popular: true,
-    savings: "Save ₹1,089",
+    savings: "Save ₹49",
   },
 ];
 
@@ -38,8 +38,7 @@ const features = [
   { icon: Home, text: "Unlimited free home sample collection" },
   { icon: Stethoscope, text: "2 free doctor consultations/month" },
   { icon: HeadphonesIcon, text: "Priority 24/7 customer support" },
-  { icon: Sparkles, text: "AI-powered health insights" },
-  { icon: Zap, text: "Express 4-hour report delivery" },
+  { icon: Zap, text: "Express report delivery" },
   { icon: Star, text: "Exclusive member discounts (up to 30%)" },
 ];
 
@@ -63,7 +62,7 @@ const SubscriptionScreen = () => {
           </div>
           <h1 className="text-2xl font-bold text-foreground">Health Swift Gold</h1>
           <p className="text-muted-foreground mt-2">
-            Unlock premium health benefits with our subscription plans
+            Unlock gold health benefits with our subscription plans
           </p>
         </motion.div>
 
@@ -78,7 +77,9 @@ const SubscriptionScreen = () => {
             <button
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
-              className={`relative p-4 rounded-2xl border-2 transition-all ${
+              className={`relative rounded-2xl border-2 transition-all ${
+                plan.popular ? "pt-6 pb-4 px-4" : "p-4"
+              } ${
                 selectedPlan === plan.id
                   ? "border-primary bg-primary/5"
                   : "border-border bg-card"
@@ -173,11 +174,8 @@ const SubscriptionScreen = () => {
           size="lg"
           onClick={() => navigate("/home")}
         >
-          Start 7-Day Free Trial
+          Buy Now
         </Button>
-        <p className="text-center text-xs text-muted-foreground mt-2">
-          Cancel anytime. No questions asked.
-        </p>
       </motion.div>
     </MobileLayout>
   );

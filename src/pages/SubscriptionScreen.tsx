@@ -9,7 +9,6 @@ import {
   Home,
   Stethoscope,
   HeadphonesIcon,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +77,7 @@ const SubscriptionScreen = () => {
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
               className={`relative rounded-2xl border-2 transition-all ${
-                plan.popular ? "pt-6 pb-4 px-4" : "p-4"
+                plan.popular ? "pt-10 pb-4 px-4" : "p-4"
               } ${
                 selectedPlan === plan.id
                   ? "border-primary bg-primary/5"
@@ -86,11 +85,20 @@ const SubscriptionScreen = () => {
               }`}
             >
               {plan.popular && (
-                <Badge variant="ai" className="absolute -top-2 left-1/2 -translate-x-1/2">
+                <Badge
+                  variant="ai"
+                  className="absolute -top-4 left-1/2 -translate-x-1/2 z-10"
+                >
                   Most Popular
                 </Badge>
               )}
-              <p className="font-semibold text-foreground">{plan.name}</p>
+              <p
+                className={`font-semibold text-foreground ${
+                  plan.popular ? "mt-2" : ""
+                }`}
+              >
+                {plan.name}
+              </p>
               <p className="text-2xl font-bold text-foreground mt-2">
                 ₹{plan.price}
               </p>
@@ -124,7 +132,9 @@ const SubscriptionScreen = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
-                <span className="flex-1 text-foreground text-sm">{feature.text}</span>
+                <span className="flex-1 text-foreground text-sm">
+                  {feature.text}
+                </span>
                 <Check className="w-5 h-5 text-success" />
               </motion.div>
             ))}
@@ -138,23 +148,39 @@ const SubscriptionScreen = () => {
           transition={{ delay: 0.3 }}
           className="mt-8"
         >
-          <h2 className="text-lg font-bold text-foreground mb-4">What Members Say</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            What Members Say
+          </h2>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar">
             {[
-              { name: "Priya S.", text: "The free home collection alone is worth it! Saved so much time.", rating: 5 },
-              { name: "Rahul M.", text: "Doctor consultations are incredibly helpful. Best investment!", rating: 5 },
-              { name: "Ananya K.", text: "Love the express reports. Got my results in just 4 hours!", rating: 5 },
+              {
+                name: "Priya S.",
+                text: "The free home collection alone is worth it! Saved so much time.",
+                rating: 5,
+              },
+              {
+                name: "Rahul M.",
+                text: "Doctor consultations are incredibly helpful. Best investment!",
+                rating: 5,
+              },
+              {
+                name: "Ananya K.",
+                text: "Love the express reports. Got my results in just 4 hours!",
+                rating: 5,
+              },
             ].map((testimonial, index) => (
-              <div
-                key={index}
-                className="soft-card min-w-[260px] flex-shrink-0"
-              >
+              <div key={index} className="soft-card min-w-[260px] flex-shrink-0">
                 <div className="flex gap-1 mb-2">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-warning fill-warning" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 text-warning fill-warning"
+                    />
                   ))}
                 </div>
-                <p className="text-sm text-foreground mb-2">"{testimonial.text}"</p>
+                <p className="text-sm text-foreground mb-2">
+                  "{testimonial.text}"
+                </p>
                 <p className="text-xs text-muted-foreground">- {testimonial.name}</p>
               </div>
             ))}

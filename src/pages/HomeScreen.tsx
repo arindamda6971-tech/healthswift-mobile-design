@@ -4,27 +4,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Bell,
-  FlaskConical,
-  Sparkles,
   ChevronRight,
   HeartPulse,
   Activity,
-  Beaker,
   Shield,
-  Building2,
-  Star,
   X,
   RefreshCw,
   FileUp,
   Stethoscope,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { toast } from "sonner";
+import DiagnosticCentersCarousel from "@/components/home/DiagnosticCentersCarousel";
 
 // Get greeting based on current time
 const getGreeting = () => {
@@ -291,51 +286,8 @@ const HomeScreen = () => {
         </div>
       </motion.header>
 
-      {/* Diagnostic Centers */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mx-4 mt-4"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Diagnostic Centers</h3>
-          </div>
-          <button 
-            onClick={() => navigate('/partner-labs')}
-            className="flex items-center gap-1 text-primary text-sm font-medium"
-          >
-            View all <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar">
-          {diagnosticCenters.map((center, index) => (
-            <motion.div
-              key={center.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-              onClick={() => navigate(`/lab/${center.id}`)}
-              className="soft-card min-w-[160px] flex-shrink-0 cursor-pointer hover:shadow-md transition-shadow"
-            >
-              <div className="flex flex-col items-center text-center p-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                  <Building2 className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-medium text-foreground text-sm mb-1">{center.name}</p>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Star className="w-3 h-3 text-warning fill-warning" />
-                  <span>{center.rating}</span>
-                  <span>•</span>
-                  <span>{center.tests}+ tests</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+      {/* Diagnostic Centers Carousel */}
+      <DiagnosticCentersCarousel centers={diagnosticCenters} />
 
       {/* Quick Actions */}
       <motion.section

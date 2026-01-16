@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
@@ -14,11 +14,17 @@ interface DiagnosticCenter {
 
 interface DiagnosticCentersCarouselProps {
   centers: DiagnosticCenter[];
+  autoPlayInterval?: number;
 }
 
-const DiagnosticCentersCarousel = ({ centers }: DiagnosticCentersCarouselProps) => {
+const DiagnosticCentersCarousel = ({ 
+  centers, 
+  autoPlayInterval = 4000 
+}: DiagnosticCentersCarouselProps) => {
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
   
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
@@ -33,16 +39,61 @@ const DiagnosticCentersCarousel = ({ centers }: DiagnosticCentersCarouselProps) 
     setSelectedIndex(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
+  // Auto-play logic
+  const startAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    autoPlayRef.current = setInterval(() => {
+      if (emblaApi && isPlaying) {
+        emblaApi.scrollNext();
+      }
+    }, autoPlayInterval);
+  }, [emblaApi, isPlaying, autoPlayInterval]);
+
+  const stopAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+      autoPlayRef.current = null;
+    }
+  }, []);
+
+  // Pause on interaction
+  const handlePointerDown = useCallback(() => {
+    setIsPlaying(false);
+    stopAutoPlay();
+  }, [stopAutoPlay]);
+
+  const handlePointerUp = useCallback(() => {
+    // Resume after a short delay
+    setTimeout(() => {
+      setIsPlaying(true);
+    }, 2000);
+  }, []);
+
   useEffect(() => {
     if (!emblaApi) return;
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
+    emblaApi.on("pointerDown", handlePointerDown);
+    emblaApi.on("pointerUp", handlePointerUp);
+    
     return () => {
       emblaApi.off("select", onSelect);
       emblaApi.off("reInit", onSelect);
+      emblaApi.off("pointerDown", handlePointerDown);
+      emblaApi.off("pointerUp", handlePointerUp);
     };
-  }, [emblaApi, onSelect]);
+  }, [emblaApi, onSelect, handlePointerDown, handlePointerUp]);
+
+  // Start/stop auto-play based on isPlaying state
+  useEffect(() => {
+    if (isPlaying) {
+      startAutoPlay();
+    } else {
+      stopAutoPlay();
+    }
+    return () => stopAutoPlay();
+  }, [isPlaying, startAutoPlay, stopAutoPlay]);
 
   return (
     <motion.div

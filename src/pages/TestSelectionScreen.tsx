@@ -17,6 +17,16 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TestData {
   id: string;
@@ -137,12 +147,19 @@ const TestSelectionScreen = () => {
 
   
 
-  const { addToCart } = useCart();
+  const { addToCart, pendingItem, confirmReplace, cancelReplace } = useCart();
 
   const handleAddToCart = (labId: string, labName: string, labPrice: number) => {
     if (!test) return;
-    addToCart({ id: `${test.id}-${labId}`, name: test.name, price: labPrice, labId, labName });
-    toast.success(`${test.name} added to cart (${labName})`);
+    const success = addToCart({ id: `${test.id}-${labId}`, name: test.name, price: labPrice, labId, labName });
+    if (success) {
+      toast.success(`${test.name} added to cart (${labName})`);
+    }
+  };
+
+  const handleConfirmReplace = () => {
+    confirmReplace();
+    toast.success("Cart replaced with new lab items");
   };
 
   if (loading) {
@@ -291,6 +308,27 @@ const TestSelectionScreen = () => {
           })}
         </div>
       </div>
+
+      {/* Lab Conflict Alert Dialog */}
+      <AlertDialog open={!!pendingItem} onOpenChange={(open) => !open && cancelReplace()}>
+        <AlertDialogContent className="max-w-[90%] rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Different Lab Selected</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have added some tests from <span className="font-semibold text-foreground">{pendingItem?.existingLabName}</span>. 
+              You can't add tests from another lab at the same time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="flex-1 mt-0" onClick={cancelReplace}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction className="flex-1" onClick={handleConfirmReplace}>
+              Replace Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
     </MobileLayout>
   );

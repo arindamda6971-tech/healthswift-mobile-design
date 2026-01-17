@@ -122,15 +122,45 @@ const DiagnosticCentersCarousel = ({
           {centers.map((center, index) => {
             const isActive = index === selectedIndex;
             
-            // Dynamic gradient colors based on index
-            const gradients = [
-              "from-primary/90 via-primary/70 to-sky-400/80",
-              "from-emerald-500/90 via-teal-500/70 to-cyan-400/80",
-              "from-violet-500/90 via-purple-500/70 to-fuchsia-400/80",
-              "from-orange-500/90 via-amber-500/70 to-yellow-400/80",
-              "from-rose-500/90 via-pink-500/70 to-red-400/80",
+            // Brand-inspired color themes for popular Indian diagnostic labs
+            const brandThemes: Record<string, { gradient: string; accent: string; glow: string }> = {
+              "Dr. Lal PathLabs": {
+                gradient: "from-[#1e3a8a] via-[#1d4ed8] to-[#3b82f6]",
+                accent: "#fbbf24",
+                glow: "shadow-[0_0_30px_rgba(59,130,246,0.5)]"
+              },
+              "Thyrocare": {
+                gradient: "from-[#7c3aed] via-[#8b5cf6] to-[#a78bfa]",
+                accent: "#fbbf24",
+                glow: "shadow-[0_0_30px_rgba(139,92,246,0.5)]"
+              },
+              "Metropolis Healthcare": {
+                gradient: "from-[#0d9488] via-[#14b8a6] to-[#2dd4bf]",
+                accent: "#ffffff",
+                glow: "shadow-[0_0_30px_rgba(20,184,166,0.5)]"
+              },
+              "SRL Diagnostics": {
+                gradient: "from-[#dc2626] via-[#ef4444] to-[#f87171]",
+                accent: "#ffffff",
+                glow: "shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+              },
+              "Apollo Diagnostics": {
+                gradient: "from-[#0369a1] via-[#0284c7] to-[#38bdf8]",
+                accent: "#fbbf24",
+                glow: "shadow-[0_0_30px_rgba(2,132,199,0.5)]"
+              },
+            };
+            
+            // Fallback themes for unknown labs
+            const fallbackThemes = [
+              { gradient: "from-[#1e40af] via-[#3b82f6] to-[#60a5fa]", accent: "#fcd34d", glow: "shadow-[0_0_30px_rgba(59,130,246,0.5)]" },
+              { gradient: "from-[#7e22ce] via-[#a855f7] to-[#c084fc]", accent: "#fcd34d", glow: "shadow-[0_0_30px_rgba(168,85,247,0.5)]" },
+              { gradient: "from-[#059669] via-[#10b981] to-[#34d399]", accent: "#ffffff", glow: "shadow-[0_0_30px_rgba(16,185,129,0.5)]" },
+              { gradient: "from-[#ea580c] via-[#f97316] to-[#fb923c]", accent: "#ffffff", glow: "shadow-[0_0_30px_rgba(249,115,22,0.5)]" },
+              { gradient: "from-[#be185d] via-[#ec4899] to-[#f472b6]", accent: "#ffffff", glow: "shadow-[0_0_30px_rgba(236,72,153,0.5)]" },
             ];
-            const gradient = gradients[index % gradients.length];
+            
+            const theme = brandThemes[center.name] || fallbackThemes[index % fallbackThemes.length];
             
             return (
               <div
@@ -148,12 +178,34 @@ const DiagnosticCentersCarousel = ({
                     damping: 30,
                   }}
                   onClick={() => navigate(`/lab/${center.id}`)}
-                  className={`relative bg-gradient-to-br ${gradient} rounded-3xl shadow-xl cursor-pointer overflow-hidden`}
+                  className={`relative bg-gradient-to-br ${theme.gradient} rounded-3xl cursor-pointer overflow-hidden ${isActive ? theme.glow : 'shadow-xl'}`}
                 >
+                  {/* Shimmer Effect - Only on active card */}
+                  {isActive && (
+                    <div className="absolute inset-0 overflow-hidden">
+                      <div 
+                        className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite]"
+                        style={{
+                          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                        }}
+                      />
+                    </div>
+                  )}
+                  
                   {/* Decorative Elements */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
                   <div className="absolute top-1/2 right-8 w-16 h-16 bg-white/5 rounded-full" />
+                  
+                  {/* Glowing orb effect for active card */}
+                  {isActive && (
+                    <motion.div 
+                      className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-40"
+                      style={{ background: `radial-gradient(circle, rgba(255,255,255,0.4), transparent)` }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  )}
                   
                   <div className="relative p-6">
                     <div className="flex items-center gap-5">
@@ -199,10 +251,14 @@ const DiagnosticCentersCarousel = ({
                     {/* CTA Button */}
                     <div className="mt-5 flex items-center justify-between">
                       <span className="text-white/80 text-sm font-medium">Explore tests & packages</span>
-                      <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm px-4 py-2 rounded-full">
+                      <motion.div 
+                        className="flex items-center gap-1 bg-white/25 backdrop-blur-sm px-4 py-2 rounded-full"
+                        animate={isActive ? { scale: [1, 1.05, 1] } : {}}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      >
                         <span className="text-white font-semibold text-sm">View Lab</span>
                         <ChevronRight className="w-4 h-4 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </motion.div>

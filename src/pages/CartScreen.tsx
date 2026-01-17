@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar, Upload, FileImage, X, Check } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar, Upload, FileImage, X, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ const timeSlots = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, subtotal } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, currentLabName } = useCart();
   const { supabaseUserId } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -278,11 +278,31 @@ const CartScreen = () => {
       <ScreenHeader title="Your Cart" />
 
       <div className="px-4 pb-32">
+        {/* Lab Indicator Banner */}
+        {currentLabName && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 mb-3 flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20"
+          >
+            <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-primary/80 font-medium">Booking from</p>
+              <p className="font-semibold text-primary truncate">{currentLabName}</p>
+            </div>
+            <Badge variant="soft" className="flex-shrink-0">
+              {items.length} {items.length === 1 ? 'test' : 'tests'}
+            </Badge>
+          </motion.div>
+        )}
+
         {/* Cart items */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-3 mt-4"
+          className="space-y-3"
         >
           {items && items.length > 0 ? (
             items.map((item, index) => (

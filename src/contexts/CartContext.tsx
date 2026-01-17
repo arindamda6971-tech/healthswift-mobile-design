@@ -10,15 +10,25 @@ interface CartItem {
   familyMemberId?: string;
 }
 
+interface PendingItem {
+  item: Omit<CartItem, "quantity">;
+  existingLabName: string;
+}
+
 interface CartContextType {
   items: CartItem[];
-  addToCart: (item: Omit<CartItem, "quantity">) => void;
+  addToCart: (item: Omit<CartItem, "quantity">) => boolean;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   updateFamilyMember: (id: string, familyMemberId: string | undefined) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  currentLabId: string | null;
+  currentLabName: string | null;
+  pendingItem: PendingItem | null;
+  confirmReplace: () => void;
+  cancelReplace: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -29,14 +39,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const saved = sessionStorage.getItem("healthswift-cart");
     return saved ? JSON.parse(saved) : [];
   });
+  
+  const [pendingItem, setPendingItem] = useState<PendingItem | null>(null);
 
   useEffect(() => {
     if (import.meta.env.DEV) console.log("Cart items changed, saving to sessionStorage:", items);
     sessionStorage.setItem("healthswift-cart", JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (item: Omit<CartItem, "quantity">) => {
+  // Get current lab from cart items
+  const currentLabId = items.length > 0 ? items[0].labId || null : null;
+  const currentLabName = items.length > 0 ? items[0].labName || null : null;
+
+  const addToCart = (item: Omit<CartItem, "quantity">): boolean => {
     console.log("CartContext.addToCart called with:", item);
+    
+    // Check if cart has items from a different lab
+    if (items.length > 0 && item.labId && currentLabId && item.labId !== currentLabId) {
+      // Set pending item and return false to indicate conflict
+      setPendingItem({ item, existingLabName: currentLabName || "another lab" });
+      return false;
+    }
+    
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -50,6 +74,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.log("Cart updated (new):", updated);
       return updated;
     });
+    return true;
+  };
+
+  const confirmReplace = () => {
+    if (pendingItem) {
+      // Clear cart and add the new item
+      setItems([{ ...pendingItem.item, quantity: 1 }]);
+      setPendingItem(null);
+    }
+  };
+
+  const cancelReplace = () => {
+    setPendingItem(null);
   };
 
   const removeFromCart = (id: string) => {
@@ -83,7 +120,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <CartContext.Provider
-      value={{ items, addToCart, removeFromCart, updateQuantity, updateFamilyMember, clearCart, itemCount, subtotal }}
+      value={{ 
+        items, 
+        addToCart, 
+        removeFromCart, 
+        updateQuantity, 
+        updateFamilyMember, 
+        clearCart, 
+        itemCount, 
+        subtotal,
+        currentLabId,
+        currentLabName,
+        pendingItem,
+        confirmReplace,
+        cancelReplace
+      }}
     >
       {children}
     </CartContext.Provider>

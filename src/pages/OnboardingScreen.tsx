@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Shield, Brain, ChevronRight } from "lucide-react";
+import { Clock, Shield, Brain, ChevronRight, Activity, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const slides = [
@@ -16,6 +16,18 @@ const slides = [
     title: "NABL-certified labs & verified phlebotomists",
     description: "100% accurate results from certified laboratories with trained healthcare professionals.",
     color: "from-success to-success/60",
+  },
+  {
+    icon: Activity,
+    title: "ECG at your doorstep",
+    description: "Get ECG tests done at home with portable devices and instant digital reports from certified technicians.",
+    color: "from-amber-500 to-amber-500/60",
+  },
+  {
+    icon: Stethoscope,
+    title: "Doctor & Physiotherapist consultations",
+    description: "Book video or in-person consultations with certified doctors and physiotherapists for personalized care.",
+    color: "from-purple-500 to-purple-500/60",
   },
   {
     icon: Brain,

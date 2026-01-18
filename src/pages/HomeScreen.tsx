@@ -30,14 +30,7 @@ const getGreeting = () => {
   return "Good night";
 };
 
-const diagnosticCenters = [
-  { id: "lal-pathlabs", name: "Dr. Lal PathLabs", rating: 4.8, tests: 500 },
-  { id: "metropolis", name: "Metropolis Healthcare", rating: 4.7, tests: 450 },
-  { id: "srl", name: "SRL Diagnostics", rating: 4.6, tests: 400 },
-  { id: "thyrocare", name: "Thyrocare", rating: 4.5, tests: 350 },
-  { id: "apollo", name: "Apollo Diagnostics", rating: 4.7, tests: 380 },
-  { id: "max-lab", name: "Max Lab", rating: 4.6, tests: 320 },
-];
+// Removed hardcoded diagnosticCenters - now fetched from database
 
 const quickActions = [
   { icon: FileUp, label: "Upload Prescription", path: "/upload-prescription", color: "bg-primary/10 text-primary" },
@@ -66,6 +59,7 @@ const HomeScreen = () => {
   const [greeting, setGreeting] = useState(getGreeting());
   const [allTests, setAllTests] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [diagnosticCenters, setDiagnosticCenters] = useState<{id: string; name: string; rating: number; tests: number; logo?: string}[]>([]);
 
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {
@@ -76,11 +70,30 @@ const HomeScreen = () => {
     if (data) setAllTests(data);
   }, []);
 
+  // Fetch diagnostic centers
+  const fetchDiagnosticCenters = useCallback(async () => {
+    const { data } = await supabase
+      .from("diagnostic_centers")
+      .select("id, name, rating, reviews_count, logo_url")
+      .eq("is_active", true)
+      .order("rating", { ascending: false })
+      .limit(10);
+    if (data) {
+      setDiagnosticCenters(data.map(center => ({
+        id: center.id,
+        name: center.name,
+        rating: center.rating || 4.5,
+        tests: center.reviews_count || 100,
+        logo: center.logo_url || undefined
+      })));
+    }
+  }, []);
+
   // Refresh handler for pull-to-refresh
   const handleRefresh = useCallback(async () => {
-    await fetchTests();
+    await Promise.all([fetchTests(), fetchDiagnosticCenters()]);
     toast.success("Data refreshed!");
-  }, [fetchTests]);
+  }, [fetchTests, fetchDiagnosticCenters]);
 
   const {
     isRefreshing,
@@ -98,10 +111,11 @@ const HomeScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch tests on mount
+  // Fetch tests and centers on mount
   useEffect(() => {
     fetchTests();
-  }, [fetchTests]);
+    fetchDiagnosticCenters();
+  }, [fetchTests, fetchDiagnosticCenters]);
 
   // Filter tests based on search query. Use supabase results when available,
   // otherwise fall back to the local `trendingTests` list so search works offline.

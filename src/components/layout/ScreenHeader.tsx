@@ -8,6 +8,7 @@ interface ScreenHeaderProps {
   showMenu?: boolean;
   rightAction?: React.ReactNode;
   transparent?: boolean;
+  onBack?: () => void;
 }
 
 const ScreenHeader = ({
@@ -16,8 +17,17 @@ const ScreenHeader = ({
   showMenu = false,
   rightAction,
   transparent = false,
+  onBack,
 }: ScreenHeaderProps) => {
   const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <motion.header
@@ -34,7 +44,7 @@ const ScreenHeader = ({
         <div className="flex items-center gap-3">
           {showBack && (
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
               className="icon-btn"
             >
               <ArrowLeft className="w-5 h-5 text-foreground" />

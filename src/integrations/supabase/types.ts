@@ -107,6 +107,84 @@ export type Database = {
           },
         ]
       }
+      diagnostic_centers: {
+        Row: {
+          address: string
+          city: string
+          closing_time: string | null
+          created_at: string
+          ecg_available: boolean | null
+          ecg_price: number | null
+          email: string | null
+          home_collection_available: boolean | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          opening_time: string | null
+          phone: string | null
+          pincode: string
+          rating: number | null
+          reviews_count: number | null
+          services: Json | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          closing_time?: string | null
+          created_at?: string
+          ecg_available?: boolean | null
+          ecg_price?: number | null
+          email?: string | null
+          home_collection_available?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          opening_time?: string | null
+          phone?: string | null
+          pincode: string
+          rating?: number | null
+          reviews_count?: number | null
+          services?: Json | null
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          closing_time?: string | null
+          created_at?: string
+          ecg_available?: boolean | null
+          ecg_price?: number | null
+          email?: string | null
+          home_collection_available?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          opening_time?: string | null
+          phone?: string | null
+          pincode?: string
+          rating?: number | null
+          reviews_count?: number | null
+          services?: Json | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

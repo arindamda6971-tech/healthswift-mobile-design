@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
-import { Building2, Star, ChevronRight, TestTubes, MapPin, Sparkles } from "lucide-react";
+import { Building2, Star, ChevronRight, TestTubes, MapPin } from "lucide-react";
 
 interface DiagnosticCenter {
   id: string;
@@ -17,25 +17,21 @@ interface DiagnosticCentersCarouselProps {
   autoPlayInterval?: number;
 }
 
-// Lab brand data with logos, offers, and locations
+// Lab brand data with logos and locations
 const labBrandData: Record<string, { 
   logo: string; 
-  offer?: string; 
   distance: string;
 }> = {
   "Dr. Lal PathLabs": {
     logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Dr_Lal_PathLabs_logo.svg/200px-Dr_Lal_PathLabs_logo.svg.png",
-    offer: "20% OFF on Health Packages",
     distance: "1.2 km"
   },
   "Thyrocare": {
     logo: "https://www.thyrocare.com/NewAssets2/images/thyrocare-logo.png",
-    offer: "Flat ₹200 OFF",
     distance: "2.5 km"
   },
   "Metropolis Healthcare": {
     logo: "https://www.metropolisindia.com/assets/images/metropolis-logo-new.svg",
-    offer: "Free Home Collection",
     distance: "0.8 km"
   },
   "SRL Diagnostics": {
@@ -44,18 +40,17 @@ const labBrandData: Record<string, {
   },
   "Apollo Diagnostics": {
     logo: "https://www.apollodiagnostics.in/assets/images/apollo-logo.png",
-    offer: "15% OFF First Order",
     distance: "1.8 km"
   },
 };
 
 // Fallback data for unknown labs
 const fallbackLabData = [
-  { distance: "2.0 km", offer: "10% OFF" },
+  { distance: "2.0 km" },
   { distance: "1.5 km" },
-  { distance: "3.2 km", offer: "Free Sample Pickup" },
+  { distance: "3.2 km" },
   { distance: "2.8 km" },
-  { distance: "1.9 km", offer: "5% Cashback" },
+  { distance: "1.9 km" },
 ];
 
 const DiagnosticCentersCarousel = ({ 
@@ -164,8 +159,8 @@ const DiagnosticCentersCarousel = ({
             const isActive = index === selectedIndex;
             
             // Get lab-specific data
-            const labData = labBrandData[center.name] || fallbackLabData[index % fallbackLabData.length];
-            const hasOffer = 'offer' in labData && labData.offer;
+            const knownLabData = labBrandData[center.name];
+            const labData = knownLabData || fallbackLabData[index % fallbackLabData.length];
             
             // Brand-inspired color themes for popular Indian diagnostic labs
             const brandThemes: Record<string, { gradient: string; accent: string; glow: string }> = {
@@ -206,7 +201,7 @@ const DiagnosticCentersCarousel = ({
             ];
             
             const theme = brandThemes[center.name] || fallbackThemes[index % fallbackThemes.length];
-            const logoUrl = 'logo' in labData ? labData.logo : center.logo;
+            const logoUrl = knownLabData?.logo || center.logo;
             
             return (
               <div
@@ -226,28 +221,6 @@ const DiagnosticCentersCarousel = ({
                   onClick={() => navigate(`/lab/${center.id}`)}
                   className={`relative bg-gradient-to-br ${theme.gradient} rounded-3xl cursor-pointer overflow-hidden ${isActive ? theme.glow : 'shadow-xl'}`}
                 >
-                  {/* Featured Offer Badge */}
-                  {hasOffer && (
-                    <motion.div 
-                      className="absolute top-3 right-3 z-20"
-                      initial={{ scale: 0, rotate: -12 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
-                    >
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-lg blur-md opacity-60" />
-                        <div className="relative bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 text-black px-3 py-1.5 rounded-lg shadow-lg">
-                          <div className="flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span className="text-xs font-bold whitespace-nowrap">
-                              {labData.offer}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                  
                   {/* Shimmer Effect - Only on active card */}
                   {isActive && (
                     <div className="absolute inset-0 overflow-hidden">

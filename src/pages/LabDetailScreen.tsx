@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,8 +10,16 @@ import {
   ShoppingCart,
   Plus,
   Check,
-  Filter,
   Beaker,
+  BadgeCheck,
+  Home,
+  Phone,
+  ChevronRight,
+  Shield,
+  Zap,
+  Award,
+  Heart,
+  TrendingUp,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +28,61 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+// Lab brand data for visual identity
+const labBrandData: Record<string, { 
+  logo: string; 
+  bannerGradient: string;
+  bannerImage: string;
+  tagline: string;
+  accentColor: string;
+}> = {
+  "Dr. Lal PathLabs": {
+    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Dr_Lal_PathLabs_logo.svg/200px-Dr_Lal_PathLabs_logo.svg.png",
+    bannerGradient: "from-[#003087] via-[#0052cc] to-[#0073e6]",
+    bannerImage: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80",
+    tagline: "India's Most Trusted Lab",
+    accentColor: "#0052cc"
+  },
+  "Thyrocare": {
+    logo: "https://www.thyrocare.com/NewAssets2/images/thyrocare-logo.png",
+    bannerGradient: "from-[#6b21a8] via-[#7c3aed] to-[#8b5cf6]",
+    bannerImage: "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=800&q=80",
+    tagline: "Quality at Affordable Prices",
+    accentColor: "#7c3aed"
+  },
+  "Metropolis Healthcare": {
+    logo: "https://www.metropolisindia.com/assets/images/metropolis-logo-new.svg",
+    bannerGradient: "from-[#0d9488] via-[#14b8a6] to-[#2dd4bf]",
+    bannerImage: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&q=80",
+    tagline: "Pathology Experts Since 1980",
+    accentColor: "#14b8a6"
+  },
+  "SRL Diagnostics": {
+    logo: "https://www.srlworld.com/assets/images/srl-logo.svg",
+    bannerGradient: "from-[#b91c1c] via-[#dc2626] to-[#ef4444]",
+    bannerImage: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+    tagline: "Excellence in Diagnostics",
+    accentColor: "#dc2626"
+  },
+  "Apollo Diagnostics": {
+    logo: "https://www.apollodiagnostics.in/assets/images/apollo-logo.png",
+    bannerGradient: "from-[#0369a1] via-[#0284c7] to-[#38bdf8]",
+    bannerImage: "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&q=80",
+    tagline: "Healthcare You Can Trust",
+    accentColor: "#0284c7"
+  },
+};
+
+// Fallback gradients for unknown labs
+const fallbackThemes = [
+  { gradient: "from-[#1e40af] via-[#3b82f6] to-[#60a5fa]", tagline: "Trusted Health Partner" },
+  { gradient: "from-[#7e22ce] via-[#a855f7] to-[#c084fc]", tagline: "Accurate Results, Fast" },
+  { gradient: "from-[#059669] via-[#10b981] to-[#34d399]", tagline: "Your Health, Our Priority" },
+  { gradient: "from-[#ea580c] via-[#f97316] to-[#fb923c]", tagline: "Advanced Diagnostics" },
+  { gradient: "from-[#be185d] via-[#ec4899] to-[#f472b6]", tagline: "Precision Healthcare" },
+];
 
 // Lab data with test catalogs
 const labsData: Record<string, {
@@ -121,7 +184,7 @@ const labsData: Record<string, {
     ],
   },
   "thyrocare": {
-    name: "Thyrocare Technologies",
+    name: "Thyrocare",
     rating: 4.5,
     reviews: 15000,
     location: "Pan India - 1200+ Centers",
@@ -171,213 +234,32 @@ const labsData: Record<string, {
       { id: "apo14", name: "Apollo Senior Citizen Package", price: 3199, originalPrice: 6500, category: "Health Packages" },
     ],
   },
-  "max-lab": {
-    name: "Max Lab",
-    rating: 4.6,
-    reviews: 5600,
-    location: "North India - 80+ Centers",
-    timing: "6:00 AM - 9:00 PM",
-    homeCollection: true,
-    accredited: ["NABL", "CAP"],
-    tests: [
-      { id: "max1", name: "CBC with ESR", price: 380, originalPrice: 520, category: "Blood Tests", popular: true },
-      { id: "max2", name: "Lipid Profile", price: 580, originalPrice: 750, category: "Heart Health" },
-      { id: "max3", name: "LFT", price: 720, originalPrice: 920, category: "Liver Health" },
-      { id: "max4", name: "KFT", price: 680, originalPrice: 880, category: "Kidney Health" },
-      { id: "max5", name: "Thyroid Panel", price: 620, originalPrice: 820, category: "Thyroid", popular: true },
-      { id: "max6", name: "HbA1c", price: 520, originalPrice: 680, category: "Diabetes" },
-      { id: "max7", name: "Vitamin D", price: 1300, originalPrice: 1650, category: "Vitamins", popular: true },
-      { id: "max8", name: "Max Basic Health Package", price: 1399, originalPrice: 2800, category: "Health Packages", popular: true },
-      { id: "max9", name: "Max Premium Health Package", price: 2999, originalPrice: 6000, category: "Health Packages" },
-      { id: "max10", name: "Max Executive Health Package", price: 4999, originalPrice: 10000, category: "Health Packages" },
-    ],
-  },
-  "tata-1mg": {
-    name: "Tata 1mg Labs",
-    rating: 4.5,
-    reviews: 4800,
-    location: "Metro Cities - 50+ Centers",
-    timing: "7:00 AM - 8:00 PM",
-    homeCollection: true,
-    accredited: ["NABL"],
-    tests: [
-      { id: "tata1", name: "Complete Blood Count", price: 299, originalPrice: 420, category: "Blood Tests", popular: true },
-      { id: "tata2", name: "Lipid Profile", price: 449, originalPrice: 600, category: "Heart Health" },
-      { id: "tata3", name: "Liver Function Test", price: 599, originalPrice: 800, category: "Liver Health" },
-      { id: "tata4", name: "Kidney Function Test", price: 549, originalPrice: 750, category: "Kidney Health" },
-      { id: "tata5", name: "Thyroid Profile", price: 499, originalPrice: 700, category: "Thyroid", popular: true },
-      { id: "tata6", name: "HbA1c", price: 399, originalPrice: 550, category: "Diabetes" },
-      { id: "tata7", name: "Vitamin D", price: 999, originalPrice: 1350, category: "Vitamins", popular: true },
-      { id: "tata8", name: "Vitamin B12", price: 649, originalPrice: 900, category: "Vitamins" },
-      { id: "tata9", name: "1mg Good Health Package", price: 899, originalPrice: 1800, category: "Health Packages", popular: true },
-      { id: "tata10", name: "1mg Complete Care Package", price: 1799, originalPrice: 3600, category: "Health Packages" },
-      { id: "tata11", name: "1mg Full Body Checkup", price: 2499, originalPrice: 5000, category: "Health Packages" },
-    ],
-  },
-  "redcliffe": {
-    name: "Redcliffe Labs",
-    rating: 4.4,
-    reviews: 6200,
-    location: "Pan India - 100+ Centers",
-    timing: "6:00 AM - 10:00 PM",
-    homeCollection: true,
-    accredited: ["NABL", "ISO"],
-    tests: [
-      { id: "red1", name: "Complete Blood Count", price: 249, originalPrice: 380, category: "Blood Tests", popular: true },
-      { id: "red2", name: "Lipid Profile", price: 399, originalPrice: 550, category: "Heart Health" },
-      { id: "red3", name: "Liver Function Test", price: 499, originalPrice: 700, category: "Liver Health" },
-      { id: "red4", name: "Kidney Function Test", price: 449, originalPrice: 650, category: "Kidney Health" },
-      { id: "red5", name: "Thyroid Profile", price: 399, originalPrice: 580, category: "Thyroid", popular: true },
-      { id: "red6", name: "HbA1c", price: 349, originalPrice: 500, category: "Diabetes" },
-      { id: "red7", name: "Vitamin D Total", price: 799, originalPrice: 1100, category: "Vitamins", popular: true },
-      { id: "red8", name: "Vitamin B12", price: 549, originalPrice: 780, category: "Vitamins" },
-      { id: "red9", name: "Redcliffe Basic Package", price: 699, originalPrice: 1400, category: "Health Packages", popular: true },
-      { id: "red10", name: "Redcliffe Advance Package", price: 1499, originalPrice: 3000, category: "Health Packages" },
-      { id: "red11", name: "Redcliffe Full Body", price: 2199, originalPrice: 4500, category: "Health Packages" },
-    ],
-  },
-  "neuberg": {
-    name: "Neuberg Diagnostics",
-    rating: 4.5,
-    reviews: 4500,
-    location: "South & West India - 90+ Centers",
-    timing: "7:00 AM - 9:00 PM",
-    homeCollection: true,
-    accredited: ["NABL", "CAP"],
-    tests: [
-      { id: "neu1", name: "Complete Hemogram", price: 360, originalPrice: 500, category: "Blood Tests", popular: true },
-      { id: "neu2", name: "Lipid Profile", price: 540, originalPrice: 720, category: "Heart Health" },
-      { id: "neu3", name: "Liver Function Test", price: 680, originalPrice: 880, category: "Liver Health" },
-      { id: "neu4", name: "Kidney Function Test", price: 620, originalPrice: 800, category: "Kidney Health" },
-      { id: "neu5", name: "Thyroid Profile", price: 560, originalPrice: 750, category: "Thyroid", popular: true },
-      { id: "neu6", name: "HbA1c", price: 460, originalPrice: 620, category: "Diabetes" },
-      { id: "neu7", name: "Vitamin D", price: 1150, originalPrice: 1500, category: "Vitamins", popular: true },
-      { id: "neu8", name: "Neuberg Wellness Package", price: 1299, originalPrice: 2600, category: "Health Packages", popular: true },
-      { id: "neu9", name: "Neuberg Executive Package", price: 2799, originalPrice: 5600, category: "Health Packages" },
-    ],
-  },
-  "vijaya": {
-    name: "Vijaya Diagnostic Centre",
-    rating: 4.6,
-    reviews: 3800,
-    location: "South India - 100+ Centers",
-    timing: "6:30 AM - 9:00 PM",
-    homeCollection: true,
-    accredited: ["NABL"],
-    tests: [
-      { id: "vij1", name: "Complete Blood Picture", price: 350, originalPrice: 480, category: "Blood Tests", popular: true },
-      { id: "vij2", name: "Lipid Profile", price: 520, originalPrice: 680, category: "Heart Health" },
-      { id: "vij3", name: "Liver Function Test", price: 650, originalPrice: 850, category: "Liver Health" },
-      { id: "vij4", name: "Kidney Function Test", price: 600, originalPrice: 780, category: "Kidney Health" },
-      { id: "vij5", name: "Thyroid Profile", price: 540, originalPrice: 720, category: "Thyroid", popular: true },
-      { id: "vij6", name: "HbA1c", price: 440, originalPrice: 600, category: "Diabetes" },
-      { id: "vij7", name: "Vitamin D3", price: 1100, originalPrice: 1450, category: "Vitamins", popular: true },
-      { id: "vij8", name: "Vijaya Basic Health Package", price: 1199, originalPrice: 2400, category: "Health Packages", popular: true },
-      { id: "vij9", name: "Vijaya Comprehensive Package", price: 2599, originalPrice: 5200, category: "Health Packages" },
-    ],
-  },
-  "mahajan": {
-    name: "Mahajan Imaging",
-    rating: 4.7,
-    reviews: 2900,
-    location: "North India - 30+ Centers",
-    timing: "8:00 AM - 8:00 PM",
-    homeCollection: false,
-    accredited: ["NABL", "AERB"],
-    tests: [
-      { id: "mah1", name: "MRI Brain", price: 5500, originalPrice: 7500, category: "Imaging", popular: true },
-      { id: "mah2", name: "MRI Spine", price: 6000, originalPrice: 8000, category: "Imaging" },
-      { id: "mah3", name: "CT Scan Chest", price: 3500, originalPrice: 4800, category: "Imaging", popular: true },
-      { id: "mah4", name: "CT Scan Abdomen", price: 4000, originalPrice: 5500, category: "Imaging" },
-      { id: "mah5", name: "X-Ray Chest", price: 350, originalPrice: 500, category: "Imaging" },
-      { id: "mah6", name: "Ultrasound Abdomen", price: 1200, originalPrice: 1600, category: "Imaging", popular: true },
-      { id: "mah7", name: "2D Echo", price: 2500, originalPrice: 3500, category: "Heart Health" },
-      { id: "mah8", name: "PET CT Scan", price: 18000, originalPrice: 25000, category: "Imaging" },
-      { id: "mah9", name: "Mammography", price: 1800, originalPrice: 2500, category: "Women's Health" },
-      { id: "mah10", name: "DEXA Bone Density", price: 2200, originalPrice: 3000, category: "Bone Health" },
-    ],
-  },
-  "suburban": {
-    name: "Suburban Diagnostics",
-    rating: 4.5,
-    reviews: 3200,
-    location: "West India - 70+ Centers",
-    timing: "7:00 AM - 9:00 PM",
-    homeCollection: true,
-    accredited: ["NABL", "CAP"],
-    tests: [
-      { id: "sub1", name: "Complete Blood Count", price: 340, originalPrice: 470, category: "Blood Tests", popular: true },
-      { id: "sub2", name: "Lipid Profile", price: 510, originalPrice: 680, category: "Heart Health" },
-      { id: "sub3", name: "Liver Function Test", price: 660, originalPrice: 860, category: "Liver Health" },
-      { id: "sub4", name: "Kidney Function Test", price: 610, originalPrice: 790, category: "Kidney Health" },
-      { id: "sub5", name: "Thyroid Profile", price: 550, originalPrice: 730, category: "Thyroid", popular: true },
-      { id: "sub6", name: "HbA1c", price: 450, originalPrice: 610, category: "Diabetes" },
-      { id: "sub7", name: "Vitamin D", price: 1120, originalPrice: 1480, category: "Vitamins", popular: true },
-      { id: "sub8", name: "Suburban Wellness Package", price: 1349, originalPrice: 2700, category: "Health Packages", popular: true },
-    ],
-  },
-  "igenetic": {
-    name: "iGenetic Diagnostics",
-    rating: 4.4,
-    reviews: 2100,
-    location: "Pan India - 40+ Centers",
-    timing: "8:00 AM - 8:00 PM",
-    homeCollection: true,
-    accredited: ["NABL"],
-    tests: [
-      { id: "igen1", name: "Complete Blood Count", price: 320, originalPrice: 450, category: "Blood Tests", popular: true },
-      { id: "igen2", name: "Lipid Profile", price: 480, originalPrice: 650, category: "Heart Health" },
-      { id: "igen3", name: "Liver Function Test", price: 620, originalPrice: 820, category: "Liver Health" },
-      { id: "igen4", name: "Thyroid Profile", price: 520, originalPrice: 700, category: "Thyroid", popular: true },
-      { id: "igen5", name: "Genetic Screening", price: 8500, originalPrice: 12000, category: "Genetic Tests", popular: true },
-      { id: "igen6", name: "NIPT Test", price: 15000, originalPrice: 22000, category: "Genetic Tests" },
-      { id: "igen7", name: "Carrier Screening", price: 12000, originalPrice: 18000, category: "Genetic Tests" },
-      { id: "igen8", name: "iGenetic Basic Package", price: 999, originalPrice: 2000, category: "Health Packages", popular: true },
-    ],
-  },
-  "healthcare-at-home": {
-    name: "HealthCare at Home",
-    rating: 4.6,
-    reviews: 1800,
-    location: "Metro Cities",
-    timing: "6:00 AM - 10:00 PM",
-    homeCollection: true,
-    accredited: ["NABL", "ISO"],
-    tests: [
-      { id: "hcah1", name: "Complete Blood Count", price: 299, originalPrice: 420, category: "Blood Tests", popular: true },
-      { id: "hcah2", name: "Lipid Profile", price: 449, originalPrice: 620, category: "Heart Health" },
-      { id: "hcah3", name: "Liver Function Test", price: 579, originalPrice: 780, category: "Liver Health" },
-      { id: "hcah4", name: "Kidney Function Test", price: 529, originalPrice: 720, category: "Kidney Health" },
-      { id: "hcah5", name: "Thyroid Profile", price: 479, originalPrice: 660, category: "Thyroid", popular: true },
-      { id: "hcah6", name: "HbA1c", price: 379, originalPrice: 520, category: "Diabetes" },
-      { id: "hcah7", name: "Vitamin D", price: 899, originalPrice: 1200, category: "Vitamins", popular: true },
-      { id: "hcah8", name: "Home Care Basic Package", price: 799, originalPrice: 1600, category: "Health Packages", popular: true },
-      { id: "hcah9", name: "Home Care Premium Package", price: 1699, originalPrice: 3400, category: "Health Packages" },
-    ],
-  },
-  "krsnaa": {
-    name: "Krsnaa Diagnostics",
-    rating: 4.3,
-    reviews: 2500,
-    location: "Pan India - 60+ Centers",
-    timing: "7:00 AM - 9:00 PM",
-    homeCollection: true,
-    accredited: ["NABL"],
-    tests: [
-      { id: "krs1", name: "Complete Blood Count", price: 280, originalPrice: 400, category: "Blood Tests", popular: true },
-      { id: "krs2", name: "Lipid Profile", price: 420, originalPrice: 580, category: "Heart Health" },
-      { id: "krs3", name: "Liver Function Test", price: 540, originalPrice: 720, category: "Liver Health" },
-      { id: "krs4", name: "Kidney Function Test", price: 490, originalPrice: 660, category: "Kidney Health" },
-      { id: "krs5", name: "Thyroid Profile", price: 460, originalPrice: 620, category: "Thyroid", popular: true },
-      { id: "krs6", name: "HbA1c", price: 360, originalPrice: 500, category: "Diabetes" },
-      { id: "krs7", name: "Vitamin D", price: 850, originalPrice: 1150, category: "Vitamins", popular: true },
-      { id: "krs8", name: "Krsnaa Basic Package", price: 699, originalPrice: 1400, category: "Health Packages", popular: true },
-      { id: "krs9", name: "Krsnaa Full Body Package", price: 1499, originalPrice: 3000, category: "Health Packages" },
-    ],
-  },
+};
+
+// Map database IDs to local data keys
+const dbIdToLocalId: Record<string, string> = {
+  "dr-lal-pathlabs": "lal-pathlabs",
+  "thyrocare": "thyrocare",
+  "metropolis-healthcare": "metropolis",
+  "srl-diagnostics": "srl",
+  "apollo-diagnostics": "apollo",
 };
 
 const categories = ["All", "Blood Tests", "Health Packages", "Thyroid", "Diabetes", "Heart Health", "Vitamins", "Liver Health", "Kidney Health"];
+
+interface DiagnosticCenter {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  rating: number | null;
+  reviews_count: number | null;
+  opening_time: string | null;
+  closing_time: string | null;
+  home_collection_available: boolean | null;
+  logo_url: string | null;
+  phone: string | null;
+}
 
 const LabDetailScreen = () => {
   const { labId } = useParams<{ labId: string }>();
@@ -386,8 +268,76 @@ const LabDetailScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
+  const [labFromDb, setLabFromDb] = useState<DiagnosticCenter | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const lab = labId ? labsData[labId] : null;
+  // Try to fetch lab from database first
+  useEffect(() => {
+    const fetchLabFromDb = async () => {
+      if (!labId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('diagnostic_centers')
+          .select('*')
+          .eq('id', labId)
+          .single();
+        
+        if (!error && data) {
+          setLabFromDb(data);
+        }
+      } catch (err) {
+        console.error('Error fetching lab:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLabFromDb();
+  }, [labId]);
+
+  // Get lab data - prefer database, fallback to hardcoded
+  const getLabData = () => {
+    if (labFromDb) {
+      // Find matching local data for tests
+      const localKey = Object.entries(dbIdToLocalId).find(([dbKey]) => 
+        labFromDb.name.toLowerCase().includes(dbKey.split('-')[0])
+      )?.[1];
+      
+      const localData = localKey ? labsData[localKey] : null;
+      
+      return {
+        name: labFromDb.name,
+        rating: labFromDb.rating || 4.5,
+        reviews: labFromDb.reviews_count || 1000,
+        location: `${labFromDb.address}, ${labFromDb.city}`,
+        timing: `${labFromDb.opening_time || '7:00 AM'} - ${labFromDb.closing_time || '9:00 PM'}`,
+        homeCollection: labFromDb.home_collection_available ?? true,
+        accredited: ["NABL"],
+        tests: localData?.tests || labsData["lal-pathlabs"].tests, // Fallback to Lal PathLabs tests
+        phone: labFromDb.phone,
+        logoUrl: labFromDb.logo_url,
+      };
+    }
+    
+    // Fallback to hardcoded data
+    const localId = labId ? (dbIdToLocalId[labId] || labId) : null;
+    return localId ? labsData[localId] : null;
+  };
+
+  const lab = getLabData();
+
+  if (isLoading) {
+    return (
+      <MobileLayout showNav={false} showFloatingAdd={false}>
+        <ScreenHeader title="Loading..." />
+        <div className="flex flex-col items-center justify-center h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground mt-4">Loading lab details...</p>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   if (!lab) {
     return (
@@ -418,7 +368,6 @@ const LabDetailScreen = () => {
         toast.info(`${testName} removed from cart`);
       } else {
         newSet.add(testId);
-        // Find the test object to get price and other details
         const test = lab.tests.find((t) => t.id === testId);
         if (test) {
           addToCart({
@@ -435,158 +384,238 @@ const LabDetailScreen = () => {
     });
   };
 
+  // Get visual theme for lab
+  const brandData = labBrandData[lab.name];
+  const fallbackTheme = fallbackThemes[Math.abs(lab.name.charCodeAt(0) % fallbackThemes.length)];
+  const bannerGradient = brandData?.bannerGradient || fallbackTheme.gradient;
+  const tagline = brandData?.tagline || fallbackTheme.tagline;
+  const logoUrl = brandData?.logo || (labFromDb?.logo_url) || null;
+
   return (
     <MobileLayout showNav={false} showFloatingAdd={false}>
-      <ScreenHeader title={lab.name} />
+      <ScreenHeader title="" />
 
-      <div className="px-4 py-4 space-y-4">
-        {/* Lab Info Card */}
+      <div className="pb-24">
+        {/* Hero Banner */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="soft-card p-4"
+          className={`relative bg-gradient-to-br ${bannerGradient} overflow-hidden`}
+          style={{ minHeight: '220px' }}
         >
-          <div className="flex gap-3">
-            <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-8 h-8 text-primary" />
+          {/* Pattern Overlay */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
+              <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="white" fillOpacity="0.3" />
+              <path d="M0,120 Q100,70 200,120 T400,120 L400,200 L0,200 Z" fill="white" fillOpacity="0.2" />
+            </svg>
+          </div>
+          
+          {/* Decorative Elements */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+          
+          {/* Content */}
+          <div className="relative px-4 py-6">
+            {/* Top Badges */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">
+                <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                <span className="text-xs font-bold text-white">Up to 40% OFF</span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                <BadgeCheck className="w-3.5 h-3.5 text-green-300" />
+                <span className="text-[10px] font-medium text-white/90">{lab.accredited.join(" & ")} Certified</span>
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="font-semibold text-lg text-foreground">{lab.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <Star className="w-4 h-4 text-warning fill-warning" />
-                <span className="text-sm font-medium">{lab.rating}</span>
-                <span className="text-xs text-muted-foreground">
-                  ({lab.reviews.toLocaleString()} reviews)
-                </span>
+            
+            {/* Lab Info */}
+            <div className="flex items-center gap-4">
+              {/* Logo */}
+              <div className="relative">
+                <div className="w-24 h-24 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-xl border-2 border-white/50 overflow-hidden">
+                  {logoUrl ? (
+                    <img 
+                      src={logoUrl} 
+                      alt={lab.name} 
+                      className="w-20 h-20 object-contain p-1"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <Building2 className={`w-12 h-12 text-gray-600 ${logoUrl ? 'hidden' : ''}`} />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
               </div>
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                <MapPin className="w-3 h-3" />
-                <span>{lab.location}</span>
+              
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <h1 className="font-bold text-white text-xl leading-tight line-clamp-2 drop-shadow-md">
+                  {lab.name}
+                </h1>
+                <p className="text-white/80 text-sm font-medium mt-0.5 italic">"{tagline}"</p>
+                
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                    <Star className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                    <span className="text-xs font-bold text-white">{lab.rating}</span>
+                    <span className="text-[10px] text-white/80">({lab.reviews.toLocaleString()})</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                    <Beaker className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs font-medium text-white">{lab.tests.length}+ Tests</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>{lab.timing}</span>
+            </div>
+            
+            {/* Quick Info Pills */}
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <MapPin className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-xs text-white/90">{lab.location}</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2">
-                {lab.homeCollection && (
-                  <Badge variant="secondary" className="text-[10px]">Home Collection</Badge>
-                )}
-                {lab.accredited.map((acc) => (
-                  <Badge key={acc} variant="outline" className="text-[10px]">
-                    {acc}
-                  </Badge>
-                ))}
+              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <Clock className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-xs text-white/90">{lab.timing}</span>
               </div>
+              {lab.homeCollection && (
+                <div className="flex items-center gap-1.5 bg-green-500/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  <Home className="w-3.5 h-3.5 text-green-200" />
+                  <span className="text-xs text-green-100 font-medium">Home Collection</span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tests..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <div className="px-4 py-4 space-y-4">
+          {/* Search */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="relative"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tests, packages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-background/80 backdrop-blur-sm"
+            />
+          </motion.div>
 
-        {/* Category Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map((cat) => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? "default" : "outline"}
-              size="sm"
-              className="flex-shrink-0 text-xs"
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
+          {/* Category Filter */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+          >
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? "default" : "outline"}
+                size="sm"
+                className="flex-shrink-0 text-xs"
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </Button>
+            ))}
+          </motion.div>
 
-        {/* Tests Count */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {filteredTests.length} tests available
-          </p>
-          {addedTests.size > 0 && (
-            <Button
-              size="sm"
-              onClick={() => navigate("/cart")}
-              className="gap-1"
-            >
-              <ShoppingCart className="w-4 h-4" />
-              View Cart ({addedTests.size})
-            </Button>
-          )}
-        </div>
+          {/* Tests Count */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-between"
+          >
+            <p className="text-sm text-muted-foreground">
+              {filteredTests.length} tests available
+            </p>
+            {addedTests.size > 0 && (
+              <Button
+                size="sm"
+                onClick={() => navigate("/cart")}
+                className="gap-1"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                View Cart ({addedTests.size})
+              </Button>
+            )}
+          </motion.div>
 
-        {/* Tests List */}
-        <div className="space-y-3 pb-8">
-          {filteredTests.map((test, index) => (
-            <motion.div
-              key={test.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.03 }}
-              className="soft-card p-4"
-            >
-              <div className="flex justify-between items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-foreground text-sm">{test.name}</h3>
-                    {test.popular && (
-                      <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary">
-                        Popular
-                      </Badge>
-                    )}
+          {/* Tests List */}
+          <div className="space-y-3 pb-8">
+            {filteredTests.map((test, index) => (
+              <motion.div
+                key={test.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 + index * 0.03 }}
+                className="soft-card p-4"
+              >
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-foreground text-sm">{test.name}</h3>
+                      {test.popular && (
+                        <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary">
+                          Popular
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{test.category}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="font-semibold text-foreground">₹{test.price}</span>
+                      {test.originalPrice && (
+                        <span className="text-xs text-muted-foreground line-through">
+                          ₹{test.originalPrice}
+                        </span>
+                      )}
+                      {test.originalPrice && (
+                        <Badge variant="secondary" className="text-[9px] bg-success/10 text-success">
+                          {Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100)}% OFF
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{test.category}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="font-semibold text-foreground">₹{test.price}</span>
-                    {test.originalPrice && (
-                      <span className="text-xs text-muted-foreground line-through">
-                        ₹{test.originalPrice}
-                      </span>
+                  <Button
+                    size="sm"
+                    variant={addedTests.has(test.id) ? "default" : "outline"}
+                    className="flex-shrink-0 gap-1 h-8"
+                    onClick={() => handleAddTest(test.id, test.name)}
+                  >
+                    {addedTests.has(test.id) ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        Added
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3 h-3" />
+                        Add
+                      </>
                     )}
-                    {test.originalPrice && (
-                      <Badge variant="secondary" className="text-[9px] bg-success/10 text-success">
-                        {Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100)}% OFF
-                      </Badge>
-                    )}
-                  </div>
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant={addedTests.has(test.id) ? "default" : "outline"}
-                  className="flex-shrink-0 gap-1 h-8"
-                  onClick={() => handleAddTest(test.id, test.name)}
-                >
-                  {addedTests.has(test.id) ? (
-                    <>
-                      <Check className="w-3 h-3" />
-                      Added
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-3 h-3" />
-                      Add
-                    </>
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
 
-          {filteredTests.length === 0 && (
-            <div className="text-center py-12">
-              <Beaker className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No tests found matching your search</p>
-            </div>
-          )}
+            {filteredTests.length === 0 && (
+              <div className="text-center py-12">
+                <Beaker className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No tests found matching your search</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

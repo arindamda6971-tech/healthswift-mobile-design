@@ -397,101 +397,131 @@ const LabDetailScreen = () => {
 
       <div className="pb-24">
         {/* Hero Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`relative bg-gradient-to-br ${bannerGradient} overflow-hidden`}
-          style={{ minHeight: '220px' }}
-        >
-          {/* Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10">
-            <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-              <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="white" fillOpacity="0.3" />
-              <path d="M0,120 Q100,70 200,120 T400,120 L400,200 L0,200 Z" fill="white" fillOpacity="0.2" />
-            </svg>
-          </div>
-          
-          {/* Decorative Elements */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
-          
-          {/* Content */}
-          <div className="relative px-4 py-6">
-            {/* Top Badges */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">
-                <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                <span className="text-xs font-bold text-white">Up to 40% OFF</span>
-              </div>
-              <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                <BadgeCheck className="w-3.5 h-3.5 text-green-300" />
-                <span className="text-[10px] font-medium text-white/90">{lab.accredited.join(" & ")} Certified</span>
-              </div>
+        {/* Polished Banner Card - Same style as Home Carousel */}
+        <div className="px-4 pt-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`relative bg-gradient-to-br ${bannerGradient} overflow-hidden rounded-3xl shadow-2xl`}
+            style={{ minHeight: '200px' }}
+          >
+            {/* Pattern Overlay */}
+            <div className="absolute inset-0 opacity-10">
+              <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
+                <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="white" fillOpacity="0.3" />
+                <path d="M0,120 Q100,70 200,120 T400,120 L400,200 L0,200 Z" fill="white" fillOpacity="0.2" />
+              </svg>
             </div>
             
-            {/* Lab Info */}
-            <div className="flex items-center gap-4">
-              {/* Logo */}
-              <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-xl border-2 border-white/50 overflow-hidden">
-                  {logoUrl ? (
-                    <img 
-                      src={logoUrl} 
-                      alt={lab.name} 
-                      className="w-20 h-20 object-contain p-1"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  ) : null}
-                  <Building2 className={`w-12 h-12 text-gray-600 ${logoUrl ? 'hidden' : ''}`} />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-primary" />
+            {/* Decorative Blobs */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+            <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-xl" />
+            
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 overflow-hidden rounded-3xl">
+              <div 
+                className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite]"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                }}
+              />
+            </div>
+            
+            {/* Glowing Pulse Effect */}
+            <motion.div 
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              animate={{ 
+                boxShadow: [
+                  '0 0 20px rgba(255,255,255,0.1)',
+                  '0 0 40px rgba(255,255,255,0.2)',
+                  '0 0 20px rgba(255,255,255,0.1)'
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            {/* Content */}
+            <div className="relative p-5 flex flex-col h-full min-h-[200px]">
+              {/* Top Badges */}
+              <div className="flex items-center justify-between mb-3">
+                <motion.div 
+                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                  <span className="text-xs font-bold text-white">Up to 40% OFF</span>
+                </motion.div>
+                <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  <BadgeCheck className="w-3.5 h-3.5 text-green-300" />
+                  <span className="text-[10px] font-medium text-white/90">{lab.accredited.join(" & ")} Certified</span>
                 </div>
               </div>
               
-              {/* Details */}
-              <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-white text-xl leading-tight line-clamp-2 drop-shadow-md">
-                  {lab.name}
-                </h1>
-                <p className="text-white/80 text-sm font-medium mt-0.5 italic">"{tagline}"</p>
+              {/* Main Content Row */}
+              <div className="flex items-center gap-4 flex-1">
+                {/* Logo Container */}
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-xl border-2 border-white/50 overflow-hidden">
+                    {logoUrl ? (
+                      <img 
+                        src={logoUrl} 
+                        alt={lab.name} 
+                        className="w-16 h-16 object-contain p-1"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <Building2 className={`w-10 h-10 text-gray-600 ${logoUrl ? 'hidden' : ''}`} />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white shadow-lg flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-primary" />
+                  </div>
+                </div>
                 
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
-                    <Star className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                    <span className="text-xs font-bold text-white">{lab.rating}</span>
-                    <span className="text-[10px] text-white/80">({lab.reviews.toLocaleString()})</span>
-                  </div>
-                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
-                    <Beaker className="w-3.5 h-3.5 text-white" />
-                    <span className="text-xs font-medium text-white">{lab.tests.length}+ Tests</span>
+                {/* Lab Info */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-bold text-white text-lg leading-tight line-clamp-1 drop-shadow-md">
+                    {lab.name}
+                  </h1>
+                  <p className="text-white/80 text-xs font-medium mt-0.5 italic">"{tagline}"</p>
+                  
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                      <Star className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                      <span className="text-xs font-bold text-white">{lab.rating}</span>
+                      <span className="text-[10px] text-white/80">({lab.reviews.toLocaleString()})</span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                      <Beaker className="w-3.5 h-3.5 text-white" />
+                      <span className="text-xs font-medium text-white">{lab.tests.length}+ Tests</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Quick Info Pills */}
-            <div className="flex items-center gap-2 mt-4 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <MapPin className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-xs text-white/90">{lab.location}</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <Clock className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-xs text-white/90">{lab.timing}</span>
-              </div>
-              {lab.homeCollection && (
-                <div className="flex items-center gap-1.5 bg-green-500/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                  <Home className="w-3.5 h-3.5 text-green-200" />
-                  <span className="text-xs text-green-100 font-medium">Home Collection</span>
+              
+              {/* Quick Info Pills */}
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  <MapPin className="w-3 h-3 text-white/80" />
+                  <span className="text-[10px] text-white/90 line-clamp-1">{lab.location}</span>
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  <Clock className="w-3 h-3 text-white/80" />
+                  <span className="text-[10px] text-white/90">{lab.timing}</span>
+                </div>
+                {lab.homeCollection && (
+                  <div className="flex items-center gap-1.5 bg-green-500/30 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                    <Home className="w-3 h-3 text-green-200" />
+                    <span className="text-[10px] text-green-100 font-medium">Home Collection</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         <div className="px-4 py-4 space-y-4">
           {/* Search */}

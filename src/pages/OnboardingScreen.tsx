@@ -29,12 +29,6 @@ const slides = [
     description: "Book video or in-person consultations with certified doctors and physiotherapists for personalized care.",
     color: "from-purple-500 to-purple-500/60",
   },
-  {
-    icon: Brain,
-    title: "AI-powered health reports & insights",
-    description: "Understand your reports with AI explanations and personalized health recommendations.",
-    color: "from-secondary to-secondary/60",
-  },
 ];
 
 const OnboardingScreen = () => {

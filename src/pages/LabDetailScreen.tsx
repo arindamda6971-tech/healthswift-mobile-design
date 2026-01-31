@@ -442,22 +442,6 @@ const LabDetailScreen = () => {
             
             {/* Content */}
             <div className="relative p-5 flex flex-col h-full min-h-[200px]">
-              {/* Top Badges */}
-              <div className="flex items-center justify-between mb-3">
-                <motion.div 
-                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                  <span className="text-xs font-bold text-white">Up to 40% OFF</span>
-                </motion.div>
-                <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                  <BadgeCheck className="w-3.5 h-3.5 text-green-300" />
-                  <span className="text-[10px] font-medium text-white/90">{lab.accredited.join(" & ")} Certified</span>
-                </div>
-              </div>
-              
               {/* Main Content Row */}
               <div className="flex items-center gap-4 flex-1">
                 {/* Logo Container */}

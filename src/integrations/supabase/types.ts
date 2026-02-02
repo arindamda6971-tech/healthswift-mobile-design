@@ -67,27 +67,39 @@ export type Database = {
           created_at: string
           family_member_id: string | null
           id: string
+          lab_id: string | null
+          lab_name: string | null
           package_id: string | null
+          price: number | null
           quantity: number | null
           test_id: string | null
+          test_name: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           family_member_id?: string | null
           id?: string
+          lab_id?: string | null
+          lab_name?: string | null
           package_id?: string | null
+          price?: number | null
           quantity?: number | null
           test_id?: string | null
+          test_name?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           family_member_id?: string | null
           id?: string
+          lab_id?: string | null
+          lab_name?: string | null
           package_id?: string | null
+          price?: number | null
           quantity?: number | null
           test_id?: string | null
+          test_name?: string | null
           user_id?: string
         }
         Relationships: [
@@ -690,6 +702,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_prescriptions: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string
+          id: string
+          image_url: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          image_url: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

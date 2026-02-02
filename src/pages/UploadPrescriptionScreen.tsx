@@ -1,9 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Upload,
   Camera,
   Image,
   FileText,
@@ -20,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { usePrescriptionStorage } from "@/hooks/usePrescriptionStorage";
 
 interface RecommendedTest {
   id: string;
@@ -64,14 +64,49 @@ const UploadPrescriptionScreen = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   
+  const { prescription, isLoading: isPrescriptionLoading, savePrescription, updateAnalysisResult, deletePrescription } = usePrescriptionStorage();
+  
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [recommendedTests, setRecommendedTests] = useState<RecommendedTest[]>([]);
   const [analysisNotes, setAnalysisNotes] = useState<string>("");
   const [confidence, setConfidence] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Load saved prescription on mount
+  useEffect(() => {
+    if (prescription && !isPrescriptionLoading) {
+      setUploadedImage(prescription.image_url);
+      
+      if (prescription.analysis_result) {
+        const result = prescription.analysis_result as AIAnalysisResult;
+        if (result.tests && result.tests.length > 0) {
+          const tests: RecommendedTest[] = result.tests.map((test, index) => {
+            const pricing = getTestPricing(test.category);
+            const discount = Math.round(((pricing.originalPrice - pricing.price) / pricing.originalPrice) * 100);
+            
+            return {
+              id: `ai-${index}-${Date.now()}`,
+              name: test.name,
+              shortName: test.shortName,
+              category: test.category,
+              price: pricing.price,
+              originalPrice: pricing.originalPrice,
+              discount: `${discount}%`,
+              reportTime: pricing.reportTime,
+            };
+          });
+          setRecommendedTests(tests);
+          setAnalysisNotes(result.notes || "");
+          setConfidence(result.confidence);
+          setAnalysisComplete(true);
+        }
+      }
+    }
+  }, [prescription, isPrescriptionLoading]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -80,12 +115,22 @@ const UploadPrescriptionScreen = () => {
       }
       
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadedImage(reader.result as string);
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+        setUploadedImage(base64Image);
         setAnalysisComplete(false);
         setRecommendedTests([]);
         setAnalysisNotes("");
         setConfidence("");
+        
+        // Save to Supabase
+        setIsUploading(true);
+        const savedUrl = await savePrescription(base64Image);
+        if (savedUrl) {
+          setUploadedImage(savedUrl);
+          toast.success("Prescription uploaded successfully!");
+        }
+        setIsUploading(false);
       };
       reader.readAsDataURL(file);
     }
@@ -97,8 +142,24 @@ const UploadPrescriptionScreen = () => {
     setIsAnalyzing(true);
     
     try {
+      // If uploadedImage is a URL, fetch and convert to base64
+      let imageBase64 = uploadedImage;
+      if (uploadedImage.startsWith("http")) {
+        try {
+          const response = await fetch(uploadedImage);
+          const blob = await response.blob();
+          imageBase64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch (fetchErr) {
+          console.error("Error fetching image:", fetchErr);
+        }
+      }
+      
       const { data, error } = await supabase.functions.invoke('analyze-prescription', {
-        body: { imageBase64: uploadedImage }
+        body: { imageBase64 }
       });
 
       if (error) {
@@ -138,6 +199,10 @@ const UploadPrescriptionScreen = () => {
       setAnalysisNotes(result.notes || "");
       setConfidence(result.confidence);
       setAnalysisComplete(true);
+      
+      // Save analysis result to Supabase
+      await updateAnalysisResult(result);
+      
       toast.success(`Found ${tests.length} test${tests.length > 1 ? 's' : ''} in your prescription!`);
       
     } catch (err) {
@@ -148,7 +213,8 @@ const UploadPrescriptionScreen = () => {
     }
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
+    await deletePrescription();
     setUploadedImage(null);
     setAnalysisComplete(false);
     setRecommendedTests([]);
@@ -173,6 +239,21 @@ const UploadPrescriptionScreen = () => {
     toast.success("All tests added to cart!");
     navigate("/cart");
   };
+
+  if (isPrescriptionLoading) {
+    return (
+      <MobileLayout showNav={false} showFloatingAdd={false}>
+        <div className="flex items-center justify-center h-screen">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          >
+            <Sparkles className="w-8 h-8 text-primary" />
+          </motion.div>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout showNav={false} showFloatingAdd={false}>
@@ -235,6 +316,7 @@ const UploadPrescriptionScreen = () => {
                   variant="outline"
                   className="gap-2"
                   onClick={() => cameraInputRef.current?.click()}
+                  disabled={isUploading}
                 >
                   <Camera className="w-4 h-4" />
                   Camera
@@ -243,6 +325,7 @@ const UploadPrescriptionScreen = () => {
                   variant="outline"
                   className="gap-2"
                   onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
                 >
                   <Image className="w-4 h-4" />
                   Gallery
@@ -256,14 +339,26 @@ const UploadPrescriptionScreen = () => {
                 alt="Uploaded prescription"
                 className="w-full rounded-2xl object-cover max-h-64"
               />
+              {isUploading && (
+                <div className="absolute inset-0 bg-background/80 rounded-2xl flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  >
+                    <Sparkles className="w-8 h-8 text-primary" />
+                  </motion.div>
+                  <span className="ml-2 text-sm text-muted-foreground">Uploading...</span>
+                </div>
+              )}
               <button
                 onClick={handleRemoveImage}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive flex items-center justify-center"
+                disabled={isUploading}
               >
                 <X className="w-4 h-4 text-destructive-foreground" />
               </button>
               
-              {!analysisComplete && (
+              {!analysisComplete && !isUploading && (
                 <div className="mt-4">
                   <Button
                     className="w-full gap-2"

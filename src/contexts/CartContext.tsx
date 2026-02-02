@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CartItem {
   id: string;
@@ -29,49 +31,160 @@ interface CartContextType {
   pendingItem: PendingItem | null;
   confirmReplace: () => void;
   cancelReplace: () => void;
+  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  // Use sessionStorage for sensitive health data - clears when browser tab closes
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = sessionStorage.getItem("healthswift-cart");
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+  const { user } = useAuth();
+  const [items, setItems] = useState<CartItem[]>([]);
   const [pendingItem, setPendingItem] = useState<PendingItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const isInitialized = useRef(false);
+  const isSyncing = useRef(false);
 
+  // Load cart from Supabase
+  const loadCartFromSupabase = useCallback(async () => {
+    if (!user) {
+      // Load from sessionStorage for non-logged-in users
+      const saved = sessionStorage.getItem("healthswift-cart");
+      if (saved) {
+        setItems(JSON.parse(saved));
+      }
+      setIsLoading(false);
+      isInitialized.current = true;
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error loading cart:", error);
+        // Fallback to sessionStorage
+        const saved = sessionStorage.getItem("healthswift-cart");
+        if (saved) {
+          setItems(JSON.parse(saved));
+        }
+      } else if (data && data.length > 0) {
+        const cartItems: CartItem[] = data.map((item) => ({
+          id: item.test_id || item.package_id || item.id,
+          name: item.test_name || "Unknown Test",
+          price: Number(item.price) || 0,
+          labId: item.lab_id || undefined,
+          labName: item.lab_name || undefined,
+          quantity: item.quantity || 1,
+          familyMemberId: item.family_member_id || undefined,
+        }));
+        setItems(cartItems);
+        // Also save to sessionStorage as backup
+        sessionStorage.setItem("healthswift-cart", JSON.stringify(cartItems));
+      } else {
+        // Check sessionStorage for any items added before login
+        const saved = sessionStorage.getItem("healthswift-cart");
+        if (saved) {
+          const localItems = JSON.parse(saved);
+          if (localItems.length > 0) {
+            setItems(localItems);
+            // Sync these to Supabase
+            isSyncing.current = true;
+            await syncItemsToSupabase(localItems, user.id);
+            isSyncing.current = false;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error loading cart:", err);
+    } finally {
+      setIsLoading(false);
+      isInitialized.current = true;
+    }
+  }, [user]);
+
+  // Sync items to Supabase
+  const syncItemsToSupabase = async (cartItems: CartItem[], userId: string) => {
+    try {
+      // Delete all existing cart items for this user
+      await supabase
+        .from("cart_items")
+        .delete()
+        .eq("user_id", userId);
+
+      // Insert new items if any
+      if (cartItems.length > 0) {
+        const cartItemsToInsert = cartItems.map((item) => ({
+          user_id: userId,
+          test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
+          test_name: item.name,
+          price: item.price,
+          lab_id: item.labId || null,
+          lab_name: item.labName || null,
+          quantity: item.quantity,
+          family_member_id: item.familyMemberId || null,
+        }));
+
+        const { error } = await supabase
+          .from("cart_items")
+          .insert(cartItemsToInsert);
+
+        if (error) {
+          console.error("Error syncing cart:", error);
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing cart:", err);
+    }
+  };
+
+  // Sync cart to Supabase when items change
+  const syncCartToSupabase = useCallback(async (newItems: CartItem[]) => {
+    // Always save to sessionStorage
+    sessionStorage.setItem("healthswift-cart", JSON.stringify(newItems));
+
+    if (!user || !isInitialized.current || isSyncing.current) return;
+
+    isSyncing.current = true;
+    await syncItemsToSupabase(newItems, user.id);
+    isSyncing.current = false;
+  }, [user]);
+
+  // Load cart on mount when user changes
   useEffect(() => {
-    if (import.meta.env.DEV) console.log("Cart items changed, saving to sessionStorage:", items);
-    sessionStorage.setItem("healthswift-cart", JSON.stringify(items));
-  }, [items]);
+    isInitialized.current = false;
+    loadCartFromSupabase();
+  }, [user, loadCartFromSupabase]);
 
   // Get current lab from cart items
   const currentLabId = items.length > 0 ? items[0].labId || null : null;
   const currentLabName = items.length > 0 ? items[0].labName || null : null;
 
   const addToCart = (item: Omit<CartItem, "quantity">): boolean => {
-    console.log("CartContext.addToCart called with:", item);
+    if (import.meta.env.DEV) console.log("CartContext.addToCart called with:", item);
     
     // Check if cart has items from a different lab
     if (items.length > 0 && item.labId && currentLabId && item.labId !== currentLabId) {
-      // Set pending item and return false to indicate conflict
       setPendingItem({ item, existingLabName: currentLabName || "another lab" });
       return false;
     }
     
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
+      let updated: CartItem[];
       if (existing) {
-        const updated = prev.map((i) =>
+        updated = prev.map((i) =>
           i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
-        console.log("Cart updated (increment):", updated);
-        return updated;
+      } else {
+        updated = [...prev, { ...item, quantity: 1 }];
       }
-      const updated = [...prev, { ...item, quantity: 1 }];
-      console.log("Cart updated (new):", updated);
+      
+      // Sync to Supabase
+      syncCartToSupabase(updated);
+      
       return updated;
     });
     return true;
@@ -79,8 +192,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const confirmReplace = () => {
     if (pendingItem) {
-      // Clear cart and add the new item
-      setItems([{ ...pendingItem.item, quantity: 1 }]);
+      const newItems = [{ ...pendingItem.item, quantity: 1 }];
+      setItems(newItems);
+      syncCartToSupabase(newItems);
       setPendingItem(null);
     }
   };
@@ -90,30 +204,41 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeFromCart = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      syncCartToSupabase(updated);
+      return updated;
+    });
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
+    setItems((prev) => {
+      const updated = prev.map((item) =>
         item.id === id
           ? { ...item, quantity: Math.max(1, item.quantity + delta) }
           : item
-      )
-    );
+      );
+      syncCartToSupabase(updated);
+      return updated;
+    });
   };
 
   const updateFamilyMember = (id: string, familyMemberId: string | undefined) => {
-    setItems((prev) =>
-      prev.map((item) =>
+    setItems((prev) => {
+      const updated = prev.map((item) =>
         item.id === id
           ? { ...item, familyMemberId }
           : item
-      )
-    );
+      );
+      syncCartToSupabase(updated);
+      return updated;
+    });
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    syncCartToSupabase([]);
+  };
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -133,7 +258,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         currentLabName,
         pendingItem,
         confirmReplace,
-        cancelReplace
+        cancelReplace,
+        isLoading,
       }}
     >
       {children}

@@ -459,12 +459,6 @@ const HomeScreen = () => {
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-foreground">₹{pkg.price}</p>
                     <p className="text-[10px] text-muted-foreground">starting price</p>
-                    {pkg.discount_percent && pkg.discount_percent > 0 && pkg.original_price && (
-                      <div className="flex items-center gap-1 justify-end mt-0.5">
-                        <span className="text-[10px] text-muted-foreground line-through">₹{pkg.original_price}</span>
-                        <span className="text-[10px] text-success font-medium">{pkg.discount_percent}% off</span>
-                      </div>
-                    )}
                   </div>
                 </motion.div>
               );

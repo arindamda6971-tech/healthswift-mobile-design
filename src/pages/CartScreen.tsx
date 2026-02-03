@@ -43,7 +43,7 @@ const timeSlots = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, subtotal, currentLabName } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, currentLabName, isLoading } = useCart();
   const { supabaseUserId } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -250,6 +250,31 @@ const CartScreen = () => {
       fileInputRef.current.value = '';
     }
   };
+
+  if (isLoading) {
+    return (
+      <MobileLayout>
+        <ScreenHeader title="Your Cart" />
+        <div className="px-4 pb-32">
+          <div className="space-y-3">
+            {[1,2,3].map((i) => (
+              <div key={i} className="soft-card animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-20 bg-muted rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </MobileLayout>
+    );
+  }
 
   if (!items || items.length === 0) {
     return (

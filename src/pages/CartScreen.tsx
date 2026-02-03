@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar, Upload, FileImage, X, Check, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -256,21 +257,98 @@ const CartScreen = () => {
       <MobileLayout>
         <ScreenHeader title="Your Cart" />
         <div className="px-4 pb-32">
-          <div className="space-y-3">
-            {[1,2,3].map((i) => (
-              <div key={i} className="soft-card animate-pulse">
+          {/* Loading Lab Banner Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 mb-3 flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border"
+          >
+            <Skeleton className="w-9 h-9 rounded-lg flex-shrink-0" />
+            <div className="flex-1 min-w-0 space-y-1">
+              <Skeleton className="h-3 w-1/4" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <Skeleton className="w-12 h-6 rounded" />
+          </motion.div>
+
+          {/* Loading Cart Items Skeletons */}
+          <div className="space-y-3 mt-4">
+            {[1, 2, 3].map((i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-4 rounded-2xl bg-card border border-border"
+              >
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-muted rounded w-1/4" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/3" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-6 w-20 bg-muted rounded" />
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    <Skeleton className="h-8 w-24 rounded-lg" />
+                    <Skeleton className="h-8 w-8 rounded-lg" />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
+
+          {/* Loading Prescription Section Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6"
+          >
+            <Skeleton className="h-4 w-1/2 mb-3" />
+            <Skeleton className="w-full h-32 rounded-2xl" />
+          </motion.div>
+
+          {/* Loading Booking Details Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 space-y-4"
+          >
+            <Skeleton className="h-4 w-1/4 mb-3" />
+            <Skeleton className="w-full h-12 rounded-xl" />
+            <Skeleton className="w-full h-12 rounded-xl" />
+          </motion.div>
+
+          {/* Loading Summary Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 p-4 rounded-2xl bg-muted/50 border border-border space-y-3"
+          >
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-5 w-1/4" />
+            </div>
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-5 w-1/4" />
+            </div>
+            <Skeleton className="h-px w-full" />
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-5 w-1/4" />
+              <Skeleton className="h-6 w-1/4" />
+            </div>
+          </motion.div>
+
+          {/* Loading Button Skeleton */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mt-6"
+          >
+            <Skeleton className="w-full h-12 rounded-xl" />
+          </motion.div>
         </div>
       </MobileLayout>
     );

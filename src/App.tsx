@@ -37,6 +37,7 @@ import UploadPrescriptionScreen from "./pages/UploadPrescriptionScreen";
 import SupportScreen from "./pages/SupportScreen";
 import PhysioConsultScreen from "./pages/PhysioConsultScreen";
 import ECGTestScreen from "./pages/ECGTestScreen";
+import ECGDoctorsScreen from "./pages/ECGDoctorsScreen";
 import ConsultationCallScreen from "./pages/ConsultationCallScreen";
 import NotFound from "./pages/NotFound";
 
@@ -86,6 +87,7 @@ const App = () => (
                   <Route path="/support" element={<ProtectedRoute><SupportScreen /></ProtectedRoute>} />
                   <Route path="/physio-consult" element={<ProtectedRoute><PhysioConsultScreen /></ProtectedRoute>} />
                   <Route path="/ecg-test" element={<ProtectedRoute><ECGTestScreen /></ProtectedRoute>} />
+                  <Route path="/ecg-doctors/:labId" element={<ProtectedRoute><ECGDoctorsScreen /></ProtectedRoute>} />
                   <Route path="/consultation-call" element={<ProtectedRoute><ConsultationCallScreen /></ProtectedRoute>} />
                   
                   {/* Catch-all */}

@@ -79,20 +79,6 @@ const ReportsScreen = () => {
               </div>
             );
           })()}
-          {/* Small box pills: Consult / Physiotherapy / Specialisations */}
-          <div className="mt-2">
-            <div className="flex gap-2 overflow-x-auto">
-              {["Consult", "Physiotherapy", "Specialisations"].map((p) => (
-                <button
-                  key={p}
-                  className="px-2 py-1 rounded-md border border-border/40 text-xs font-medium bg-background/60 hover:bg-muted/20 whitespace-nowrap"
-                  onClick={() => setSelectedCategory(p)}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
         <Tabs defaultValue="reports" className="mt-4">
           <TabsContent value="reports" className="space-y-4">

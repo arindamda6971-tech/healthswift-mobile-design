@@ -26,7 +26,8 @@ const doctors = [
     reviews: 1240,
     available: true,
     nextSlot: "Available now",
-    consultationFee: 299,
+    videoCallFee: 299,
+    audioCallFee: 199,
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
   },
   {
@@ -38,7 +39,8 @@ const doctors = [
     reviews: 980,
     available: true,
     nextSlot: "In 15 mins",
-    consultationFee: 399,
+    videoCallFee: 399,
+    audioCallFee: 299,
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
   },
   {
@@ -50,24 +52,20 @@ const doctors = [
     reviews: 756,
     available: false,
     nextSlot: "Tomorrow 10 AM",
-    consultationFee: 599,
+    videoCallFee: 599,
+    audioCallFee: 499,
     image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face",
   },
 ];
 
-const consultTypes = [
-  { id: "video", icon: Video, label: "Video Call", price: "+₹0" },
-  { id: "audio", icon: Phone, label: "Audio Call", price: "+₹0" },
-];
-
 const DoctorConsultScreen = () => {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState("video");
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<"video" | "audio">("video");
 
   return (
     <MobileLayout showNav={false}>
-      <ScreenHeader title="Consult a Doctor" />
+      <ScreenHeader title="Book a Doctor" />
 
       <div className="px-4 pb-32">
         {/* Hero banner */}
@@ -88,32 +86,6 @@ const DoctorConsultScreen = () => {
             <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0">
               Instant Connect
             </Badge>
-          </div>
-        </motion.div>
-
-        {/* Consultation type */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mt-6"
-        >
-          <h3 className="font-semibold text-foreground mb-3">Consultation Type</h3>
-          <div className="flex gap-2">
-            {consultTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => setSelectedType(type.id)}
-                className={`flex-1 py-3 px-3 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                  selectedType === type.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                }`}
-              >
-                <type.icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{type.label}</span>
-              </button>
-            ))}
           </div>
         </motion.div>
 
@@ -171,8 +143,19 @@ const DoctorConsultScreen = () => {
                 </div>
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                   <div>
-                    <p className="text-xs text-muted-foreground">Consultation fee</p>
-                    <p className="font-bold text-foreground">₹{doctor.consultationFee}</p>
+                    <p className="text-xs text-muted-foreground mb-2">Call Pricing</p>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-3 h-3 text-primary" />
+                        <span className="text-xs text-muted-foreground">Video:</span>
+                        <span className="font-semibold text-foreground">₹{doctor.videoCallFee}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3 h-3 text-primary" />
+                        <span className="text-xs text-muted-foreground">Audio:</span>
+                        <span className="font-semibold text-foreground">₹{doctor.audioCallFee}</span>
+                      </div>
+                    </div>
                   </div>
                   <Button variant="soft" size="sm">
                     Book Now
@@ -192,6 +175,36 @@ const DoctorConsultScreen = () => {
           animate={{ y: 0 }}
           className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
         >
+          <div className="space-y-3 mb-4">
+            <button
+              onClick={() => setSelectedType("video")}
+              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
+                selectedType === "video"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Video className="w-5 h-5" />
+                <span className="font-medium">Video Call</span>
+              </div>
+              <span className="font-semibold">₹{doctors.find(d => d.id === selectedDoctor)?.videoCallFee}</span>
+            </button>
+            <button
+              onClick={() => setSelectedType("audio")}
+              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
+                selectedType === "audio"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Phone className="w-5 h-5" />
+                <span className="font-medium">Audio Call</span>
+              </div>
+              <span className="font-semibold">₹{doctors.find(d => d.id === selectedDoctor)?.audioCallFee}</span>
+            </button>
+          </div>
           <Button
             variant="hero"
             className="w-full"
@@ -216,7 +229,7 @@ const DoctorConsultScreen = () => {
             }}
           >
             {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
-            Start {selectedType === "video" ? "Video" : "Audio"} Call • ₹{doctors.find(d => d.id === selectedDoctor)?.consultationFee}
+            Book {selectedType === "video" ? "Video" : "Audio"} Call
           </Button>
         </motion.div>
       )}

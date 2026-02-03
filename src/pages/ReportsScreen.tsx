@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import CategoryIcon from "@/components/ui/CategoryIcon";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import MobileLayout from "@/components/layout/MobileLayout";
@@ -73,7 +74,10 @@ const ReportsScreen = () => {
                         : "bg-muted/20 text-muted-foreground hover:bg-muted/30"
                     }`}
                   >
-                    {c}
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon category={c} className="w-4 h-4 text-muted-foreground" />
+                      <span>{c}</span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -144,7 +148,10 @@ const ReportsScreen = () => {
 
                 return (
                   <div key={cat} className="space-y-2">
-                    <h4 className="text-sm font-semibold text-foreground/90">{cat}</h4>
+                    <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                      <CategoryIcon category={cat} className="w-4 h-4 text-foreground/80" />
+                      {cat}
+                    </h4>
                     <div className="space-y-3">
                       {items.map((report, idx) => {
                         const RiskIcon = getRiskIcon(report.riskLevel);

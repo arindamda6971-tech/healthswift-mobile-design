@@ -60,7 +60,7 @@ const ReportsScreen = () => {
       <div className="px-4 pb-6">
         <div className="pt-3">
           {(() => {
-            const cats = ["All", ...Array.from(new Set(reports.map((r) => r.category)))];
+            const cats = Array.from(new Set(reports.map((r) => r.category)));
             return (
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {cats.map((c) => (

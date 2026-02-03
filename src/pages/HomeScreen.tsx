@@ -364,7 +364,7 @@ const HomeScreen = () => {
         <div className="flex items-center justify-between px-4 mb-4">
           <h2 className="text-lg font-bold text-foreground">Trending Tests</h2>
           <button 
-            onClick={() => navigate('/categories')}
+            onClick={() => navigate('/packages')}
             className="flex items-center gap-1 text-primary text-sm font-medium"
           >
             View all <ChevronRight className="w-4 h-4" />
@@ -426,7 +426,8 @@ const HomeScreen = () => {
         </div>
         <div className="space-y-3">
           {healthPackages.length > 0 ? (
-            healthPackages.map((pkg, index) => {
+            // show only top 3 packages on the home screen
+            healthPackages.slice(0, 3).map((pkg, index) => {
               const gradientColors = [
                 "from-primary to-primary/60",
                 "from-success to-success/60", 

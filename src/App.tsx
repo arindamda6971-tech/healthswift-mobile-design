@@ -33,6 +33,7 @@ import DoctorConsultScreen from "./pages/DoctorConsultScreen";
 import RewardsScreen from "./pages/RewardsScreen";
 import PartnerLabsScreen from "./pages/PartnerLabsScreen";
 import LabDetailScreen from "./pages/LabDetailScreen";
+import PackagesScreen from "./pages/PackagesScreen";
 import UploadPrescriptionScreen from "./pages/UploadPrescriptionScreen";
 import SupportScreen from "./pages/SupportScreen";
 import PhysioConsultScreen from "./pages/PhysioConsultScreen";
@@ -82,6 +83,7 @@ const App = () => (
                   {/* Family screen removed */}
                   <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
                   <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
+                  <Route path="/packages" element={<ProtectedRoute><PackagesScreen /></ProtectedRoute>} />
                   <Route path="/upload-prescription" element={<ProtectedRoute><UploadPrescriptionScreen /></ProtectedRoute>} />
                   <Route path="/support" element={<ProtectedRoute><SupportScreen /></ProtectedRoute>} />
                   <Route path="/physio-consult" element={<ProtectedRoute><PhysioConsultScreen /></ProtectedRoute>} />

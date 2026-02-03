@@ -446,15 +446,9 @@ const HomeScreen = () => {
                   onClick={() => navigate(`/test/select/${pkg.id}`, { state: { isPackage: true } })}
                   className="soft-card flex items-center gap-4 cursor-pointer"
                 >
-                  {pkg.lab_logo ? (
-                    <div className="w-14 h-14 rounded-2xl bg-white border border-border flex items-center justify-center flex-shrink-0 p-2">
-                      <img src={pkg.lab_logo} alt={pkg.lab_name} className="w-full h-full object-contain" />
-                    </div>
-                  ) : (
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
-                      <IconComponent className="w-7 h-7 text-primary-foreground" />
-                    </div>
-                  )}
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
+                    <IconComponent className="w-7 h-7 text-primary-foreground" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground text-sm truncate">{pkg.name}</h3>
                     <p className="text-xs text-muted-foreground">{pkg.tests_count} tests included</p>
@@ -464,8 +458,12 @@ const HomeScreen = () => {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-foreground">₹{pkg.price}</p>
-                    {pkg.discount_percent && pkg.discount_percent > 0 && (
-                      <p className="text-xs text-success">{pkg.discount_percent}% off</p>
+                    <p className="text-[10px] text-muted-foreground">starting price</p>
+                    {pkg.discount_percent && pkg.discount_percent > 0 && pkg.original_price && (
+                      <div className="flex items-center gap-1 justify-end mt-0.5">
+                        <span className="text-[10px] text-muted-foreground line-through">₹{pkg.original_price}</span>
+                        <span className="text-[10px] text-success font-medium">{pkg.discount_percent}% off</span>
+                      </div>
                     )}
                   </div>
                 </motion.div>

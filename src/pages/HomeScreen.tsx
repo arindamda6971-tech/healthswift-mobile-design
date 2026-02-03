@@ -46,11 +46,7 @@ const trendingTests = [
   { name: "Liver Function Test", price: 449, originalPrice: 799, discount: "44%", time: "12 hours" },
 ];
 
-const healthPlans = [
-  { icon: HeartPulse, name: "Sexual Health Test", tests: 15, price: 1499, color: "from-primary to-primary/60" },
-  { icon: Activity, name: "Thyroid Care", tests: 12, price: 1299, color: "from-success to-success/60" },
-  { icon: Shield, name: "Allergy Checkup", tests: 25, price: 1899, color: "from-secondary to-secondary/60" },
-];
+// Health packages will be fetched from database
 
 const HomeScreen = () => {
   const navigate = useNavigate();
@@ -60,6 +56,7 @@ const HomeScreen = () => {
   const [allTests, setAllTests] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [diagnosticCenters, setDiagnosticCenters] = useState<{id: string; name: string; rating: number; tests: number; logo?: string}[]>([]);
+  const [healthPackages, setHealthPackages] = useState<{id: string; name: string; tests_count: number; price: number; original_price?: number; discount_percent?: number; icon?: string; color?: string}[]>([]);
 
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {
@@ -89,11 +86,33 @@ const HomeScreen = () => {
     }
   }, []);
 
+  // Fetch health packages from test_packages table
+  const fetchHealthPackages = useCallback(async () => {
+    const { data } = await supabase
+      .from("test_packages")
+      .select("id, name, tests_count, price, original_price, discount_percent, icon, color")
+      .eq("is_active", true)
+      .order("is_popular", { ascending: false })
+      .limit(5);
+    if (data) {
+      setHealthPackages(data.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        tests_count: pkg.tests_count || 0,
+        price: pkg.price,
+        original_price: pkg.original_price || undefined,
+        discount_percent: pkg.discount_percent || undefined,
+        icon: pkg.icon || undefined,
+        color: pkg.color || undefined
+      })));
+    }
+  }, []);
+
   // Refresh handler for pull-to-refresh
   const handleRefresh = useCallback(async () => {
-    await Promise.all([fetchTests(), fetchDiagnosticCenters()]);
+    await Promise.all([fetchTests(), fetchDiagnosticCenters(), fetchHealthPackages()]);
     toast.success("Data refreshed!");
-  }, [fetchTests, fetchDiagnosticCenters]);
+  }, [fetchTests, fetchDiagnosticCenters, fetchHealthPackages]);
 
   const {
     isRefreshing,
@@ -111,11 +130,12 @@ const HomeScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch tests and centers on mount
+  // Fetch tests, centers and packages on mount
   useEffect(() => {
     fetchTests();
     fetchDiagnosticCenters();
-  }, [fetchTests, fetchDiagnosticCenters]);
+    fetchHealthPackages();
+  }, [fetchTests, fetchDiagnosticCenters, fetchHealthPackages]);
 
   // Filter tests based on search query. Use supabase results when available,
   // otherwise fall back to the local `trendingTests` list so search works offline.
@@ -383,7 +403,7 @@ const HomeScreen = () => {
         </div>
       </motion.section>
 
-      {/* Health Plans */}
+      {/* Health Packages */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -391,34 +411,81 @@ const HomeScreen = () => {
         className="px-4 mt-8 mb-6"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">Health Plans</h2>
-          <button className="flex items-center gap-1 text-primary text-sm font-medium">
+          <h2 className="text-lg font-bold text-foreground">Health Packages</h2>
+          <button 
+            onClick={() => navigate('/categories')}
+            className="flex items-center gap-1 text-primary text-sm font-medium"
+          >
             View all <ChevronRight className="w-4 h-4" />
           </button>
         </div>
         <div className="space-y-3">
-          {healthPlans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 + index * 0.1 }}
-              onClick={() => navigate("/subscription")}
-              className="soft-card flex items-center gap-4 cursor-pointer"
-            >
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center flex-shrink-0`}>
-                <plan.icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground">{plan.tests} tests included</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-foreground">₹{plan.price}</p>
-                <p className="text-xs text-muted-foreground">onwards</p>
-              </div>
-            </motion.div>
-          ))}
+          {healthPackages.length > 0 ? (
+            healthPackages.map((pkg, index) => {
+              const gradientColors = [
+                "from-primary to-primary/60",
+                "from-success to-success/60", 
+                "from-secondary to-secondary/60",
+                "from-destructive to-destructive/60",
+                "from-accent to-accent/60"
+              ];
+              const IconComponent = pkg.icon === "HeartPulse" ? HeartPulse : 
+                                   pkg.icon === "Activity" ? Activity : 
+                                   pkg.icon === "Shield" ? Shield : HeartPulse;
+              return (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
+                  onClick={() => navigate(`/test/select/${pkg.id}`, { state: { isPackage: true } })}
+                  className="soft-card flex items-center gap-4 cursor-pointer"
+                >
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
+                    <IconComponent className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground text-sm">{pkg.name}</h3>
+                    <p className="text-xs text-muted-foreground">{pkg.tests_count} tests included</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-foreground">₹{pkg.price}</p>
+                    {pkg.discount_percent && pkg.discount_percent > 0 && (
+                      <p className="text-xs text-success">{pkg.discount_percent}% off</p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            // Fallback if no packages loaded
+            [
+              { name: "Full Body Checkup", tests: 70, price: 1499, color: "from-primary to-primary/60" },
+              { name: "Comprehensive Health Package", tests: 85, price: 2499, color: "from-success to-success/60" },
+              { name: "Wellness Package", tests: 45, price: 999, color: "from-secondary to-secondary/60" },
+            ].map((plan, index) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+                onClick={() => navigate("/categories")}
+                className="soft-card flex items-center gap-4 cursor-pointer"
+              >
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center flex-shrink-0`}>
+                  <HeartPulse className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">{plan.name}</h3>
+                  <p className="text-sm text-muted-foreground">{plan.tests} tests included</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-foreground">₹{plan.price}</p>
+                  <p className="text-xs text-muted-foreground">onwards</p>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </motion.section>
 

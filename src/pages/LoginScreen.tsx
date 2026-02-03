@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Activity, Zap, Phone, Mail, Lock, Eye, EyeOff, MessageCircle, Loader2, User } from "lucide-react";
+import { Activity, Zap, Phone, Mail, Lock, Eye, EyeOff, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -213,10 +213,7 @@ const LoginScreen = () => {
     }
   };
 
-  const handleWhatsAppBooking = () => {
-    const message = encodeURIComponent("Hi! I'd like to book a health test with HealthSwift.");
-    window.open(`https://wa.me/916296092819?text=${message}`, "_blank");
-  };
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-[430px] mx-auto">
@@ -340,6 +337,12 @@ const LoginScreen = () => {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleEmailAuth();
+                  }
+                }}
                 className="pl-12 pr-12 h-14 rounded-xl bg-muted border-0 text-base"
               />
               <button
@@ -422,10 +425,7 @@ const LoginScreen = () => {
             Continue with Google
           </Button>
 
-          <Button variant="glass" className="w-full bg-success/10 hover:bg-success/20" size="lg" onClick={handleWhatsAppBooking}>
-            <MessageCircle className="w-5 h-5 text-success" />
-            <span className="text-success">Book via WhatsApp</span>
-          </Button>
+
         </div>
       </motion.div>
 

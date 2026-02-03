@@ -598,6 +598,7 @@ export type Database = {
           color: string | null
           created_at: string
           description: string | null
+          diagnostic_center_id: string | null
           discount_percent: number | null
           icon: string | null
           id: string
@@ -612,6 +613,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          diagnostic_center_id?: string | null
           discount_percent?: number | null
           icon?: string | null
           id?: string
@@ -626,6 +628,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          diagnostic_center_id?: string | null
           discount_percent?: number | null
           icon?: string | null
           id?: string
@@ -636,7 +639,15 @@ export type Database = {
           price?: number
           tests_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "test_packages_diagnostic_center_id_fkey"
+            columns: ["diagnostic_center_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_centers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tests: {
         Row: {

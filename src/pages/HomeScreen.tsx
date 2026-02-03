@@ -56,7 +56,7 @@ const HomeScreen = () => {
   const [allTests, setAllTests] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [diagnosticCenters, setDiagnosticCenters] = useState<{id: string; name: string; rating: number; tests: number; logo?: string}[]>([]);
-  const [healthPackages, setHealthPackages] = useState<{id: string; name: string; tests_count: number; price: number; original_price?: number; discount_percent?: number; icon?: string; color?: string}[]>([]);
+  const [healthPackages, setHealthPackages] = useState<{id: string; name: string; tests_count: number; price: number; original_price?: number; discount_percent?: number; icon?: string; color?: string; lab_name?: string; lab_logo?: string}[]>([]);
 
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {
@@ -86,16 +86,19 @@ const HomeScreen = () => {
     }
   }, []);
 
-  // Fetch health packages from test_packages table
+  // Fetch health packages from test_packages table with diagnostic center info
   const fetchHealthPackages = useCallback(async () => {
     const { data } = await supabase
       .from("test_packages")
-      .select("id, name, tests_count, price, original_price, discount_percent, icon, color")
+      .select(`
+        id, name, tests_count, price, original_price, discount_percent, icon, color,
+        diagnostic_centers!diagnostic_center_id (id, name, logo_url)
+      `)
       .eq("is_active", true)
       .order("is_popular", { ascending: false })
       .limit(5);
     if (data) {
-      setHealthPackages(data.map(pkg => ({
+      setHealthPackages(data.map((pkg: any) => ({
         id: pkg.id,
         name: pkg.name,
         tests_count: pkg.tests_count || 0,
@@ -103,7 +106,9 @@ const HomeScreen = () => {
         original_price: pkg.original_price || undefined,
         discount_percent: pkg.discount_percent || undefined,
         icon: pkg.icon || undefined,
-        color: pkg.color || undefined
+        color: pkg.color || undefined,
+        lab_name: pkg.diagnostic_centers?.name || undefined,
+        lab_logo: pkg.diagnostic_centers?.logo_url || undefined
       })));
     }
   }, []);
@@ -441,14 +446,23 @@ const HomeScreen = () => {
                   onClick={() => navigate(`/test/select/${pkg.id}`, { state: { isPackage: true } })}
                   className="soft-card flex items-center gap-4 cursor-pointer"
                 >
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
-                    <IconComponent className="w-7 h-7 text-primary-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground text-sm">{pkg.name}</h3>
+                  {pkg.lab_logo ? (
+                    <div className="w-14 h-14 rounded-2xl bg-white border border-border flex items-center justify-center flex-shrink-0 p-2">
+                      <img src={pkg.lab_logo} alt={pkg.lab_name} className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
+                      <IconComponent className="w-7 h-7 text-primary-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm truncate">{pkg.name}</h3>
                     <p className="text-xs text-muted-foreground">{pkg.tests_count} tests included</p>
+                    {pkg.lab_name && (
+                      <p className="text-[10px] text-primary font-medium mt-0.5">by {pkg.lab_name}</p>
+                    )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <p className="font-bold text-foreground">₹{pkg.price}</p>
                     {pkg.discount_percent && pkg.discount_percent > 0 && (
                       <p className="text-xs text-success">{pkg.discount_percent}% off</p>

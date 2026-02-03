@@ -2,17 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  HeartPulse,
-  Clock,
-  Home,
   ShoppingCart,
-  ChevronRight,
   Stethoscope,
   Award,
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
@@ -31,14 +26,6 @@ interface Doctor {
   availability: string;
   qualification: string;
 }
-
-const homeCollectionOption = {
-  id: "home-ecg",
-  name: "At-Home ECG",
-  price: 599,
-  description: "Technician visits your home",
-  icon: Home,
-};
 
 // Mock doctors data
 const mockDoctors: Doctor[] = [
@@ -113,23 +100,6 @@ const ECGTestScreen = () => {
     setLoading(false);
   }, []);
 
-  const handleHomeCollection = () => {
-    const success = addToCart({
-      id: `ecg-${homeCollectionOption.id}`,
-      name: homeCollectionOption.name,
-      price: homeCollectionOption.price,
-      labId: homeCollectionOption.id,
-      labName: homeCollectionOption.name,
-    });
-    
-    if (success) {
-      toast({
-        title: "Added to Cart",
-        description: `${homeCollectionOption.name} added to cart`,
-      });
-    }
-  };
-
   const handleBookDoctor = (doctor: Doctor) => {
     const success = addToCart({
       id: `ecg-${doctor.id}`,
@@ -169,68 +139,6 @@ const ECGTestScreen = () => {
       />
 
       <div className="px-4 pb-8">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-5 rounded-3xl bg-gradient-to-br from-destructive via-destructive/90 to-destructive/80 text-destructive-foreground relative overflow-hidden"
-        >
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/20 -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/20 translate-y-1/2 -translate-x-1/2" />
-          </div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <HeartPulse className="w-8 h-8" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold">12-Lead ECG Test</h2>
-                <p className="text-sm opacity-90 mt-0.5">Complete heart rhythm analysis</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 mt-5">
-              <div className="flex items-center gap-2 text-sm opacity-90">
-                <Clock className="w-4 h-4" />
-                <span>15 mins</span>
-              </div>
-              <Badge className="bg-white/20 text-white border-0">₹399</Badge>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* At-Home Collection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mt-6"
-        >
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleHomeCollection}
-            className="w-full p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 hover:border-primary/50 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1 text-left">
-                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <Home className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">{homeCollectionOption.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{homeCollectionOption.description}</p>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0 ml-2">
-                <p className="text-xl font-bold text-primary">₹{homeCollectionOption.price}</p>
-                <ChevronRight className="w-5 h-5 text-primary mt-1" />
-              </div>
-            </div>
-          </motion.button>
-        </motion.div>
-
         {/* Select a Doctor */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

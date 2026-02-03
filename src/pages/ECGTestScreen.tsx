@@ -6,6 +6,7 @@ import {
   Stethoscope,
   Award,
   Star,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -293,10 +293,7 @@ const DiagnosticCentersCarousel = ({
                       </svg>
                     )}
                     {labData.overlayPattern === 'waves' && (
-                      <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-                        <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="white" fillOpacity="0.3" />
-                        <path d="M0,120 Q100,70 200,120 T400,120 L400,200 L0,200 Z" fill="white" fillOpacity="0.2" />
-                      </svg>
+                      <div></div>
                     )}
                     {labData.overlayPattern === 'grid' && (
                       <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">

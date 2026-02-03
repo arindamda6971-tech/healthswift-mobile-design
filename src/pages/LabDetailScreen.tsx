@@ -405,14 +405,6 @@ const LabDetailScreen = () => {
             className={`relative bg-gradient-to-br ${bannerGradient} overflow-hidden rounded-3xl shadow-2xl`}
             style={{ minHeight: '200px' }}
           >
-            {/* Pattern Overlay */}
-            <div className="absolute inset-0 opacity-10">
-              <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-                <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="white" fillOpacity="0.3" />
-                <path d="M0,120 Q100,70 200,120 T400,120 L400,200 L0,200 Z" fill="white" fillOpacity="0.2" />
-              </svg>
-            </div>
-            
             {/* Decorative Blobs */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
             <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-xl" />

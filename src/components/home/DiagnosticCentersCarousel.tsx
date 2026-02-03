@@ -349,25 +349,6 @@ const DiagnosticCentersCarousel = ({
                   
                   {/* Content */}
                   <div className="relative p-5 flex flex-col h-full min-h-[200px]">
-                    {/* Top Row - Urgency Badge & Trust Badge */}
-                    <div className="flex items-center justify-between mb-3">
-                      {/* Urgency Badge - Creates FOMO */}
-                      <motion.div 
-                        className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30"
-                        animate={isActive ? { scale: [1, 1.05, 1] } : {}}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                        <span className="text-xs font-bold text-white">{labData.urgencyText}</span>
-                      </motion.div>
-                      
-                      {/* Trust Badge */}
-                      <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                        <BadgeCheck className="w-3.5 h-3.5 text-green-300" />
-                        <span className="text-[10px] font-medium text-white/90">{labData.trustBadge}</span>
-                      </div>
-                    </div>
-                    
                     {/* Main Content Row */}
                     <div className="flex items-center gap-4 flex-1">
                       {/* Logo Container - Prominent Display */}

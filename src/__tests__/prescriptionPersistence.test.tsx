@@ -1,7 +1,7 @@
 import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
 
 // Mock useAuth to return a logged-in user
 vi.mock('@/hooks/useAuth', () => ({
@@ -72,7 +72,7 @@ describe('Prescription upload persistence', () => {
 
     // Wait for prescription to appear in component state
     await waitFor(() => {
-      expect(screen.getByTestId('prescription-url')).toHaveTextContent(mockInsertResult.image_url);
+      expect(screen.getByTestId('prescription-url')).toHaveTextContent(mockInsertResultInitial.image_url);
     });
 
     // Simulate navigating away

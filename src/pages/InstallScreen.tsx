@@ -30,8 +30,8 @@ const InstallScreen = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="flex items-center justify-center gap-2 mb-6"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-glow">
-            <Droplet className="w-8 h-8 text-white fill-white" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-glow">
+            <Droplet className="w-8 h-8 text-primary-foreground fill-primary-foreground" />
           </div>
           <Zap className="w-5 h-5 text-success -ml-3 -mt-6" />
         </motion.div>
@@ -42,7 +42,7 @@ const InstallScreen = () => {
           transition={{ delay: 0.1 }}
           className="text-2xl font-bold text-secondary mb-2"
         >
-          Blood<span className="text-red-500">lyn</span>
+          Blood<span className="text-primary">lyn</span>
         </motion.h1>
 
         <motion.p

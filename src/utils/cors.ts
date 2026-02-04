@@ -5,8 +5,8 @@
 
 // List of allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  'https://healthswift.app',
-  'https://www.healthswift.app',
+  'https://bloodlyn.app',
+  'https://www.bloodlyn.app',
   // Lovable preview domains - pattern match handled separately
 ];
 
@@ -37,7 +37,7 @@ export const getCorsHeaders = (request: Request): Record<string, string> => {
     isLocalhost(origin);
   
   // Use the requesting origin if allowed, otherwise use a safe default
-  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://healthswift.app';
+  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://bloodlyn.app';
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

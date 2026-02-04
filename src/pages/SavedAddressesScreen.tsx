@@ -118,7 +118,7 @@ const SavedAddressesScreen = () => {
       const res = await fetch(url, {
         headers: {
           "Accept": "application/json",
-          "User-Agent": "HealthSwiftApp/1.0"
+          "User-Agent": "BloodlynApp/1.0"
         }
       });
       const data = await res.json();

@@ -38,16 +38,16 @@ const SplashScreen = () => {
         <motion.div
           animate={{ 
             boxShadow: [
-              "0 0 20px hsl(0 84% 60% / 0.2)",
-              "0 0 40px hsl(0 84% 60% / 0.4)",
-              "0 0 20px hsl(0 84% 60% / 0.2)"
+              "0 0 20px hsl(201 88% 62% / 0.2)",
+              "0 0 40px hsl(201 88% 62% / 0.4)",
+              "0 0 20px hsl(201 88% 62% / 0.2)"
             ]
           }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-24 h-24 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mb-6"
+          className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6"
         >
           <div className="relative">
-            <Droplet className="w-12 h-12 text-white fill-white" />
+            <Droplet className="w-12 h-12 text-primary-foreground fill-primary-foreground" />
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -66,7 +66,7 @@ const SplashScreen = () => {
           transition={{ delay: 0.3 }}
           className="text-3xl font-bold text-secondary mb-2"
         >
-          Blood<span className="text-red-500">lyn</span>
+          Blood<span className="text-primary">lyn</span>
         </motion.h1>
 
         {/* Tagline */}

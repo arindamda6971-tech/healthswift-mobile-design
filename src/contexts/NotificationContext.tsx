@@ -27,7 +27,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   // Use sessionStorage for sensitive health notifications - clears when browser tab closes
   const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = sessionStorage.getItem("healthswift-notifications");
+    const stored = sessionStorage.getItem("bloodlyn-notifications");
     return stored ? JSON.parse(stored) : [];
   });
 
@@ -45,7 +45,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setNotifications(filtered);
     }
     
-    sessionStorage.setItem("healthswift-notifications", JSON.stringify(filtered));
+    sessionStorage.setItem("bloodlyn-notifications", JSON.stringify(filtered));
   }, [notifications]);
 
   // Listen for new orders in real-time

@@ -193,7 +193,7 @@ const ProfileScreen = () => {
           transition={{ delay: 0.6 }}
           className="text-center text-xs text-muted-foreground mt-6"
         >
-          HealthSwift v2.1.0 • Made with ❤️
+          Bloodlyn v2.1.0 • Made with ❤️
         </motion.p>
       </div>
     </MobileLayout>

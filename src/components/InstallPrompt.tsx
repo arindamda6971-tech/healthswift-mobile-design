@@ -50,7 +50,7 @@ const InstallPrompt = () => {
 
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-foreground mb-1">
-                Install HealthSwift
+                Install Bloodlyn
               </h3>
               <p className="text-sm text-muted-foreground mb-3">
                 {isIOS

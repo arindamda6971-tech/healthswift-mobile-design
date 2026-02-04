@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Activity, Zap, Download, Share, Check, Smartphone, Bell, Wifi } from "lucide-react";
+import { Droplet, Zap, Download, Share, Check, Smartphone, Bell, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePWA } from "@/hooks/usePWA";
 
@@ -30,8 +30,8 @@ const InstallScreen = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="flex items-center justify-center gap-2 mb-6"
         >
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-glow">
-            <Activity className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-glow">
+            <Droplet className="w-8 h-8 text-white fill-white" />
           </div>
           <Zap className="w-5 h-5 text-success -ml-3 -mt-6" />
         </motion.div>
@@ -42,7 +42,7 @@ const InstallScreen = () => {
           transition={{ delay: 0.1 }}
           className="text-2xl font-bold text-secondary mb-2"
         >
-          Health<span className="text-primary">Swift</span>
+          Blood<span className="text-red-500">lyn</span>
         </motion.h1>
 
         <motion.p
@@ -96,7 +96,7 @@ const InstallScreen = () => {
               <span className="font-medium">App installed!</span>
             </div>
             <Button onClick={() => navigate("/home")} variant="hero" size="lg" className="w-full">
-              Open HealthSwift
+              Open Bloodlyn
             </Button>
           </div>
         ) : isIOS ? (
@@ -120,7 +120,7 @@ const InstallScreen = () => {
         ) : isInstallable ? (
           <Button onClick={handleInstall} variant="hero" size="lg" className="w-full">
             <Download className="w-5 h-5" />
-            Install HealthSwift
+            Install Bloodlyn
           </Button>
         ) : (
           <div className="text-center text-muted-foreground">

@@ -47,7 +47,7 @@ const SubscriptionScreen = () => {
 
   return (
     <MobileLayout showNav={false}>
-      <ScreenHeader title="Health Subscription" />
+      <ScreenHeader title="bloodlyn Subscription" />
 
       <div className="px-4 pb-32">
         {/* Hero section */}
@@ -59,7 +59,7 @@ const SubscriptionScreen = () => {
           <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-warning to-warning/60 flex items-center justify-center mb-4">
             <Crown className="w-10 h-10 text-warning-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Health Swift Gold</h1>
+          <h1 className="text-2xl font-bold text-foreground">bloodlyn Gold</h1>
           <p className="text-muted-foreground mt-2">
             Unlock gold health benefits with our subscription plans
           </p>

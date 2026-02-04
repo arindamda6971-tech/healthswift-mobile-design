@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // List of allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  'https://healthswift.app',
-  'https://www.healthswift.app',
+  'https://bloodlyn.app',
+  'https://www.bloodlyn.app',
 ];
 
 // Check if origin matches Lovable preview pattern
@@ -26,7 +26,7 @@ const getCorsHeaders = (request: Request): Record<string, string> => {
     isLovablePreview(origin) ||
     isLocalhost(origin);
   
-  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://healthswift.app';
+  const allowedOrigin = isAllowed ? origin : ALLOWED_ORIGINS[0] || 'https://bloodlyn.app';
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

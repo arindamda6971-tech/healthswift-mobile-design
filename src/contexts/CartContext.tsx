@@ -48,7 +48,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const loadCartFromSupabase = useCallback(async () => {
     if (!user) {
       // Load from sessionStorage for non-logged-in users
-      const saved = sessionStorage.getItem("healthswift-cart");
+      const saved = sessionStorage.getItem("bloodlyn-cart");
       if (saved) {
         setItems(JSON.parse(saved));
       }
@@ -66,7 +66,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error("Error loading cart:", error);
         // Fallback to sessionStorage
-        const saved = sessionStorage.getItem("healthswift-cart");
+        const saved = sessionStorage.getItem("bloodlyn-cart");
         if (saved) {
           setItems(JSON.parse(saved));
         }
@@ -82,10 +82,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }));
         setItems(cartItems);
         // Also save to sessionStorage as backup
-        sessionStorage.setItem("healthswift-cart", JSON.stringify(cartItems));
+        sessionStorage.setItem("bloodlyn-cart", JSON.stringify(cartItems));
       } else {
         // Check sessionStorage for any items added before login
-        const saved = sessionStorage.getItem("healthswift-cart");
+        const saved = sessionStorage.getItem("bloodlyn-cart");
         if (saved) {
           const localItems = JSON.parse(saved);
           if (localItems.length > 0) {
@@ -143,7 +143,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Sync cart to Supabase when items change
   const syncCartToSupabase = useCallback(async (newItems: CartItem[]) => {
     // Always save to sessionStorage
-    sessionStorage.setItem("healthswift-cart", JSON.stringify(newItems));
+    sessionStorage.setItem("bloodlyn-cart", JSON.stringify(newItems));
 
     if (!user || !isInitialized.current || isSyncing.current) return;
 

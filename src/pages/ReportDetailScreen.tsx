@@ -21,7 +21,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 const reportDetails = {
   name: "Complete Blood Count (CBC)",
   date: "November 28, 2024",
-  labName: "Bloodlyn Labs",
+   labName: "BloodLyn Labs",
   parameters: [
     { name: "Hemoglobin", value: 14.2, unit: "g/dL", min: 13.0, max: 17.0, status: "normal" },
     { name: "RBC Count", value: 5.1, unit: "million/μL", min: 4.5, max: 5.5, status: "normal" },
@@ -116,7 +116,7 @@ const ReportDetailScreen = () => {
                 </div>
                 <div className="text-left">
                   <p className="font-semibold text-foreground">AI Report Summary</p>
-                  <p className="text-xs text-muted-foreground">Powered by Bloodlyn AI</p>
+                   <p className="text-xs text-muted-foreground">Powered by BloodLyn AI</p>
                 </div>
               </div>
               <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${showAiSummary ? "rotate-180" : ""}`} />

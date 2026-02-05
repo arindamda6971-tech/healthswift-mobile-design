@@ -193,7 +193,7 @@ const ProfileScreen = () => {
           transition={{ delay: 0.6 }}
           className="text-center text-xs text-muted-foreground mt-6"
         >
-          Bloodlyn v2.1.0 • Made with ❤️
+           BloodLyn v2.1.0 • Made with ❤️
         </motion.p>
       </div>
     </MobileLayout>

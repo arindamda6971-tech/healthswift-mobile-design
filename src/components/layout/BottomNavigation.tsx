@@ -14,15 +14,13 @@ const BottomNavigation = () => {
   const navigate = useNavigate();
 
   return (
-     <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[430px] mx-auto">
+     <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[430px] mx-auto bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
        <div 
-         className="flex items-center justify-around px-1 py-1.5 backdrop-blur-xl bg-background/95 border-t border-border/30"
-        style={{
-          WebkitBackdropFilter: 'blur(16px)',
-          backdropFilter: 'blur(16px)',
-           paddingBottom: 'env(safe-area-inset-bottom, 8px)',
-        }}
-      >
+         className="flex items-center justify-around px-2 py-2"
+         style={{
+           paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 4px)',
+         }}
+       >
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -32,35 +30,28 @@ const BottomNavigation = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               whileTap={{ scale: 0.92 }}
-              className="relative flex flex-col items-center gap-0 py-0.5 px-2.5"
+               className="relative flex flex-col items-center gap-1 py-1.5 px-4 min-w-[64px]"
             >
               <div
-                className={`p-1.5 rounded-xl transition-all duration-300 ${
+                 className={`p-2 rounded-2xl transition-all duration-300 ${
                   isActive 
-                    ? "bg-primary/15" 
+                     ? "bg-primary/10" 
                     : "hover:bg-muted/50"
                 }`}
               >
                 <Icon
-                  className={`w-4 h-4 transition-colors duration-300 ${
-                    isActive ? "text-primary" : "text-muted-foreground"
+                   className={`w-5 h-5 transition-colors duration-300 ${
+                     isActive ? "text-primary" : "text-muted-foreground/70"
                   }`}
                 />
               </div>
               <span
-                className={`text-[9px] font-medium transition-colors duration-300 ${
-                  isActive ? "text-primary" : "text-muted-foreground"
+                 className={`text-[10px] font-semibold transition-colors duration-300 ${
+                   isActive ? "text-primary" : "text-muted-foreground/70"
                 }`}
               >
                 {item.label}
               </span>
-              {isActive && (
-                <motion.div
-                  layoutId="activeIndicator"
-                  className="absolute -bottom-0 w-1 h-1 bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
             </motion.button>
           );
         })}

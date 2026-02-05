@@ -14,12 +14,13 @@ const BottomNavigation = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-1 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-24px)] max-w-[380px]">
-      <div 
-        className="flex items-center justify-around px-1 py-1.5 rounded-2xl backdrop-blur-xl bg-background/70 border border-border/30 shadow-md"
+     <nav className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[430px] mx-auto">
+       <div 
+         className="flex items-center justify-around px-1 py-1.5 backdrop-blur-xl bg-background/95 border-t border-border/30"
         style={{
           WebkitBackdropFilter: 'blur(16px)',
           backdropFilter: 'blur(16px)',
+           paddingBottom: 'env(safe-area-inset-bottom, 8px)',
         }}
       >
         {navItems.map((item) => {

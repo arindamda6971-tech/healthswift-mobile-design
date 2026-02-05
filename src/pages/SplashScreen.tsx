@@ -66,7 +66,7 @@ const SplashScreen = () => {
           transition={{ delay: 0.3 }}
           className="text-3xl font-bold text-secondary mb-2"
         >
-          Blood<span className="text-primary">lyn</span>
+           Blood<span className="text-primary">Lyn</span>
         </motion.h1>
 
         {/* Tagline */}

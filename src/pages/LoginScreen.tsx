@@ -229,7 +229,7 @@ const LoginScreen = () => {
           </div>
           <Zap className="w-4 h-4 text-success -ml-2 -mt-4" />
         </div>
-        <h1 className="text-2xl font-bold text-secondary">bloodlyn</h1>
+         <h1 className="text-2xl font-bold text-secondary">Blood<span className="text-primary">Lyn</span></h1>
         <p className="text-muted-foreground mt-2">
           {isSignUp ? "Create your account" : "Sign in to continue"}
         </p>

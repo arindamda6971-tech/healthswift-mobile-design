@@ -42,7 +42,7 @@ const InstallScreen = () => {
           transition={{ delay: 0.1 }}
           className="text-2xl font-bold text-secondary mb-2"
         >
-          Blood<span className="text-primary">lyn</span>
+           Blood<span className="text-primary">Lyn</span>
         </motion.h1>
 
         <motion.p
@@ -96,7 +96,7 @@ const InstallScreen = () => {
               <span className="font-medium">App installed!</span>
             </div>
             <Button onClick={() => navigate("/home")} variant="hero" size="lg" className="w-full">
-              Open Bloodlyn
+               Open BloodLyn
             </Button>
           </div>
         ) : isIOS ? (
@@ -120,7 +120,7 @@ const InstallScreen = () => {
         ) : isInstallable ? (
           <Button onClick={handleInstall} variant="hero" size="lg" className="w-full">
             <Download className="w-5 h-5" />
-            Install Bloodlyn
+             Install BloodLyn
           </Button>
         ) : (
           <div className="text-center text-muted-foreground">

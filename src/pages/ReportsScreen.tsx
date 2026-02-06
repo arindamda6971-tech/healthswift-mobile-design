@@ -58,32 +58,35 @@ const ReportsScreen = () => {
     <MobileLayout>
       <ScreenHeader title="Health Reports" showBack={false} />
 
-      <div className="px-4 pb-6">
-        <div className="pt-3">
-          {(() => {
-            const cats = Array.from(new Set(reports.map((r) => r.category)));
-            return (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {cats.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setSelectedCategory(c)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors duration-150 ${
-                      selectedCategory === c
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/20 text-muted-foreground hover:bg-muted/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CategoryIcon category={c} className="w-4 h-4 text-muted-foreground" />
-                      <span>{c}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+      {/* Top Menu Bar */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
+        <div className="px-4 py-3">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+            {["All", ...Array.from(new Set(reports.map((r) => r.category)))].map((c) => (
+              <motion.button
+                key={c}
+                onClick={() => setSelectedCategory(c)}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  selectedCategory === c
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {c !== "All" && (
+                  <CategoryIcon 
+                    category={c} 
+                    className={`w-4 h-4 ${selectedCategory === c ? "text-primary-foreground" : "text-muted-foreground"}`} 
+                  />
+                )}
+                <span>{c}</span>
+              </motion.button>
+            ))}
+          </div>
         </div>
+      </div>
+
+      <div className="px-4 pb-6">
         <Tabs defaultValue="reports" className="mt-4">
           <TabsContent value="reports" className="space-y-4">
             {(() => {

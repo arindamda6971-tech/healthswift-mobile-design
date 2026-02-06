@@ -256,7 +256,7 @@ const CartScreen = () => {
     return (
       <MobileLayout>
         <ScreenHeader title="Your Cart" />
-        <div className="px-4 pb-32">
+        <div className="px-4 pb-44">
           {/* Loading Lab Banner Skeleton */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -380,7 +380,7 @@ const CartScreen = () => {
     <MobileLayout>
       <ScreenHeader title="Your Cart" />
 
-      <div className="px-4 pb-32">
+      <div className="px-4 pb-44">
         {/* Lab Indicator Banner */}
         {currentLabName && (
           <motion.div
@@ -690,30 +690,38 @@ const CartScreen = () => {
         </motion.div>
       </div>
 
-      {/* Bottom CTA */}
+      {/* Bottom CTA - Positioned above bottom navigation */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-         className="fixed left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4"
-         style={{ bottom: 'calc(env(safe-area-inset-bottom, 8px) + 56px)' }}
+        className="fixed left-0 right-0 max-w-[430px] mx-auto bg-card border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 z-40"
+        style={{ 
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)',
+        }}
       >
-        <Button
-          variant="hero"
-          className="w-full"
-          size="lg"
-          onClick={() => navigate("/payment", { 
-            state: { 
-              cartItems: items, 
-              addressId: selectedAddressId, 
-              scheduledDate: dates[selectedDate].fullDate,
-              scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
-              subtotal 
-            } 
-          })}
-          disabled={!selectedAddressId && addresses.length > 0}
-        >
-          Proceed to Payment • ₹{subtotal}
-        </Button>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground">Total Amount</span>
+            <span className="text-lg font-bold text-foreground">₹{subtotal}</span>
+          </div>
+          <Button
+            variant="hero"
+            className="flex-1 max-w-[200px]"
+            size="lg"
+            onClick={() => navigate("/payment", { 
+              state: { 
+                cartItems: items, 
+                addressId: selectedAddressId, 
+                scheduledDate: dates[selectedDate].fullDate,
+                scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
+                subtotal 
+              } 
+            })}
+            disabled={!selectedAddressId && addresses.length > 0}
+          >
+            Proceed to Pay
+          </Button>
+        </div>
       </motion.div>
 
       {/* Add Address Modal */}

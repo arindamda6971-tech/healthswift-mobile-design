@@ -61,13 +61,13 @@ const ReportsScreen = () => {
       {/* Top Menu Bar */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+          <div className="flex flex-wrap gap-2">
             {["All", ...Array.from(new Set(reports.map((r) => r.category)))].map((c) => (
               <motion.button
                 key={c}
                 onClick={() => setSelectedCategory(c)}
                 whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                   selectedCategory === c
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -76,7 +76,7 @@ const ReportsScreen = () => {
                 {c !== "All" && (
                   <CategoryIcon 
                     category={c} 
-                    className={`w-4 h-4 ${selectedCategory === c ? "text-primary-foreground" : "text-muted-foreground"}`} 
+                    className={`w-3.5 h-3.5 ${selectedCategory === c ? "text-primary-foreground" : "text-muted-foreground"}`} 
                   />
                 )}
                 <span>{c}</span>

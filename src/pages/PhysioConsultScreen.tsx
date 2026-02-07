@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const physiotherapists = [
@@ -83,9 +84,8 @@ const specializations = [
 
 const PhysioConsultScreen = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedSpecialization, setSelectedSpecialization] = useState<string | null>(null);
-  const [selectedPhysio, setSelectedPhysio] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<"video" | "audio">("video");
 
   const filteredPhysios = selectedSpecialization
     ? physiotherapists.filter((p) => {
@@ -97,11 +97,27 @@ const PhysioConsultScreen = () => {
       })
     : physiotherapists;
 
+  const handleBookPhysio = (physio: typeof physiotherapists[0], type: "video" | "audio") => {
+    if (!user) {
+      toast.error("Please login to book a consultation");
+      navigate("/login");
+      return;
+    }
+
+    // Navigate to booking screen with physio details
+    navigate("/physio-booking", { 
+      state: { 
+        physio, 
+        consultationType: type 
+      } 
+    });
+  };
+
   return (
     <MobileLayout showNav={false}>
       <ScreenHeader title="Book a Physiotherapist" />
 
-      <div className="px-4 pb-32">
+      <div className="px-4 pb-8">
         {/* Hero banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -158,7 +174,6 @@ const PhysioConsultScreen = () => {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-foreground">Available Physiotherapists</h3>
-            <button className="text-primary text-sm font-medium">View all</button>
           </div>
           <div className="space-y-3">
             {filteredPhysios.map((physio, index) => (
@@ -167,10 +182,7 @@ const PhysioConsultScreen = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
-                onClick={() => setSelectedPhysio(physio.id)}
-                className={`soft-card cursor-pointer transition-all ${
-                  selectedPhysio === physio.id ? "ring-2 ring-primary" : ""
-                }`}
+                className="soft-card"
               >
                 <div className="flex gap-4">
                   <img
@@ -201,98 +213,49 @@ const PhysioConsultScreen = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">Call Pricing</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Video className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-muted-foreground">Video:</span>
-                        <span className="font-semibold text-foreground">₹{physio.videoCallFee}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-muted-foreground">Audio:</span>
-                        <span className="font-semibold text-foreground">₹{physio.audioCallFee}</span>
-                      </div>
-                    </div>
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="soft"
+                      className="flex-1"
+                      onClick={() => handleBookPhysio(physio, "video")}
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Video ₹{physio.videoCallFee}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleBookPhysio(physio, "audio")}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Audio ₹{physio.audioCallFee}
+                    </Button>
                   </div>
-                  <Button variant="soft" size="sm">
-                    Book Now
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
                 </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
-      </div>
 
-      {/* Bottom CTA */}
-      {selectedPhysio && (
+        {/* Info Section */}
         <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800"
         >
-          <div className="space-y-3 mb-4">
-            <button
-              onClick={() => setSelectedType("video")}
-              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
-                selectedType === "video"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
-                <span className="font-medium">Video Call</span>
-              </div>
-              <span className="font-semibold">₹{physiotherapists.find(p => p.id === selectedPhysio)?.videoCallFee}</span>
-            </button>
-            <button
-              onClick={() => setSelectedType("audio")}
-              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
-                selectedType === "audio"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Audio Call</span>
-              </div>
-              <span className="font-semibold">₹{physiotherapists.find(p => p.id === selectedPhysio)?.audioCallFee}</span>
-            </button>
-          </div>
-          <Button
-            variant="hero"
-            className="w-full"
-            size="lg"
-            onClick={() => {
-              const physio = physiotherapists.find(p => p.id === selectedPhysio);
-              if (physio) {
-                if (!physio.available) {
-                  toast.error("Physiotherapist is currently offline", {
-                    description: `Next available: ${physio.nextSlot}`,
-                  });
-                  return;
-                }
-                navigate("/consultation-call", {
-                  state: {
-                    type: selectedType,
-                    professional: physio,
-                    professionalType: "physiotherapist",
-                  },
-                });
-              }
-            }}
-          >
-            {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
-            Book {selectedType === "video" ? "Video" : "Audio"} Call
-          </Button>
+          <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+            💡 Quick Tips
+          </h4>
+          <ul className="space-y-1 text-sm text-foreground">
+            <li>• All physiotherapists are certified and experienced</li>
+            <li>• 30-minute consultation sessions</li>
+            <li>• Get personalized exercise plans</li>
+          </ul>
         </motion.div>
-      )}
+      </div>
     </MobileLayout>
   );
 };

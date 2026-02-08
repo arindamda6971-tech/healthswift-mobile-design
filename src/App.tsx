@@ -22,6 +22,7 @@ import TestDetailScreen from "./pages/TestDetailScreen";
 import TestSelectionScreen from "./pages/TestSelectionScreen";
 import CartScreen from "./pages/CartScreen";
 import PaymentScreen from "./pages/PaymentScreen";
+import BookingsScreen from "./pages/BookingsScreen";
 import ReportsScreen from "./pages/ReportsScreen";
 import ReportDetailScreen from "./pages/ReportDetailScreen";
 import ProfileScreen from "./pages/ProfileScreen";
@@ -72,6 +73,7 @@ const App = () => (
                   <Route path="/test/:id" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
                   <Route path="/cart" element={<ProtectedRoute><CartScreen /></ProtectedRoute>} />
                   <Route path="/payment" element={<ProtectedRoute><PaymentScreen /></ProtectedRoute>} />
+                  <Route path="/bookings" element={<ProtectedRoute><BookingsScreen /></ProtectedRoute>} />
                   <Route path="/reports" element={<ProtectedRoute><ReportsScreen /></ProtectedRoute>} />
                   <Route path="/report-detail" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />
                   <Route path="/ai-report" element={<ProtectedRoute><ReportDetailScreen /></ProtectedRoute>} />

@@ -1,10 +1,11 @@
-import { Home, Grid3X3, FileText, User } from "lucide-react";
+import { Home, Grid3X3, CalendarCheck, FileText, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/home" },
   { icon: Grid3X3, label: "Tests", path: "/categories" },
+  { icon: CalendarCheck, label: "Bookings", path: "/bookings" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: User, label: "Profile", path: "/profile" },
 ];

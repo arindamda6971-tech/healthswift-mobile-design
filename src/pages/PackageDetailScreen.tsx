@@ -588,8 +588,11 @@ const PackageDetailScreen = () => {
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent border-t border-border/40 p-4 z-40"
-        style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+        className="fixed left-0 right-0 bg-gradient-to-t from-background via-background to-transparent border-t border-border/40 p-4 z-40"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)",
+          paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+        }}
       >
         <Button
           className="w-full gap-2 shadow-lg h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"

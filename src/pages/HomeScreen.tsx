@@ -408,7 +408,7 @@ const HomeScreen = () => {
         </div>
       </motion.section>
 
-      {/* Health Packages */}
+      {/* Health Packages Section - Modern Design */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -416,10 +416,13 @@ const HomeScreen = () => {
         className="px-4 mt-8 mb-6"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">Health Packages</h2>
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Health Packages</h2>
+            <p className="text-xs text-muted-foreground mt-1">Comprehensive health checkups from trusted labs</p>
+          </div>
           <button 
-            onClick={() => navigate('/categories')}
-            className="flex items-center gap-1 text-primary text-sm font-medium"
+            onClick={() => navigate('/packages')}
+            className="flex items-center gap-1 text-primary text-sm font-semibold hover:text-primary/80 transition-colors"
           >
             View all <ChevronRight className="w-4 h-4" />
           </button>
@@ -429,72 +432,135 @@ const HomeScreen = () => {
             // show only top 3 packages on the home screen
             healthPackages.slice(0, 3).map((pkg, index) => {
               const gradientColors = [
-                "from-primary to-primary/60",
-                "from-success to-success/60", 
-                "from-secondary to-secondary/60",
-                "from-destructive to-destructive/60",
-                "from-accent to-accent/60"
+                "from-primary/20 to-primary/10",
+                "from-success/20 to-success/10", 
+                "from-secondary/20 to-secondary/10",
+              ];
+              const borderColors = [
+                "border-primary/30",
+                "border-success/30", 
+                "border-secondary/30",
+              ];
+              const badgeColors = [
+                "bg-primary/15 text-primary",
+                "bg-success/15 text-success", 
+                "bg-secondary/15 text-secondary",
               ];
               const IconComponent = pkg.icon === "HeartPulse" ? HeartPulse : 
                                    pkg.icon === "Activity" ? Activity : 
                                    pkg.icon === "Shield" ? Shield : HeartPulse;
               return (
-                <motion.div
+                <motion.button
                   key={pkg.id}
+                  type="button"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
                   onClick={() => navigate(`/package/${pkg.id}`)}
-                  className="soft-card flex items-center gap-4 cursor-pointer"
+                  className="w-full text-left group"
                   data-testid={`health-package-${pkg.id}`}
                 >
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
-                    <IconComponent className="w-7 h-7 text-primary-foreground" />
+                  <div className={`bg-gradient-to-br ${gradientColors[index % gradientColors.length]} border ${borderColors[index % borderColors.length]} rounded-xl p-4 hover:shadow-md hover:border-opacity-60 transition-all duration-200 overflow-hidden relative`}>
+                    {/* Background accent */}
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/20 to-transparent rounded-full -mr-8 -mt-8" />
+
+                    <div className="relative z-10 flex items-center gap-3">
+                      {/* Icon Badge */}
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradientColors[index % gradientColors.length]} backdrop-blur-md flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200`}>
+                        <IconComponent className="w-7 h-7 text-primary" />
+                      </div>
+
+                      {/* Package Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">
+                            {pkg.name}
+                          </h3>
+                          {pkg.discount_percent > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 bg-destructive/15 text-destructive rounded-full text-[10px] font-bold flex-shrink-0">
+                              {pkg.discount_percent}%
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{pkg.tests_count} tests • Comprehensive</p>
+                        {pkg.lab_name && (
+                          <p className="text-[10px] text-primary font-semibold mt-1">by {pkg.lab_name}</p>
+                        )}
+                      </div>
+
+                      {/* Price */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-bold text-foreground">₹{pkg.price}</p>
+                        {pkg.original_price && (
+                          <p className="text-[9px] text-muted-foreground line-through">₹{pkg.original_price}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{pkg.name}</h3>
-                    <p className="text-xs text-muted-foreground">{pkg.tests_count} tests included</p>
-                    {pkg.lab_name && (
-                      <p className="text-[10px] text-primary font-medium mt-0.5">by {pkg.lab_name}</p>
-                    )}
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-foreground">₹{pkg.price}</p>
-                    <p className="text-[10px] text-muted-foreground">starting price</p>
-                  </div>
-                </motion.div>
+                </motion.button>
               );
             })
           ) : (
             // Fallback if no packages loaded
             [
-              { name: "Full Body Checkup", tests: 70, price: 1499, color: "from-primary to-primary/60" },
-              { name: "Comprehensive Health Package", tests: 85, price: 2499, color: "from-success to-success/60" },
-              { name: "Wellness Package", tests: 45, price: 999, color: "from-secondary to-secondary/60" },
-            ].map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-                onClick={() => navigate("/categories")}
-                className="soft-card flex items-center gap-4 cursor-pointer"
-              >
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center flex-shrink-0`}>
-                  <HeartPulse className="w-7 h-7 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground">{plan.tests} tests included</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-foreground">₹{plan.price}</p>
-                  <p className="text-xs text-muted-foreground">onwards</p>
-                </div>
-              </motion.div>
-            ))
+              { name: "Full Body Checkup", tests: 70, price: 1499, icon: "HeartPulse" },
+              { name: "Comprehensive Health Package", tests: 85, price: 2499, icon: "Activity" },
+              { name: "Wellness Package", tests: 45, price: 999, icon: "Shield" },
+            ].map((plan, index) => {
+              const gradientColors = [
+                "from-primary/20 to-primary/10",
+                "from-success/20 to-success/10", 
+                "from-secondary/20 to-secondary/10",
+              ];
+              const borderColors = [
+                "border-primary/30",
+                "border-success/30", 
+                "border-secondary/30",
+              ];
+              const IconComponent = plan.icon === "Activity" ? Activity : 
+                                   plan.icon === "Shield" ? Shield : HeartPulse;
+              return (
+                <motion.button
+                  key={plan.name}
+                  type="button"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
+                  onClick={() => navigate("/packages")}
+                  className="w-full text-left group"
+                >
+                  <div className={`bg-gradient-to-br ${gradientColors[index % gradientColors.length]} border ${borderColors[index % borderColors.length]} rounded-xl p-4 hover:shadow-md transition-all duration-200`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
+                        <IconComponent className="w-7 h-7 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground text-sm truncate">{plan.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">{plan.tests} tests included</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-bold text-foreground">₹{plan.price}</p>
+                        <p className="text-[10px] text-muted-foreground">onwards</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })
           )}
         </div>
+
+        {/* View All CTA */}
+        <motion.button
+          type="button"
+          onClick={() => navigate('/packages')}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="w-full mt-4 py-3 px-4 rounded-xl border-2 border-primary/40 text-primary font-semibold hover:border-primary/70 hover:bg-primary/5 transition-all duration-200"
+        >
+          Browse All Packages →
+        </motion.button>
       </motion.section>
 
     </MobileLayout>

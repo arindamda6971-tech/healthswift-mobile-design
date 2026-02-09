@@ -14,6 +14,9 @@ import {
   Home,
   Star,
   ChevronRight,
+  Zap,
+  TrendingDown,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
@@ -287,154 +290,259 @@ const PackageDetailScreen = () => {
     <MobileLayout>
       <ScreenHeader title="Package Details" />
 
-      <div className="px-4 pb-32">
-        {/* Package Info Card */}
+      <div className="pb-32">
+        {/* Hero Section with Gradient Background */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="soft-card mt-4"
+          className="bg-gradient-to-br from-primary/10 via-accent/5 to-background pt-6 pb-8 px-4 relative overflow-hidden"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              {discountPercent > 0 && (
-                <Badge variant="softSuccess" className="mb-2">{discountPercent}% OFF</Badge>
-              )}
-              <h1 className="text-lg font-bold text-foreground">{packageData.name}</h1>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">
-                  {packageData.tests_count} Tests Included
-                </Badge>
-                {packageData.lab_name && (
-                  <p className="text-xs text-muted-foreground">by {packageData.lab_name}</p>
+          {/* Background decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-success/5 rounded-full -ml-12 -mb-12" />
+
+          <div className="relative z-10">
+            {/* Discount Badge */}
+            {discountPercent > 0 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-1.5 mb-4 px-3 py-1.5 bg-destructive/90 text-destructive-foreground rounded-full"
+              >
+                <TrendingDown className="w-4 h-4" />
+                <span className="font-bold text-sm">{discountPercent}% OFF</span>
+              </motion.div>
+            )}
+
+            {/* Package Title & Tests Count */}
+            <h1 className="text-2xl font-bold text-foreground leading-tight mb-2">
+              {packageData.name}
+            </h1>
+            
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-0">
+                <Zap className="w-3.5 h-3.5 mr-1" />
+                {packageData.tests_count} Tests Included
+              </Badge>
+            </div>
+
+            {packageData.description && (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {packageData.description}
+              </p>
+            )}
+
+            {/* Price Section - Modern Design */}
+            <div className="mt-6 bg-white/50 dark:bg-secondary/20 backdrop-blur-sm rounded-2xl p-4 border border-border/40">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">Total Price</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-bold text-primary">₹{displayPrice}</p>
+                {packageData.original_price && packageData.original_price > displayPrice && (
+                  <p className="text-sm text-muted-foreground line-through">₹{packageData.original_price}</p>
                 )}
               </div>
-              {packageData.description && (
-                <p className="text-sm text-muted-foreground mt-2">{packageData.description}</p>
-              )}
-            </div>
-            <div className="text-right ml-4 flex-shrink-0">
-              <p className="font-bold text-lg text-foreground">₹{displayPrice}</p>
               {packageData.original_price && packageData.original_price > displayPrice && (
-                <p className="text-xs text-muted-foreground line-through">₹{packageData.original_price}</p>
+                <p className="text-xs text-success font-semibold mt-2">
+                  Save ₹{packageData.original_price - displayPrice}
+                </p>
               )}
-              <p className="text-[10px] text-muted-foreground mt-1">per package</p>
             </div>
           </div>
         </motion.div>
 
-        {/* What's Included */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6 mt-6"
-        >
-          <h2 className="text-lg font-bold text-foreground mb-3">What's Included</h2>
-          <div className="soft-card space-y-3">
-            {defaultIncludes.map((item, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
-                  <item.icon className="w-4 h-4 text-success" />
-                </div>
-                <span className="text-foreground text-sm">{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Tests in Package */}
-        {packageTests.length > 0 && (
-          <motion.div
+        <div className="px-4 space-y-6 py-6">
+          {/* What's Included - Modern Grid Layout */}
+          <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-6"
+            transition={{ delay: 0.15 }}
           >
-            <h2 className="text-lg font-bold text-foreground mb-3">
-              Tests in this Package ({packageTests.length})
+            <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <HeartPulse className="w-5 h-5 text-primary" />
+              What's Included
             </h2>
-            <div className="soft-card space-y-2 max-h-64 overflow-y-auto">
-              {packageTests.map((test, index) => (
-                <div key={test.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Check className="w-4 h-4 text-success flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{test.name}</p>
-                      <p className="text-xs text-muted-foreground">{test.category}</p>
-                    </div>
+            <div className="grid grid-cols-2 gap-3">
+              {defaultIncludes.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 + index * 0.05 }}
+                  className="bg-gradient-to-br from-success/10 to-success/5 rounded-xl p-3.5 border border-success/20 hover:border-success/40 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-success/20 flex items-center justify-center mb-2">
+                    <item.icon className="w-5 h-5 text-success" />
                   </div>
-                  <p className="text-xs font-semibold text-muted-foreground ml-2 flex-shrink-0">₹{test.price}</p>
-                </div>
+                  <p className="text-xs font-semibold text-foreground leading-snug">
+                    {item.text}
+                  </p>
+                </motion.div>
               ))}
             </div>
-          </motion.div>
-        )}
+          </motion.section>
 
-        {/* Lab Selection */}
-        {!packageData.lab_id && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mt-6 mb-4"
+          {/* Tests in Package - Enhanced List */}
+          {packageTests.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
-              <h2 className="text-lg font-bold text-foreground">Choose Your Lab</h2>
-              <p className="text-sm text-muted-foreground">Select a lab to book this package</p>
-            </motion.div>
-
-            <div className="space-y-3">
-              {labOptions.map((lab, index) => {
-                const labPrice = Math.round(packageData.price * lab.priceMultiplier);
-
-                return (
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Tests Included
+                </h2>
+                <Badge variant="outline" className="text-xs">
+                  {packageTests.length} items
+                </Badge>
+              </div>
+              <div className="max-h-80 overflow-y-auto rounded-xl border border-border/40 bg-muted/40 divide-y divide-border/40">
+                {packageTests.map((test, index) => (
                   <motion.div
-                    key={lab.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
-                    onClick={() => setSelectedLabId(lab.id)}
-                    className={`soft-card cursor-pointer transition-all ${
-                      selectedLabId === lab.id 
-                        ? "border-primary ring-1 ring-primary" 
-                        : "hover:border-primary/50"
-                    }`}
+                    key={test.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + index * 0.02 }}
+                    className="flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-7 h-7 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <h3 className="font-semibold text-foreground truncate">{lab.name}</h3>
-                          {selectedLabId === lab.id && (
-                            <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                    <div className="w-5 h-5 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-success" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {test.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {test.category}
+                      </p>
+                    </div>
+                    <p className="text-xs font-semibold text-primary flex-shrink-0">
+                      ₹{test.price}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Lab Selection - Modern Card Layout */}
+          {!packageData.lab_id && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h2 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                Choose Your Lab
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select a lab to book this package
+              </p>
+
+              <div className="space-y-3">
+                {labOptions.map((lab, index) => {
+                  const labPrice = Math.round(packageData.price * lab.priceMultiplier);
+                  const priceDiff = displayPrice - labPrice;
+
+                  return (
+                    <motion.button
+                      key={lab.id}
+                      type="button"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 + index * 0.05 }}
+                      onClick={() => setSelectedLabId(lab.id)}
+                      className={`w-full text-left transition-all duration-200 ${
+                        selectedLabId === lab.id
+                          ? "bg-gradient-to-r from-primary/15 to-primary/5 border-primary/60 border-2 shadow-md"
+                          : "bg-white dark:bg-secondary/30 border border-border/40 hover:border-primary/30 hover:shadow-sm"
+                      } rounded-xl p-4`}
+                    >
+                      <div className="flex gap-3">
+                        {/* Logo/Avatar */}
+                        <div
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            selectedLabId === lab.id
+                              ? "bg-primary/20"
+                              : "bg-muted/50"
+                          }`}
+                        >
+                          <Building2
+                            className={`w-6 h-6 ${
+                              selectedLabId === lab.id ? "text-primary" : "text-muted-foreground"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Lab Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h3 className="font-semibold text-foreground text-sm">
+                              {lab.name}
+                            </h3>
+                            {selectedLabId === lab.id && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="flex-shrink-0 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center"
+                              >
+                                <Check className="w-3 h-3" />
+                              </motion.div>
+                            )}
+                          </div>
+
+                          {/* Rating and Reviews */}
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                              <span className="text-xs font-semibold text-foreground">
+                                {lab.rating}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">
+                              {lab.reviews.toLocaleString()} reviews
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">•</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {lab.reportTime}
+                            </span>
+                          </div>
+
+                          {/* Features */}
+                          {lab.homeCollection && (
+                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-success/10 rounded-md">
+                              <Home className="w-3 h-3 text-success" />
+                              <span className="text-[9px] font-semibold text-success">
+                                Home Collection
+                              </span>
+                            </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-                          <div className="flex items-center gap-0.5">
-                            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                            <span>{lab.rating}</span>
-                          </div>
-                          <span>•</span>
-                          <span>{lab.reviews.toLocaleString()} reviews</span>
-                          <span>•</span>
-                          <span>{lab.reportTime}</span>
+
+                        {/* Price */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-bold text-foreground">₹{labPrice}</p>
+                          {priceDiff > 0 && (
+                            <p className="text-[10px] text-success font-semibold">
+                              Save ₹{priceDiff}
+                            </p>
+                          )}
+                          {priceDiff < 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              +₹{Math.abs(priceDiff)}
+                            </p>
+                          )}
                         </div>
-                        {lab.homeCollection && (
-                          <p className="text-[10px] text-success font-medium mt-1">✓ Home collection available</p>
-                        )}
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-bold text-foreground">₹{labPrice}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.section>
+          )}
 
         {/* Pending Item Replace Dialog */}
         <AnimatePresence>
@@ -449,22 +557,23 @@ const PackageDetailScreen = () => {
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
                 exit={{ y: 100 }}
-                className="w-full bg-background rounded-t-2xl p-4"
+                className="w-full bg-background rounded-t-3xl p-6 shadow-2xl"
               >
-                <h3 className="font-bold text-foreground mb-2">Replace Cart Items?</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Your cart has items from another lab. Do you want to replace them?
+                <div className="w-12 h-1 bg-muted rounded-full mx-auto mb-4" />
+                <h3 className="font-bold text-lg text-foreground mb-2">Replace Cart Items?</h3>
+                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                  Your cart has items from another lab. Do you want to replace them with this package?
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="w-full"
                     onClick={cancelReplace}
                   >
                     Keep Both
                   </Button>
                   <Button
-                    className="flex-1"
+                    className="w-full bg-gradient-to-r from-primary to-primary/80"
                     onClick={handleConfirmReplace}
                   >
                     Replace Cart
@@ -476,16 +585,15 @@ const PackageDetailScreen = () => {
         </AnimatePresence>
       </div>
 
-      {/* Add to Cart Button */}
+      {/* Add to Cart Button - Fixed Bottom Bar */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-40"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent border-t border-border/40 p-4 z-40"
         style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <Button
-          className="w-full gap-2 shadow-lg"
-          size="lg"
+          className="w-full gap-2 shadow-lg h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"
           onClick={handleAddToCart}
         >
           <ShoppingCart className="w-5 h-5" />

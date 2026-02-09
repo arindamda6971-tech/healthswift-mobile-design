@@ -444,8 +444,9 @@ const HomeScreen = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
-                  onClick={() => navigate(`/test/select/${pkg.id}`, { state: { isPackage: true } })}
+                  onClick={() => navigate(`/package/${pkg.id}`)}
                   className="soft-card flex items-center gap-4 cursor-pointer"
+                  data-testid={`health-package-${pkg.id}`}
                 >
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.color || gradientColors[index % gradientColors.length]} flex items-center justify-center flex-shrink-0`}>
                     <IconComponent className="w-7 h-7 text-primary-foreground" />

@@ -272,8 +272,6 @@ const PackageDetailScreen = () => {
       price: displayPrice,
       labId: selectedLab.id,
       labName: selectedLab.name,
-      isPackage: true,
-      testCount: packageData.tests_count,
     });
 
     if (success) {
@@ -543,6 +541,7 @@ const PackageDetailScreen = () => {
               </div>
             </motion.section>
           )}
+        </div>
 
         {/* Pending Item Replace Dialog */}
         <AnimatePresence>

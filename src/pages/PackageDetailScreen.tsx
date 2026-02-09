@@ -594,13 +594,17 @@ const PackageDetailScreen = () => {
           paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        <Button
-          className="w-full gap-2 shadow-lg h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all"
-          onClick={handleAddToCart}
-        >
-          <ShoppingCart className="w-5 h-5" />
-          Add Package to Cart
-        </Button>
+        <div className="mx-auto max-w-lg">
+          <Button
+            className="w-full flex items-center justify-center gap-3 h-14 rounded-full shadow-xl text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all px-5"
+            onClick={handleAddToCart}
+          >
+            <div className="flex items-center gap-3">
+              <ShoppingCart className="w-5 h-5" />
+              <span>Add Package to Cart</span>
+            </div>
+          </Button>
+        </div>
       </motion.div>
     </MobileLayout>
   );

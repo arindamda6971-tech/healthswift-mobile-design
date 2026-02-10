@@ -6,6 +6,8 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Professional {
   id: number;
@@ -47,8 +49,10 @@ const ConsultationBookingScreen = () => {
   const { professional, type } = state;
 
   const isAudio = type === "audio";
+  const { user, supabaseUserId } = useAuth();
+  const [isBooking, setIsBooking] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedSlot) {
       toast.error("Please select a slot");
       return;
@@ -59,13 +63,44 @@ const ConsultationBookingScreen = () => {
       return;
     }
 
-    // Simulate booking
-    toast.success("Appointment booked", {
-      description: `Doctor will call you within 10 minutes at ${isAudio ? phone : "your app"}`,
-    });
+    if (!supabaseUserId) {
+      toast.error("Please login to book a consultation");
+      navigate("/login");
+      return;
+    }
 
-    // Navigate to bookings page
-    setTimeout(() => navigate("/bookings"), 800);
+    setIsBooking(true);
+    try {
+      const orderNumber = `DOC${Date.now()}`;
+
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: supabaseUserId,
+          order_number: orderNumber,
+          scheduled_date: new Date().toISOString().split("T")[0],
+          scheduled_time_slot: selectedSlot,
+          subtotal: professional.consultationFee,
+          total: professional.consultationFee,
+          status: "confirmed",
+          payment_status: "pending",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      toast.success("Appointment booked", {
+        description: `Doctor will call you within 10 minutes at ${isAudio ? phone : "your app"}`,
+      });
+
+      setTimeout(() => navigate("/bookings"), 800);
+    } catch (err) {
+      console.error("Booking error:", err);
+      toast.error("Failed to create booking. Please try again.");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   return (
@@ -113,8 +148,8 @@ const ConsultationBookingScreen = () => {
           )}
 
           <div className="mt-8">
-            <Button className="w-full" onClick={handleConfirm} size="lg">
-              Confirm Booking
+            <Button className="w-full" onClick={handleConfirm} size="lg" disabled={isBooking}>
+              {isBooking ? "Booking..." : "Confirm Booking"}
             </Button>
           </div>
         </motion.div>

@@ -218,7 +218,7 @@ const DoctorConsultScreen = () => {
                   });
                   return;
                 }
-                navigate("/consultation-call", {
+                navigate("/consultation-booking", {
                   state: {
                     type: selectedType,
                     professional: doctor,

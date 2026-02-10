@@ -43,6 +43,7 @@ import PhysioBookingScreen from "./pages/PhysioBookingScreen";
 import ECGTestScreen from "./pages/ECGTestScreen";
 import ECGBookingScreen from "./pages/ECGBookingScreen";
 import ConsultationCallScreen from "./pages/ConsultationCallScreen";
+import ConsultationBookingScreen from "./pages/ConsultationBookingScreen";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,7 @@ const App = () => (
                   <Route path="/ecg-test" element={<ProtectedRoute><ECGTestScreen /></ProtectedRoute>} />
                   <Route path="/ecg-booking" element={<ProtectedRoute><ECGBookingScreen /></ProtectedRoute>} />
                   <Route path="/consultation-call" element={<ProtectedRoute><ConsultationCallScreen /></ProtectedRoute>} />
+                  <Route path="/consultation-booking" element={<ProtectedRoute><ConsultationBookingScreen /></ProtectedRoute>} />
                   
                   {/* Catch-all */}
                   <Route path="*" element={<NotFound />} />

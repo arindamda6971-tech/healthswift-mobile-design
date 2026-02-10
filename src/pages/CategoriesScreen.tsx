@@ -90,55 +90,7 @@ const CategoriesScreen = () => {
         </div>
       </div>
 
-      {/* Popular Packages */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="px-4 pb-6"
-      >
-        <h2 className="text-lg font-bold text-foreground mb-4">Popular Packages</h2>
-        <div className="space-y-3">
-          {[
-            { name: "Essential Health Checkup", tests: 40, price: 999, originalPrice: 2499 },
-            { name: "Comprehensive Health Package", tests: 80, price: 1999, originalPrice: 4999 },
-            { name: "Advanced Full Body", tests: 100, price: 2999, originalPrice: 6999 },
-          ].map((pkg, index) => (
-            <motion.div
-              key={pkg.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + index * 0.1 }}
-              onClick={() => navigate("/test/select", { 
-                state: { 
-                  test: { 
-                    id: `package-${index}`,
-                    name: pkg.name, 
-                    price: pkg.price, 
-                    original_price: pkg.originalPrice,
-                    discount_percent: Math.round((1 - pkg.price / pkg.originalPrice) * 100),
-                    report_time_hours: 24,
-                    sample_type: "Blood"
-                  } 
-                } 
-              })}
-              className="soft-card flex items-center gap-4 cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0">
-                <Stethoscope className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground text-sm">{pkg.name}</h3>
-                <p className="text-xs text-muted-foreground">{pkg.tests} tests included</p>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-foreground">₹{pkg.price}</p>
-                <p className="text-xs text-muted-foreground line-through">₹{pkg.originalPrice}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+      {/* Popular Packages removed as requested */}
     </MobileLayout>
   );
 };

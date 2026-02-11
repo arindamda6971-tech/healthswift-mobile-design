@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -43,7 +46,41 @@ const features = [
 
 const SubscriptionScreen = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { purchaseSubscription, isLoading: isSubscriptionLoading } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState("yearly");
+  const [isPurchasing, setIsPurchasing] = useState(false);
+
+  const handleBuyNow = async () => {
+    if (!user) {
+      toast.error("Please log in to purchase a subscription");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsPurchasing(true);
+      const selectedPlanData = plans.find(p => p.id === selectedPlan);
+      
+      if (!selectedPlanData) {
+        toast.error("Invalid plan selected");
+        return;
+      }
+
+      await purchaseSubscription(selectedPlan as "monthly" | "yearly", selectedPlanData.price);
+      
+      toast.success(`🎉 Welcome to BloodLyn Gold! Your ${selectedPlanData.name} subscription is active.`);
+      
+      // Navigate to profile after 1.5 seconds to show the toast
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to purchase subscription");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   return (
     <MobileLayout showNav={false}>
@@ -198,9 +235,10 @@ const SubscriptionScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          onClick={() => navigate("/home")}
+          onClick={handleBuyNow}
+          disabled={isPurchasing || isSubscriptionLoading}
         >
-          Buy Now
+          {isPurchasing ? "Processing..." : "Buy Now"}
         </Button>
       </motion.div>
     </MobileLayout>

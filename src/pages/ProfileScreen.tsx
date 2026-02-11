@@ -19,6 +19,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAddresses } from "@/contexts/AddressContext";
@@ -34,6 +35,7 @@ const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { membershipType, isActive } = useSubscription();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
 
   useEffect(() => {
@@ -99,7 +101,11 @@ const ProfileScreen = () => {
           <div className="flex-1">
             <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
             <p className="text-sm text-muted-foreground">{contactInfo}</p>
-            <Badge variant="soft" className="mt-1">Gold Member</Badge>
+            {isActive && membershipType && (
+              <Badge variant="soft" className="mt-1 capitalize">
+                {membershipType} Member
+              </Badge>
+            )}
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate("/edit-profile")}>
             Edit
@@ -156,6 +162,10 @@ const ProfileScreen = () => {
               {item.label === "Saved Addresses" ? (
                 <Badge variant={addresses.length > 0 ? "softSuccess" : "secondary"}>
                   {addresses.length > 0 ? `${addresses.length} saved` : "No saved"}
+                </Badge>
+              ) : item.label === "Subscription Plans" && isActive && membershipType ? (
+                <Badge variant="softSuccess">
+                  Active
                 </Badge>
               ) : (
                 item.badge && (

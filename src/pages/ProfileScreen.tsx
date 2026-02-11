@@ -6,7 +6,6 @@ import {
   ChevronRight,
   MapPin,
   Crown,
-  Gift,
   HelpCircle,
   LogOut,
   Moon,
@@ -27,7 +26,6 @@ import { useAddresses } from "@/contexts/AddressContext";
 const menuItems = [
   { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
-  { icon: Gift, label: "Rewards & Referrals", path: "/rewards", badge: "₹500" },
   { icon: HelpCircle, label: "Help & Support", path: "/support", badge: null },
 ];
 

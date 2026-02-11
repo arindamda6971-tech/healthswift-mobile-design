@@ -31,7 +31,6 @@ import NotificationsScreen from "./pages/NotificationsScreen";
 import SubscriptionScreen from "./pages/SubscriptionScreen";
 import SavedAddressesScreen from "./pages/SavedAddressesScreen";
 import DoctorConsultScreen from "./pages/DoctorConsultScreen";
-import RewardsScreen from "./pages/RewardsScreen";
 import PartnerLabsScreen from "./pages/PartnerLabsScreen";
 import LabDetailScreen from "./pages/LabDetailScreen";
 import PackagesScreen from "./pages/PackagesScreen";
@@ -85,7 +84,6 @@ const App = () => (
                   <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
                   <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />
                   <Route path="/doctor-consult" element={<ProtectedRoute><DoctorConsultScreen /></ProtectedRoute>} />
-                  <Route path="/rewards" element={<ProtectedRoute><RewardsScreen /></ProtectedRoute>} />
                   {/* Family screen removed */}
                   <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
                   <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />

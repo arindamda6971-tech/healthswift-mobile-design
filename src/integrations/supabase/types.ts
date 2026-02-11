@@ -437,33 +437,6 @@ export type Database = {
         }
         Relationships: []
       }
-      referrals: {
-        Row: {
-          created_at: string
-          id: string
-          referred_id: string
-          referrer_id: string
-          reward_amount: number | null
-          status: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          referred_id: string
-          referrer_id: string
-          reward_amount?: number | null
-          status?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          referred_id?: string
-          referrer_id?: string
-          reward_amount?: number | null
-          status?: string | null
-        }
-        Relationships: []
-      }
       reports: {
         Row: {
           abnormal_count: number | null
@@ -532,36 +505,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      rewards: {
-        Row: {
-          created_at: string
-          id: string
-          referral_code: string | null
-          referral_count: number | null
-          total_points: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          referral_code?: string | null
-          referral_count?: number | null
-          total_points?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          referral_code?: string | null
-          referral_count?: number | null
-          total_points?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       test_categories: {
         Row: {

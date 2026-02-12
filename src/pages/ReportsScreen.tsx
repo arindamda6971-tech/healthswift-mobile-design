@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Report = {
   id: string;
@@ -25,18 +27,27 @@ type Report = {
 };
 
 const ReportsScreen = () => {
+  const navigate = useNavigate();
+  const { supabaseUserId } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const navigate = useNavigate();
+
   useEffect(() => {
     let cancelled = false;
+
     const fetchReports = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
+        if (!supabaseUserId) {
+          setLoading(false);
+          return;
+        }
+
         // Fetch user reports with related test name
-        const { data, error } = await (await import("@/integrations/supabase/client")).supabase
+        const { data, error } = await supabase
           .from("reports")
-          .select(`id, test_id, status, risk_level, abnormal_count, ai_summary, pdf_url, lab_name, generated_at, tests (name, category)`)
+          .select(`id, status, risk_level, abnormal_count, ai_summary, generated_at, created_at, tests (name, category)`)
+          .eq("user_id", supabaseUserId)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -45,7 +56,9 @@ const ReportsScreen = () => {
           const mapped = data.map((r: any) => ({
             id: r.id,
             name: r.tests?.[0]?.name || r.ai_summary || "Report",
-            date: r.generated_at ? new Date(r.generated_at).toLocaleDateString() : new Date(r.created_at).toLocaleDateString(),
+            date: r.generated_at
+              ? new Date(r.generated_at).toLocaleDateString()
+              : new Date(r.created_at).toLocaleDateString(),
             status: r.status || "processing",
             riskLevel: r.risk_level || "low",
             parameters: Array.isArray(r.parameters) ? r.parameters.length : undefined,
@@ -62,8 +75,10 @@ const ReportsScreen = () => {
     };
 
     fetchReports();
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [supabaseUserId]);
 
   // continue component below (rendering) -- keep same name for component
   const [selectedReport, setSelectedReport] = useState<number | null>(null);

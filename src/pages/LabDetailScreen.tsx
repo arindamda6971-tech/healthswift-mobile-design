@@ -274,7 +274,7 @@ interface DiagnosticCenter {
 const LabDetailScreen = () => {
   const { labId } = useParams<{ labId: string }>();
   const navigate = useNavigate();
-  const { addToCart, pendingItem, confirmReplace, cancelReplace } = useCart();
+  const { addToCart, removeFromCart, pendingItem, confirmReplace, cancelReplace } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
@@ -371,29 +371,39 @@ const LabDetailScreen = () => {
   });
 
   const handleAddTest = (testId: string, testName: string) => {
-    setAddedTests((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(testId)) {
+    const isAdded = addedTests.has(testId);
+    const test = lab.tests.find((t) => t.id === testId);
+
+    if (isAdded) {
+      // remove from local added set and cart
+      setAddedTests((prev) => {
+        const newSet = new Set(prev);
         newSet.delete(testId);
-        toast.info(`${testName} removed from cart`);
-      } else {
-        newSet.add(testId);
-        const test = lab.tests.find((t) => t.id === testId);
-        if (test) {
-          const ok = addToCart({
-            id: testId,
-            name: testName,
-            price: test.price,
-            labId: labId || "",
-            labName: lab.name,
-          });
-          if (ok) {
-            toast.success(`${testName} added to cart`);
-          }
-        }
-      }
-      return newSet;
+        return newSet;
+      });
+      if (test) removeFromCart(testId);
+      toast.info(`${testName} removed from cart`);
+      return;
+    }
+
+    if (!test) return;
+
+    const ok = addToCart({
+      id: testId,
+      name: testName,
+      price: test.price,
+      labId: labId || "",
+      labName: lab.name,
     });
+
+    if (ok) {
+      setAddedTests((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(testId);
+        return newSet;
+      });
+      toast.success(`${testName} added to cart`);
+    }
   };
 
   const handleConfirmReplace = () => {

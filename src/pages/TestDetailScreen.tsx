@@ -21,6 +21,16 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TestData {
   id: string;
@@ -51,7 +61,7 @@ const TestDetailScreen = () => {
   const [test, setTest] = useState<TestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { addToCart, itemCount } = useCart();
+  const { addToCart, itemCount, pendingItem, confirmReplace, cancelReplace } = useCart();
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -89,10 +99,18 @@ const TestDetailScreen = () => {
 
   const handleAddToCart = () => {
     if (!test) return;
+    let addedAny = false;
     for (let i = 0; i < quantity; i++) {
-      addToCart({ id: test.id, name: test.name, price: test.price });
+      const ok = addToCart({ id: test.id, name: test.name, price: test.price });
+      if (!ok) break;
+      addedAny = true;
     }
-    toast.success(`${test.name} added to cart!`);
+    if (addedAny) toast.success(`${test.name} added to cart!`);
+  };
+
+  const handleConfirmReplace = () => {
+    confirmReplace();
+    toast.success("Cart replaced with new lab items");
   };
 
   if (loading) {
@@ -351,6 +369,27 @@ const TestDetailScreen = () => {
           </Button>
         </motion.div>
       </nav>
+
+      {/* Lab Conflict Alert Dialog */}
+      <AlertDialog open={!!pendingItem} onOpenChange={(open) => !open && cancelReplace()}>
+        <AlertDialogContent className="max-w-[90%] rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Different Lab Selected</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have added some tests from <span className="font-semibold text-foreground">{pendingItem?.existingLabName}</span>.
+              You can't add tests from another lab at the same time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="flex-1 mt-0" onClick={cancelReplace}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction className="flex-1" onClick={handleConfirmReplace}>
+              Replace Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 };

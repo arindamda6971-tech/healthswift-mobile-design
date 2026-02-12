@@ -21,6 +21,16 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Doctor {
   id: string;
@@ -116,7 +126,7 @@ const ECGDoctorsScreen = () => {
   const { labId } = useParams<{ labId: string }>();
   const location = useLocation();
   const { toast } = useToast();
-  const { addToCart, itemCount } = useCart();
+  const { addToCart, itemCount, pendingItem, confirmReplace, cancelReplace } = useCart();
 
   const [lab, setLab] = useState<DiagnosticCenter | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -175,6 +185,11 @@ const ECGDoctorsScreen = () => {
       });
       navigate("/cart");
     }
+  };
+
+  const handleConfirmReplace = () => {
+    confirmReplace();
+    toast({ title: "Cart replaced", description: "Cart replaced with new lab items" });
   };
 
   if (!lab) {
@@ -253,6 +268,27 @@ const ECGDoctorsScreen = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Lab Conflict Alert Dialog */}
+        <AlertDialog open={!!pendingItem} onOpenChange={(open) => !open && cancelReplace()}>
+          <AlertDialogContent className="max-w-[90%] rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Different Lab Selected</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have added some tests from <span className="font-semibold text-foreground">{pendingItem?.existingLabName}</span>.
+                You can't add tests from another lab at the same time.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row gap-2">
+              <AlertDialogCancel className="flex-1 mt-0" onClick={cancelReplace}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction className="flex-1" onClick={handleConfirmReplace}>
+                Replace Cart
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* ECG Test Info */}
         <motion.div

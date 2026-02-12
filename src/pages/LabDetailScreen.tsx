@@ -27,6 +27,16 @@ import { Button } from "@/components/ui/button";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { useCart } from "@/contexts/CartContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -264,7 +274,7 @@ interface DiagnosticCenter {
 const LabDetailScreen = () => {
   const { labId } = useParams<{ labId: string }>();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, pendingItem, confirmReplace, cancelReplace } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
@@ -370,18 +380,25 @@ const LabDetailScreen = () => {
         newSet.add(testId);
         const test = lab.tests.find((t) => t.id === testId);
         if (test) {
-          addToCart({
+          const ok = addToCart({
             id: testId,
             name: testName,
             price: test.price,
             labId: labId || "",
             labName: lab.name,
           });
+          if (ok) {
+            toast.success(`${testName} added to cart`);
+          }
         }
-        toast.success(`${testName} added to cart`);
       }
       return newSet;
     });
+  };
+
+  const handleConfirmReplace = () => {
+    confirmReplace();
+    toast.success("Cart replaced with new lab items");
   };
 
   // Get visual theme for lab
@@ -658,6 +675,27 @@ const LabDetailScreen = () => {
           </Button>
         </motion.div>
       )}
+
+      {/* Lab Conflict Alert Dialog */}
+      <AlertDialog open={!!pendingItem} onOpenChange={(open) => !open && cancelReplace()}>
+        <AlertDialogContent className="max-w-[90%] rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Different Lab Selected</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have added some tests from <span className="font-semibold text-foreground">{pendingItem?.existingLabName}</span>.
+              You can't add tests from another lab at the same time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="flex-1 mt-0" onClick={cancelReplace}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction className="flex-1" onClick={handleConfirmReplace}>
+              Replace Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MobileLayout>
   );
 };

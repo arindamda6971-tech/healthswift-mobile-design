@@ -165,8 +165,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = (item: Omit<CartItem, "quantity">): boolean => {
     if (import.meta.env.DEV) console.log("CartContext.addToCart called with:", item);
     
-    // Check if cart has items from a different lab
-    if (items.length > 0 && item.labId && currentLabId && item.labId !== currentLabId) {
+    // If there are items in cart and the existing cart is tied to a specific lab,
+    // prevent adding an item from a different lab (or an item without labId)
+    if (items.length > 0 && currentLabId && item.labId !== currentLabId) {
       setPendingItem({ item, existingLabName: currentLabName || "another lab" });
       return false;
     }

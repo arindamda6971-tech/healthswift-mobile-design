@@ -17,17 +17,36 @@ class LocalResourceLoader extends ResourceLoader {
   fetch(url, options) {
     // Map absolute paths (/assets/...) to files in dist
     try {
-      let p = url;
-      if (p.startsWith('http://') || p.startsWith('https://')) {
-        // Block external network requests for safety
-        return null;
+      let p;
+      // Normalize and map URLs to files in `dist`.
+      // Accept same-origin (localhost) http(s) requests and map their pathname to `dist`.
+      try {
+        const parsed = new URL(url, 'http://localhost');
+        if (parsed.protocol === 'file:') {
+          p = parsed.pathname;
+        } else if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          // allow only same-origin (localhost) requests to be served from dist
+          if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+            p = path.join(distDir, parsed.pathname.replace(/^\//, ''));
+          } else {
+            return null;
+          }
+        } else {
+          // other protocols, treat as relative path into dist
+          p = path.join(distDir, parsed.pathname.replace(/^\//, ''));
+        }
+      } catch (err) {
+        // fallback for non-URL inputs
+        if (typeof url === 'string' && url.startsWith('/')) {
+          p = path.join(distDir, url.replace(/^\//, ''));
+        } else if (typeof url === 'string' && url.startsWith('file:')) {
+          p = new URL(url).pathname;
+        } else {
+          p = path.join(distDir, String(url));
+        }
       }
-      if (p.startsWith('/')) {
-        p = path.join(distDir, p);
-      } else if (p.startsWith('file:')) {
-        p = new URL(p).pathname;
-      }
-      if (fs.existsSync(p)) {
+
+      if (p && fs.existsSync(p)) {
         const buf = fs.readFileSync(p);
         return Promise.resolve(buf);
       }

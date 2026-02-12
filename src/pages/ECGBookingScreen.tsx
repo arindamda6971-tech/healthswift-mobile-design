@@ -120,7 +120,7 @@ const ECGBookingScreen = () => {
         .order("is_default", { ascending: false });
 
       if (error) {
-        console.error("Error fetching addresses:", error);
+        if (import.meta.env.DEV) console.error("Failed to fetch addresses");
         setAddresses([]);
       } else if (data) {
         setAddresses(data);
@@ -132,7 +132,7 @@ const ECGBookingScreen = () => {
         setAddresses([]);
       }
     } catch (err) {
-      console.error("Exception fetching addresses:", err);
+      if (import.meta.env.DEV) console.error("Failed to load addresses");
       setAddresses([]);
     } finally {
       setLoadingAddresses(false);
@@ -194,7 +194,7 @@ const ECGBookingScreen = () => {
         setSelectedAddressId(data.id);
       }
     } catch (error) {
-      console.error("Error saving address:", error);
+      if (import.meta.env.DEV) console.error("Failed to save address")
       toast.error("Failed to add address");
     } finally {
       setSavingAddress(false);

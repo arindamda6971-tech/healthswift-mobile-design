@@ -61,13 +61,13 @@ const SavedAddressesScreen = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching addresses:", error);
+        if (import.meta.env.DEV) console.error("Failed to fetch addresses");
         setAddresses([]);
       } else {
         setAddresses(data || []);
       }
     } catch (err) {
-      console.error("Exception fetching addresses:", err);
+      if (import.meta.env.DEV) console.error("Failed to load addresses");
       setAddresses([]);
     } finally {
       setLoading(false);
@@ -124,7 +124,7 @@ const SavedAddressesScreen = () => {
       const data = await res.json();
       return data;
     } catch (err) {
-      console.error("Reverse geocode failed", err);
+      if (import.meta.env.DEV) console.error("Reverse geocoding failed");
       return null;
     }
   };
@@ -234,7 +234,7 @@ const SavedAddressesScreen = () => {
       resetForm();
       await fetchAddresses();
     } catch (err: any) {
-      console.error("Save error:", err);
+      if (import.meta.env.DEV) console.error("Save error:", err);
       toast.error(err?.message || "Failed to save address");
     } finally {
       setSaving(false);
@@ -255,7 +255,7 @@ const SavedAddressesScreen = () => {
       toast.success("Address removed");
       await fetchAddresses();
     } catch (err) {
-      console.error("Delete error:", err);
+      if (import.meta.env.DEV) console.error("Delete error:", err);
       toast.error("Failed to delete address");
     }
   };

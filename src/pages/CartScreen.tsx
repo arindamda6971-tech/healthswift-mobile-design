@@ -88,7 +88,7 @@ const CartScreen = () => {
         .order("is_default", { ascending: false });
 
       if (error) {
-        if (import.meta.env.DEV) console.error("Error fetching addresses:", error);
+        if (import.meta.env.DEV) console.error("Failed to fetch addresses");
         setAddresses([]);
       } else if (data) {
         setAddresses(data);
@@ -101,7 +101,7 @@ const CartScreen = () => {
         setAddresses([]);
       }
     } catch (err) {
-      if (import.meta.env.DEV) console.error("Exception fetching addresses:", err);
+      if (import.meta.env.DEV) console.error("Failed to load user addresses");
       setAddresses([]);
     } finally {
       setLoadingAddresses(false);
@@ -171,7 +171,7 @@ const CartScreen = () => {
         setSelectedAddressId(data.id);
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Error saving address:", error);
+      if (import.meta.env.DEV) console.error("Failed to save address");
       toast.error("Failed to add address");
     } finally {
       setSavingAddress(false);
@@ -227,7 +227,7 @@ const CartScreen = () => {
       setPrescriptionUrl(fileName);
       toast.success("Prescription uploaded successfully!");
     } catch (error) {
-      console.error("Error uploading prescription:", error);
+        if (import.meta.env.DEV) console.error("Error uploading prescription:", error);
       toast.error("Failed to upload prescription");
     } finally {
       setUploadingPrescription(false);
@@ -241,7 +241,7 @@ const CartScreen = () => {
           .from('prescriptions')
           .remove([prescriptionUrl]);
       } catch (error) {
-        console.error("Error removing prescription:", error);
+        if (import.meta.env.DEV) console.error("Error removing prescription:", error);
       }
     }
     setPrescriptionFile(null);

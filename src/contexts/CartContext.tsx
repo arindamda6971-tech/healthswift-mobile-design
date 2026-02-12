@@ -142,8 +142,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Sync cart to Supabase when items change
   const syncCartToSupabase = useCallback(async (newItems: CartItem[]) => {
-    // Always save to sessionStorage
-    sessionStorage.setItem("bloodlyn-cart", JSON.stringify(newItems));
+    // Always save to sessionStorage - DO NOT include sensitive user data here
+    // Only store: id, name, price, labId, labName, quantity, familyMemberId
+    try {
+      sessionStorage.setItem("bloodlyn-cart", JSON.stringify(newItems));
+    } catch (err) {
+      // Storage quota exceeded - fail gracefully
+      if (import.meta.env.DEV) console.warn("Failed to persist cart to sessionStorage");
+    }
 
     if (!user || !isInitialized.current || isSyncing.current) return;
 

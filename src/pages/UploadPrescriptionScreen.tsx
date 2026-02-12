@@ -154,7 +154,7 @@ const UploadPrescriptionScreen = () => {
             reader.readAsDataURL(blob);
           });
         } catch (fetchErr) {
-          console.error("Error fetching image:", fetchErr);
+          if (import.meta.env.DEV) console.error("Failed to fetch image");
         }
       }
       
@@ -163,7 +163,7 @@ const UploadPrescriptionScreen = () => {
       });
 
       if (error) {
-        if (import.meta.env.DEV) console.error("Error analyzing prescription:", error);
+        if (import.meta.env.DEV) console.error("Prescription analysis failed");
         toast.error("Failed to analyze prescription. Please try again.");
         setIsAnalyzing(false);
         return;
@@ -206,7 +206,7 @@ const UploadPrescriptionScreen = () => {
       toast.success(`Found ${tests.length} test${tests.length > 1 ? 's' : ''} in your prescription!`);
       
     } catch (err) {
-      console.error("Error:", err);
+      if (import.meta.env.DEV) console.error("Upload failed");
       toast.error("Failed to analyze prescription. Please try again.");
     } finally {
       setIsAnalyzing(false);

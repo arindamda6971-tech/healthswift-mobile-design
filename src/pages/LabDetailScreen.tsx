@@ -297,7 +297,7 @@ const LabDetailScreen = () => {
           setLabFromDb(data);
         }
       } catch (err) {
-        console.error('Error fetching lab:', err);
+        if (import.meta.env.DEV) console.error('Error fetching lab:', err);
       } finally {
         setIsLoading(false);
       }

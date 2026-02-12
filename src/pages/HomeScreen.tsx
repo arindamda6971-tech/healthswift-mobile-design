@@ -115,8 +115,13 @@ const HomeScreen = () => {
 
   // Refresh handler for pull-to-refresh
   const handleRefresh = useCallback(async () => {
-    await Promise.all([fetchTests(), fetchDiagnosticCenters(), fetchHealthPackages()]);
-    toast.success("Data refreshed!");
+    try {
+      await Promise.all([fetchTests(), fetchDiagnosticCenters(), fetchHealthPackages()]);
+      toast.success("Data refreshed!");
+    } catch (err) {
+      if (import.meta.env.DEV) console.error("Failed to refresh data");
+      toast.error("Failed to refresh data");
+    }
   }, [fetchTests, fetchDiagnosticCenters, fetchHealthPackages]);
 
   const {
@@ -173,7 +178,7 @@ const HomeScreen = () => {
     }).slice(0, 7);
   }, [searchQuery, allTests]);
 
-  const handleSearchKeyDown = (e: any) => {
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (searchResults.length > 0) {
         const test = searchResults[0];

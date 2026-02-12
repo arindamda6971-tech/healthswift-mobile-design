@@ -93,7 +93,7 @@ const EditProfileScreen = () => {
       toast.success("Profile updated successfully");
       navigate("/profile");
     } catch (error) {
-      console.error("Profile save error:", error);
+      if (import.meta.env.DEV) console.error("Profile save error:", error);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);

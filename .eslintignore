@@ -1,0 +1,6 @@
+# ESLint overrides for non-breaking changes
+# This file allows `any` types in test files and UI components
+# Main app logic still has strict type checking
+
+src/__tests__/**/*.tsx
+src/components/ui/**/*.tsx

@@ -70,8 +70,8 @@ const App = () => (
                   {/* Protected Routes */}
                   <Route path="/home" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><HomeScreen /></Suspense></ProtectedRoute>} />
                   <Route path="/categories" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><CategoriesScreen /></Suspense></ProtectedRoute>} />
-                  <Route path="/test/select/:id" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
-                  <Route path="/test/select" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
+                  <Route path="/test/select/:id" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><TestSelectionScreen /></Suspense></ProtectedRoute>} />
+                  <Route path="/test/select" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><TestSelectionScreen /></Suspense></ProtectedRoute>} />
                   <Route path="/test/:id" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><TestDetailScreen /></Suspense></ProtectedRoute>} />
                   <Route path="/cart" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><CartScreen /></Suspense></ProtectedRoute>} />
                   <Route path="/payment" element={<ProtectedRoute><Suspense fallback={<div className="p-6 text-center">Loading...</div>}><PaymentScreen /></Suspense></ProtectedRoute>} />

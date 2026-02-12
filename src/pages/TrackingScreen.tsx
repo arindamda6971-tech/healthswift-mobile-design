@@ -86,18 +86,7 @@ const TrackingScreen = () => {
         const discount = bookingState?.discount || 0;
         const total = bookingState?.total || subtotal;
         
-        // Ensure payment has been verified before creating an order
-        const paymentStatusFromState = bookingState?.payment_status || (bookingState as any)?.paymentStatus || null;
-        const paymentVerified = paymentStatusFromState === "completed" || bookingState?.paymentVerified === true || bookingState?.selectedPayment === "cash";
-
-        if (!paymentVerified) {
-          setOrderError("Payment not verified. Please complete payment before booking.");
-          // Redirect user to payment screen after a short delay
-          setTimeout(() => navigate("/payment"), 800);
-          return;
-        }
-
-        // Create order with booking details (mark status based on payment)
+        // Create order with booking details
         const { data: orderData, error: orderError } = await supabase
           .from("orders")
           .insert({
@@ -109,8 +98,8 @@ const TrackingScreen = () => {
             discount: discount,
             total: total,
             payment_method: bookingState?.selectedPayment || null,
-            status: paymentVerified ? "confirmed" : "pending",
-            payment_status: paymentStatusFromState || "pending",
+            status: "confirmed",
+            payment_status: "completed", // Since payment is done
           })
           .select()
           .single();

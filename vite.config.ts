@@ -10,47 +10,6 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  build: {
-    target: "esnext",
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Vendor chunks
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-ui": ["framer-motion", "lucide-react", "@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-tabs"],
-          "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-utils": ["sonner", "class-variance-authority", "clsx", "tailwind-merge"],
-          // Feature chunks
-          "pages-auth": [
-            "./src/pages/LoginScreen.tsx",
-            "./src/pages/OnboardingScreen.tsx",
-          ],
-          "pages-booking": [
-            "./src/pages/CartScreen.tsx",
-            "./src/pages/BookingScreen.tsx",
-            "./src/pages/TrackingScreen.tsx",
-            "./src/pages/PaymentScreen.tsx",
-          ],
-          "pages-tests": [
-            "./src/pages/CategoriesScreen.tsx",
-            "./src/pages/TestDetailScreen.tsx",
-            "./src/pages/PackageDetailScreen.tsx",
-            "./src/pages/PackagesScreen.tsx",
-          ],
-        },
-        chunkFileNames: "assets/[name]-[hash].js",
-        entryFileNames: "assets/[name]-[hash].js",
-      },
-    },
-    chunkSizeWarningLimit: 300,
-  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),

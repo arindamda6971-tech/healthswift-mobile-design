@@ -110,26 +110,6 @@ const ProfileScreen = () => {
           </Button>
         </motion.div>
 
-        {/* MFA encouragement banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="soft-card mt-4 px-4 py-3 text-sm bg-amber-50 border-amber-100"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <div className="font-medium text-foreground">Secure your account</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Enable multi-factor authentication (MFA) for better account security. Follow the steps in your Supabase project to enable TOTP or SMS MFA.
-              </div>
-            </div>
-            <div className="flex items-center">
-              <Button variant="outline" size="sm" onClick={() => window.open("https://supabase.com/docs/guides/auth#multi-factor-authentication", "_blank")}>Enable MFA</Button>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Quick settings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -12,75 +12,33 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 type Report = {
-  id: string;
+  id: number;
   name: string;
   date: string;
   status: string;
   riskLevel: string;
   parameters?: number;
   abnormal?: number;
-  category: string;
+  category: "Health Tests" | "ECG Tests" | "Physiotherapy" | "Consultations" | string;
 };
+
+const reports: Report[] = [
+  { id: 1, name: "Complete Blood Count", date: "Nov 28, 2024", status: "ready", riskLevel: "low", parameters: 9, abnormal: 0, category: "Health Tests" },
+  { id: 2, name: "Thyroid Profile", date: "Nov 25, 2024", status: "ready", riskLevel: "medium", parameters: 6, abnormal: 2, category: "Health Tests" },
+  { id: 3, name: "Liver Function Test", date: "Nov 20, 2024", status: "ready", riskLevel: "low", parameters: 12, abnormal: 0, category: "Health Tests" },
+  { id: 4, name: "Vitamin D & B12", date: "Nov 15, 2024", status: "ready", riskLevel: "high", parameters: 4, abnormal: 2, category: "Health Tests" },
+  { id: 11, name: "Resting ECG Report", date: "Dec 02, 2024", status: "ready", riskLevel: "medium", category: "ECG Tests" },
+  { id: 12, name: "Holter Monitor Summary", date: "Jan 05, 2025", status: "ready", riskLevel: "low", category: "ECG Tests" },
+  { id: 21, name: "Physio Session 1 Notes", date: "Dec 10, 2024", status: "ready", riskLevel: "low", category: "Physiotherapy" },
+  { id: 22, name: "Physio Progress Report", date: "Jan 12, 2025", status: "ready", riskLevel: "medium", category: "Physiotherapy" },
+  { id: 31, name: "Consultation - Dr. Sharma", date: "Nov 30, 2024", status: "ready", riskLevel: "low", category: "Consultations" },
+  { id: 32, name: "Follow-up - Dr. Rao", date: "Jan 20, 2025", status: "ready", riskLevel: "low", category: "Consultations" },
+];
 
 const ReportsScreen = () => {
   const navigate = useNavigate();
-  const { supabaseUserId } = useAuth();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchReports = async () => {
-      try {
-        setLoading(true);
-        if (!supabaseUserId) {
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user reports with related test name
-        const { data, error } = await supabase
-          .from("reports")
-          .select(`id, status, risk_level, abnormal_count, ai_summary, generated_at, created_at, tests (name, category)`)
-          .eq("user_id", supabaseUserId)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        if (!cancelled && data) {
-          const mapped = data.map((r: any) => ({
-            id: r.id,
-            name: r.tests?.[0]?.name || r.ai_summary || "Report",
-            date: r.generated_at
-              ? new Date(r.generated_at).toLocaleDateString()
-              : new Date(r.created_at).toLocaleDateString(),
-            status: r.status || "processing",
-            riskLevel: r.risk_level || "low",
-            parameters: Array.isArray(r.parameters) ? r.parameters.length : undefined,
-            abnormal: r.abnormal_count || 0,
-            category: r.tests?.[0]?.category || "Health Tests",
-          }));
-          setReports(mapped as Report[]);
-        }
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("Failed to load reports");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchReports();
-    return () => {
-      cancelled = true;
-    };
-  }, [supabaseUserId]);
-
-  // continue component below (rendering) -- keep same name for component
   const [selectedReport, setSelectedReport] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
@@ -130,10 +88,8 @@ const ReportsScreen = () => {
 
       <div className="px-4 pb-6">
         <Tabs defaultValue="reports" className="mt-4">
-              <TabsContent value="reports" className="space-y-4">
-            {loading ? (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading reports...</div>
-            ) : (() => {
+          <TabsContent value="reports" className="space-y-4">
+            {(() => {
               if (selectedCategory !== "All") {
                 const items = reports.filter((r) => r.category === selectedCategory);
                 return (

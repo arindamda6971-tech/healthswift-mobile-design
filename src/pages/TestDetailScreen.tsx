@@ -99,15 +99,13 @@ const TestDetailScreen = () => {
 
   const handleAddToCart = () => {
     if (!test) return;
-    let added = 0;
+    let addedAny = false;
     for (let i = 0; i < quantity; i++) {
       const ok = addToCart({ id: test.id, name: test.name, price: test.price });
       if (!ok) break;
-      added += 1;
+      addedAny = true;
     }
-    if (added > 0) {
-      toast.success(`${test.name} added to cart${added > 1 ? ` x${added}` : ""}!`);
-    }
+    if (addedAny) toast.success(`${test.name} added to cart!`);
   };
 
   const handleConfirmReplace = () => {

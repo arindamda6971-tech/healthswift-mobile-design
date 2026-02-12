@@ -142,14 +142,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Sync cart to Supabase when items change
   const syncCartToSupabase = useCallback(async (newItems: CartItem[]) => {
-    // Always save to sessionStorage - DO NOT include sensitive user data here
-    // Only store: id, name, price, labId, labName, quantity, familyMemberId
-    try {
-      sessionStorage.setItem("bloodlyn-cart", JSON.stringify(newItems));
-    } catch (err) {
-      // Storage quota exceeded - fail gracefully
-      if (import.meta.env.DEV) console.warn("Failed to persist cart to sessionStorage");
-    }
+    // Always save to sessionStorage
+    sessionStorage.setItem("bloodlyn-cart", JSON.stringify(newItems));
 
     if (!user || !isInitialized.current || isSyncing.current) return;
 
@@ -164,32 +158,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     loadCartFromSupabase();
   }, [user, loadCartFromSupabase]);
 
-  // Helper to derive a canonical lab key for comparison
-  const labKeyFrom = (labId?: string | null, labName?: string | null) => {
-    const id = labId && String(labId).trim();
-    if (id) return `id:${id}`;
-    const name = labName && String(labName).trim().toLowerCase();
-    if (name) return `name:${name}`;
-    return null;
-  };
-
-  // Get current lab key from first cart item (if any)
-  const currentLabKey = items.length > 0 ? labKeyFrom(items[0].labId || null, items[0].labName || null) : null;
+  // Get current lab from cart items
+  const currentLabId = items.length > 0 ? items[0].labId || null : null;
+  const currentLabName = items.length > 0 ? items[0].labName || null : null;
 
   const addToCart = (item: Omit<CartItem, "quantity">): boolean => {
     if (import.meta.env.DEV) console.log("CartContext.addToCart called with:", item);
-
-    const incomingLabKey = labKeyFrom(item.labId || null, item.labName || null);
-
-    // If cart has items tied to a lab but incoming item has a different lab (or no lab info), prompt replace
-    if (items.length > 0 && currentLabKey && incomingLabKey && incomingLabKey !== currentLabKey) {
-      setPendingItem({ item, existingLabName: items[0].labName || "another lab" });
-      return false;
-    }
-
-    // If cart has items tied to a lab but incoming item lacks lab info, treat as conflict
-    if (items.length > 0 && currentLabKey && !incomingLabKey) {
-      setPendingItem({ item, existingLabName: items[0].labName || "another lab" });
+    
+    // If there are items in cart and the existing cart is tied to a specific lab,
+    // prevent adding an item from a different lab (or an item without labId)
+    if (items.length > 0 && currentLabId && item.labId !== currentLabId) {
+      setPendingItem({ item, existingLabName: currentLabName || "another lab" });
       return false;
     }
     

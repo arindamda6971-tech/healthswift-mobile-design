@@ -99,50 +99,29 @@ export const usePrescriptionStorage = () => {
         .eq("status", "pending");
 
       // Save to database
-      // Insert the prescription row. Supabase client returns a chainable builder
-      // that supports `.select().single()` before awaiting, but test mocks may
-      // return a plain promise/object from `insert`. Support both patterns.
-      try {
-        const insertCall: any = supabase.from("user_prescriptions").insert({
+      const { data, error } = await supabase
+        .from("user_prescriptions")
+        .insert({
           user_id: user.id,
           image_url: imageUrl,
           status: "pending",
-        });
+        })
+        .select()
+        .single();
 
-        let insertResult: any;
-
-        if (insertCall && typeof insertCall.select === "function") {
-          // Typical supabase client: chain then await
-          insertResult = await insertCall.select().single();
-        } else {
-          // Some mocks return a Promise resolving to { data, error }
-          const awaited = await insertCall;
-          insertResult = awaited;
-        }
-
-        const data = insertResult?.data ?? insertResult;
-        const error = insertResult?.error ?? null;
-
-        if (error) {
-          console.error("Error saving prescription:", error);
-          toast.error("Failed to save prescription");
-          return null;
-        }
-
-        if (data) {
-          setPrescription({
-            id: data.id,
-            image_url: data.image_url,
-            status: data.status,
-            analysis_result: data.analysis_result,
-            created_at: data.created_at,
-          });
-        }
-      } catch (e) {
-        console.error("Error saving prescription:", e);
+      if (error) {
+        console.error("Error saving prescription:", error);
         toast.error("Failed to save prescription");
         return null;
       }
+
+      setPrescription({
+        id: data.id,
+        image_url: data.image_url,
+        status: data.status,
+        analysis_result: data.analysis_result,
+        created_at: data.created_at,
+      });
 
       return imageUrl;
     } catch (err) {

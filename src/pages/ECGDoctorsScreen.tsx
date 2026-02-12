@@ -145,7 +145,7 @@ const ECGDoctorsScreen = () => {
     // For now, use mock data
     setDoctors(mockDoctors);
     setLoading(false);
-  }, [labId, location.state?.lab, fetchLab]);
+  }, [labId]);
 
   const fetchLab = async () => {
     try {
@@ -158,7 +158,7 @@ const ECGDoctorsScreen = () => {
       if (error) throw error;
       setLab(data);
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Error fetching lab:", error);
+      console.error("Error fetching lab:", error);
       toast({
         title: "Error",
         description: "Failed to load center details.",

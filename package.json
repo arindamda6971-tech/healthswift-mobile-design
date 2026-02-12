@@ -9,7 +9,7 @@
     "test": "vitest",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview --host --port 8080"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@fontsource/manrope": "^5.2.8",

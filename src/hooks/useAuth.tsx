@@ -151,23 +151,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // In test environments, return a safe noop context to simplify testing
-    // Tests often mount contexts like CartProvider without wrapping AuthProvider.
-    // Returning a default stub avoids throwing while keeping runtime behavior safe.
-    if (process.env.NODE_ENV === 'test' || import.meta.env?.MODE === 'test') {
-      return {
-        user: null,
-        loading: false,
-        supabaseUserId: null,
-        signInWithEmail: async () => ({ error: null }),
-        signUpWithEmail: async () => ({ error: null }),
-        signInWithPhone: async () => ({ error: null }),
-        verifyOtp: async () => ({ error: null }),
-        signInWithGoogle: async () => ({ error: null }),
-        signOut: async () => {},
-      } as AuthContextType;
-    }
-
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

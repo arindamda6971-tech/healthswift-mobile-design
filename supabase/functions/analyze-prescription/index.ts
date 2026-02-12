@@ -44,44 +44,8 @@ serve(async (req) => {
   }
 
   try {
-    // Authentication: require a Supabase access token and verify it
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Server not configured for authentication" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!token) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Verify token by calling Supabase Auth user endpoint using service role key
-    const userResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-      },
-    });
-
-    if (!userResp.ok) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const { imageBase64 } = await req.json();
-
+    
     if (!imageBase64) {
       return new Response(
         JSON.stringify({ error: "No image provided" }),

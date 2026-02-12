@@ -39,18 +39,18 @@ const ConsultationBookingScreen = () => {
   const location = useLocation();
   const state = (location.state as LocationState) || null;
 
-  // Hook calls MUST come before conditional returns (React rules)
-  const { user, supabaseUserId } = useAuth();
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
-  const [isBooking, setIsBooking] = useState(false);
 
   const slots = useMemo(() => generateSlots(), []);
 
   if (!state) return null;
 
   const { professional, type } = state;
+
   const isAudio = type === "audio";
+  const { user, supabaseUserId } = useAuth();
+  const [isBooking, setIsBooking] = useState(false);
 
   const handleConfirm = async () => {
     if (!selectedSlot) {
@@ -96,8 +96,7 @@ const ConsultationBookingScreen = () => {
 
       setTimeout(() => navigate("/bookings"), 800);
     } catch (err) {
-      // Log only in dev mode; don't expose error details to user in production
-      if (import.meta.env.DEV) console.error("Booking error:", err);
+      console.error("Booking error:", err);
       toast.error("Failed to create booking. Please try again.");
     } finally {
       setIsBooking(false);

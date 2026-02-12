@@ -68,7 +68,7 @@ const ReportsScreen = () => {
           setReports(mapped as Report[]);
         }
       } catch (err) {
-        if (import.meta.env.DEV) console.error("Failed to load reports:", err);
+        if (import.meta.env.DEV) console.error("Failed to load reports");
       } finally {
         if (!cancelled) setLoading(false);
       }

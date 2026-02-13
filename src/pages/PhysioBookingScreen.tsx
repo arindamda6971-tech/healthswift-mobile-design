@@ -3,14 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Clock,
-  Calendar,
   MapPin,
   Navigation,
   Plus,
   Check,
-  Video,
-  Phone,
-  User,
+  Stethoscope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,52 +38,34 @@ import type { Tables } from "@/integrations/supabase/types";
 type Address = Tables<"addresses">;
 
 interface Physiotherapist {
-  id: number;
+  id: string;
   name: string;
   specialty: string;
-  experience: string;
+  experience: string | number;
   rating: number;
-  reviews: number;
-  available: boolean;
-  nextSlot: string;
-  videoCallFee: number;
-  audioCallFee: number;
-  image: string;
+  reviews_count: number;
+  fee: number;
+  available?: boolean;
+  qualification?: string;
+  image?: string | null;
 }
 
 interface LocationState {
   physio: Physiotherapist;
-  consultationType: "video" | "audio";
 }
-
-const timeSlots = [
-  { id: 1, time: "9:00 AM - 9:30 AM", available: true },
-  { id: 2, time: "9:30 AM - 10:00 AM", available: true },
-  { id: 3, time: "10:00 AM - 10:30 AM", available: true },
-  { id: 4, time: "10:30 AM - 11:00 AM", available: false },
-  { id: 5, time: "11:00 AM - 11:30 AM", available: true },
-  { id: 6, time: "2:00 PM - 2:30 PM", available: true },
-  { id: 7, time: "2:30 PM - 3:00 PM", available: true },
-  { id: 8, time: "3:00 PM - 3:30 PM", available: true },
-  { id: 9, time: "4:00 PM - 4:30 PM", available: true },
-  { id: 10, time: "5:00 PM - 5:30 PM", available: true },
-];
 
 const PhysioBookingScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { supabaseUserId } = useAuth();
-  
+
   const locationState = location.state as LocationState | null;
   const physio = locationState?.physio;
-  const consultationType = locationState?.consultationType || "video";
-  
+
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(0);
-  const [selectedTime, setSelectedTime] = useState(2);
-  const [selectedType, setSelectedType] = useState<"video" | "audio">(consultationType);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
   // Add Address Modal State
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
@@ -101,16 +80,16 @@ const PhysioBookingScreen = () => {
     is_default: false,
   });
 
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-    return {
-      day: date.toLocaleDateString("en-US", { weekday: "short" }),
-      date: date.getDate(),
-      month: date.toLocaleDateString("en-US", { month: "short" }),
-      fullDate: date.toISOString().split("T")[0],
-    };
-  });
+  const generateSlots = () => {
+    const now = new Date();
+    const slots: string[] = [];
+    for (let i = 1; i <= 6; i++) {
+      const slot = new Date(now.getTime() + i * 30 * 60 * 1000);
+      slots.push(slot.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    }
+    return slots;
+  };
+  const slots = generateSlots();
 
   const fetchAddresses = async () => {
     if (!supabaseUserId) {
@@ -209,11 +188,9 @@ const PhysioBookingScreen = () => {
     }
   };
 
-  const currentFee = selectedType === "video" ? physio?.videoCallFee : physio?.audioCallFee;
-
   const handleProceedToPayment = () => {
     if (!physio) return;
-    
+
     if (!selectedAddressId && addresses.length > 0) {
       toast.error("Please select an address");
       return;
@@ -227,18 +204,17 @@ const PhysioBookingScreen = () => {
     navigate("/payment", {
       state: {
         cartItems: [{
-          id: `physio-${physio.id}-${selectedType}`,
-          name: `${selectedType === "video" ? "Video" : "Audio"} Consultation with ${physio.name}`,
-          price: currentFee,
+          id: `physio-${physio.id}`,
+          name: `Physiotherapy Session with ${physio.name}`,
+          price: physio.fee,
           quantity: 1,
         }],
         addressId: selectedAddressId,
-        scheduledDate: dates[selectedDate].fullDate,
-        scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
-        subtotal: currentFee,
+        scheduledDate: new Date().toISOString().split("T")[0],
+        scheduledTimeSlot: selectedTime || "",
+        subtotal: physio.fee,
         bookingType: "physio",
         physioName: physio.name,
-        consultationType: selectedType,
       },
     });
   };
@@ -249,7 +225,7 @@ const PhysioBookingScreen = () => {
 
   return (
     <MobileLayout showNav={false}>
-      <ScreenHeader title="Book Consultation" />
+      <ScreenHeader title="Book Physio Appointment" />
 
       <div className="px-4 pb-44">
         {/* Physio Info Banner */}
@@ -273,98 +249,28 @@ const PhysioBookingScreen = () => {
           </Badge>
         </motion.div>
 
-        {/* Consultation Type Selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
-          <h3 className="font-semibold text-foreground mb-3">Consultation Type</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setSelectedType("video")}
-              className={`p-4 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                selectedType === "video"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <Video className="w-6 h-6" />
-              <span className="font-medium">Video Call</span>
-              <span className="text-lg font-bold">₹{physio.videoCallFee}</span>
-            </button>
-            <button
-              onClick={() => setSelectedType("audio")}
-              className={`p-4 rounded-xl flex flex-col items-center gap-2 transition-all ${
-                selectedType === "audio"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <Phone className="w-6 h-6" />
-              <span className="font-medium">Audio Call</span>
-              <span className="text-lg font-bold">₹{physio.audioCallFee}</span>
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Date selection */}
+        {/* Time slot selection (physio-style half-hour slots) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Select Date</h3>
-          </div>
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-            {dates.map((date, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedDate(index)}
-                className={`flex-shrink-0 w-16 py-3 rounded-2xl text-center transition-all ${
-                  selectedDate === index
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                }`}
-              >
-                <p className="text-xs opacity-80">{date.day}</p>
-                <p className="text-lg font-bold">{date.date}</p>
-                <p className="text-xs opacity-80">{date.month}</p>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Time slot selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
+          className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Select Time Slot</h3>
-            <Badge variant="soft">30 min session</Badge>
+            <Badge variant="soft">30 min slots</Badge>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {timeSlots.map((slot) => (
+          <div className="grid grid-cols-3 gap-2">
+            {slots.map((s) => (
               <button
-                key={slot.id}
-                onClick={() => slot.available && setSelectedTime(slot.id)}
-                disabled={!slot.available}
+                key={s}
+                onClick={() => setSelectedTime(s)}
                 className={`py-3 px-4 rounded-xl text-center transition-all ${
-                  !slot.available
-                    ? "bg-muted/50 text-muted-foreground opacity-50"
-                    : selectedTime === slot.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
+                  selectedTime === s ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                 }`}
               >
-                <p className="text-sm font-medium">{slot.time}</p>
+                <p className="text-sm font-medium">{s}</p>
               </button>
             ))}
           </div>
@@ -457,24 +363,22 @@ const PhysioBookingScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="p-4 rounded-2xl bg-muted/50 border border-border"
+          className="mt-6 p-4 rounded-2xl bg-muted/50 border border-border"
         >
           <h3 className="font-semibold text-foreground mb-3">Price Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {selectedType === "video" ? "Video" : "Audio"} Consultation
-              </span>
-              <span className="text-foreground">₹{currentFee}</span>
+              <span className="text-muted-foreground">Physio Session</span>
+              <span className="text-foreground">₹{physio.fee}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Platform Fee</span>
+              <span className="text-muted-foreground">Home Visit Charges</span>
               <span className="text-success">FREE</span>
             </div>
             <div className="h-px bg-border my-2" />
             <div className="flex justify-between">
               <span className="font-semibold text-foreground">Total</span>
-              <span className="font-bold text-lg text-foreground">₹{currentFee}</span>
+              <span className="font-bold text-lg text-foreground">₹{physio.fee}</span>
             </div>
           </div>
         </motion.div>
@@ -490,11 +394,10 @@ const PhysioBookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          disabled={!selectedAddressId || addresses.length === 0}
+          disabled={!selectedAddressId || addresses.length === 0 || !selectedTime}
           onClick={handleProceedToPayment}
         >
-          {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
-          Proceed to Pay • ₹{currentFee}
+          Proceed to Pay • ₹{physio.fee}
         </Button>
       </motion.div>
 

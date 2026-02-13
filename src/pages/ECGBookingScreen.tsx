@@ -3,13 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Clock,
-  Calendar,
   MapPin,
   Navigation,
   Plus,
   Check,
   Stethoscope,
-  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,16 +53,7 @@ interface LocationState {
   doctor: Doctor;
 }
 
-const timeSlots = [
-  { id: 1, time: "6:00 AM - 8:00 AM", available: true, phlebotomists: 5 },
-  { id: 2, time: "8:00 AM - 10:00 AM", available: true, phlebotomists: 8 },
-  { id: 3, time: "10:00 AM - 12:00 PM", available: true, phlebotomists: 6 },
-  { id: 4, time: "12:00 PM - 2:00 PM", available: false, phlebotomists: 0 },
-  { id: 5, time: "2:00 PM - 4:00 PM", available: true, phlebotomists: 4 },
-  { id: 6, time: "4:00 PM - 6:00 PM", available: true, phlebotomists: 7 },
-  { id: 7, time: "6:00 PM - 8:00 PM", available: true, phlebotomists: 3 },
-  { id: 8, time: "8:00 PM - 10:00 PM", available: true, phlebotomists: 2 },
-];
+// time slots will be generated dynamically (doctor-style half-hour slots)
 
 const ECGBookingScreen = () => {
   const navigate = useNavigate();
@@ -77,8 +66,7 @@ const ECGBookingScreen = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(0);
-  const [selectedTime, setSelectedTime] = useState(2);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   
   // Add Address Modal State
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
@@ -93,16 +81,16 @@ const ECGBookingScreen = () => {
     is_default: false,
   });
 
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-    return {
-      day: date.toLocaleDateString("en-US", { weekday: "short" }),
-      date: date.getDate(),
-      month: date.toLocaleDateString("en-US", { month: "short" }),
-      fullDate: date.toISOString().split("T")[0],
-    };
-  });
+  const generateSlots = () => {
+    const now = new Date();
+    const slots: string[] = [];
+    for (let i = 1; i <= 6; i++) {
+      const slot = new Date(now.getTime() + i * 30 * 60 * 1000);
+      slots.push(slot.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    }
+    return slots;
+  };
+  const slots = generateSlots();
 
   const fetchAddresses = async () => {
     if (!supabaseUserId) {
@@ -223,8 +211,8 @@ const ECGBookingScreen = () => {
           quantity: 1,
         }],
         addressId: selectedAddressId,
-        scheduledDate: dates[selectedDate].fullDate,
-        scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
+        scheduledDate: new Date().toISOString().split("T")[0],
+        scheduledTimeSlot: selectedTime || "",
         subtotal: doctor.fee,
         bookingType: "ecg",
         doctorName: doctor.name,
@@ -276,7 +264,7 @@ const ECGBookingScreen = () => {
           </Badge>
         </motion.div>
 
-        {/* Date selection */}
+        {/* Time slot selection (doctor-style half-hour slots) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -284,66 +272,26 @@ const ECGBookingScreen = () => {
           className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Select Date</h3>
+            <Clock className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold text-foreground">Select Time Slot</h3>
+            <Badge variant="soft">30 min slots</Badge>
           </div>
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-            {dates.map((date, index) => (
+          <div className="grid grid-cols-3 gap-2">
+            {slots.map((s) => (
               <button
-                key={index}
-                onClick={() => setSelectedDate(index)}
-                className={`flex-shrink-0 w-16 py-3 rounded-2xl text-center transition-all ${
-                  selectedDate === index
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
+                key={s}
+                onClick={() => setSelectedTime(s)}
+                className={`py-3 px-4 rounded-xl text-center transition-all ${
+                  selectedTime === s ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                 }`}
               >
-                <p className="text-xs opacity-80">{date.day}</p>
-                <p className="text-lg font-bold">{date.date}</p>
-                <p className="text-xs opacity-80">{date.month}</p>
+                <p className="text-sm font-medium">{s}</p>
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* Time slot selection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-6"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Select Time Slot</h3>
-            <Badge variant="soft">24/7 Available</Badge>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {timeSlots.map((slot) => (
-              <button
-                key={slot.id}
-                onClick={() => slot.available && setSelectedTime(slot.id)}
-                disabled={!slot.available}
-                className={`py-3 px-4 rounded-xl text-center transition-all ${
-                  !slot.available
-                    ? "bg-muted/50 text-muted-foreground opacity-50"
-                    : selectedTime === slot.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                }`}
-              >
-                <p className="text-sm font-medium">{slot.time}</p>
-                {slot.available && (
-                  <p className={`text-xs mt-1 ${
-                    selectedTime === slot.id ? "opacity-80" : "text-muted-foreground"
-                  }`}>
-                    {slot.phlebotomists} available
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        
 
         {/* Address Selection */}
         <motion.div
@@ -463,7 +411,7 @@ const ECGBookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          disabled={!selectedAddressId || addresses.length === 0}
+          disabled={!selectedAddressId || addresses.length === 0 || !selectedTime}
           onClick={handleProceedToPayment}
         >
           Proceed to Pay • ₹{doctor.fee}

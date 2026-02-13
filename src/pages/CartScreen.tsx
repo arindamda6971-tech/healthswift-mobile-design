@@ -708,18 +708,26 @@ const CartScreen = () => {
             variant="hero"
             className="flex-1 max-w-[200px]"
             size="lg"
-            onClick={() => navigate("/payment", { 
-              state: { 
-                cartItems: items, 
-                addressId: selectedAddressId, 
-                scheduledDate: dates[selectedDate].fullDate,
-                scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
-                subtotal 
-              } 
-            })}
+            onClick={() => {
+              // If no lab selected yet, go to lab selection screen
+              if (!currentLabId) {
+                navigate("/lab-selection");
+              } else {
+                // If lab already selected, proceed to payment
+                navigate("/payment", { 
+                  state: { 
+                    cartItems: items, 
+                    addressId: selectedAddressId, 
+                    scheduledDate: dates[selectedDate].fullDate,
+                    scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
+                    subtotal 
+                  } 
+                });
+              }
+            }}
             disabled={!selectedAddressId && addresses.length > 0}
           >
-            Proceed to Pay
+            {currentLabId ? "Proceed to Pay" : "Book Now"}
           </Button>
         </div>
       </motion.div>

@@ -23,6 +23,7 @@ interface CartContextType {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, delta: number) => void;
   updateFamilyMember: (id: string, familyMemberId: string | undefined) => void;
+  updateLabForItems: (labId: string, labName: string) => void;
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
@@ -236,6 +237,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const updateLabForItems = (labId: string, labName: string) => {
+    setItems((prev) => {
+      const updated = prev.map((item) => ({
+        ...item,
+        labId,
+        labName,
+      }));
+      syncCartToSupabase(updated);
+      return updated;
+    });
+  };
+
   const clearCart = () => {
     setItems([]);
     syncCartToSupabase([]);
@@ -252,6 +265,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         removeFromCart, 
         updateQuantity, 
         updateFamilyMember, 
+        updateLabForItems,
         clearCart, 
         itemCount, 
         subtotal,

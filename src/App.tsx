@@ -21,6 +21,7 @@ import CategoriesScreen from "./pages/CategoriesScreen";
 import TestDetailScreen from "./pages/TestDetailScreen";
 import TestSelectionScreen from "./pages/TestSelectionScreen";
 import CartScreen from "./pages/CartScreen";
+import LabSelectionScreen from "./pages/LabSelectionScreen";
 import PaymentScreen from "./pages/PaymentScreen";
 import BookingsScreen from "./pages/BookingsScreen";
 import ReportsScreen from "./pages/ReportsScreen";
@@ -69,10 +70,11 @@ const App = () => (
                   {/* Protected Routes */}
                   <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
                   <Route path="/categories" element={<ProtectedRoute><CategoriesScreen /></ProtectedRoute>} />
-                  <Route path="/test/select/:id" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
-                  <Route path="/test/select" element={<ProtectedRoute><TestSelectionScreen /></ProtectedRoute>} />
+                  <Route path="/test/select/:id" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
+                  <Route path="/test/select" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
                   <Route path="/test/:id" element={<ProtectedRoute><TestDetailScreen /></ProtectedRoute>} />
                   <Route path="/cart" element={<ProtectedRoute><CartScreen /></ProtectedRoute>} />
+                  <Route path="/lab-selection" element={<ProtectedRoute><LabSelectionScreen /></ProtectedRoute>} />
                   <Route path="/payment" element={<ProtectedRoute><PaymentScreen /></ProtectedRoute>} />
                   <Route path="/bookings" element={<ProtectedRoute><BookingsScreen /></ProtectedRoute>} />
                   <Route path="/reports" element={<ProtectedRoute><ReportsScreen /></ProtectedRoute>} />

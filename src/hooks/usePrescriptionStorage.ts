@@ -6,7 +6,7 @@ import { toast } from "sonner";
 interface PrescriptionData {
   id: string;
   image_url: string;
-  status: string;
+  status: string | null;
   analysis_result: any;
   created_at: string;
 }

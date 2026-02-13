@@ -1,6 +1,5 @@
-import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { CartProvider } from '@/contexts/CartContext';
@@ -143,7 +142,7 @@ afterEach(() => {
 });
 
 describe('Health Packages Feature', () => {
-  const renderWithRouter = (component, initialRoute = '/home') => {
+  const renderWithRouter = (component: React.ReactElement, initialRoute = '/home') => {
     return render(
       <MemoryRouter initialEntries={[initialRoute]}>
         <CartProvider>
@@ -365,7 +364,7 @@ describe('Health Packages Feature', () => {
 
 // Integration tests
 describe('Health Packages Integration Tests', () => {
-  const renderWithRouter = (component, initialRoute = '/home') => {
+  const renderWithRouter = (component: React.ReactElement, initialRoute = '/home') => {
     return render(
       <MemoryRouter initialEntries={[initialRoute]}>
         <CartProvider>

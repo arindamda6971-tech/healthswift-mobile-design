@@ -144,11 +144,13 @@ export const useSubscription = (): UseSubscriptionReturn => {
 
       if (error) throw error;
 
-      // Update user profile
-      await (supabase
-        .from("profiles")
-        .update({ subscription_type: "none" as any } as any)
-        .eq("id", user?.id) as any);
+      // Update user profile if we have a user id
+      if (user?.id) {
+        await (supabase
+          .from("profiles")
+          .update({ subscription_type: "none" as any } as any)
+          .eq("id", user.id) as any);
+      }
 
       setSubscription(null);
     } catch (err) {

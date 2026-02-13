@@ -476,7 +476,7 @@ const HomeScreen = () => {
                           <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">
                             {pkg.name}
                           </h3>
-                          {pkg.discount_percent > 0 && (
+                          {pkg.discount_percent && pkg.discount_percent > 0 && (
                             <span className="inline-flex items-center px-2 py-0.5 bg-destructive/15 text-destructive rounded-full text-[10px] font-bold flex-shrink-0">
                               {pkg.discount_percent}%
                             </span>

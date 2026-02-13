@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAddresses } from "@/contexts/AddressContext";
 
-const menuItems = [
+const menuItems: { icon: any; label: string; path: string; badge?: string | null }[] = [
   { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
   { icon: HelpCircle, label: "Help & Support", path: "/support", badge: null },

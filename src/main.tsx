@@ -26,7 +26,7 @@ async function updateServiceWorker() {
 // Remove any debug controls injected at runtime (e.g. "Hide debug" button)
 // This operates at the DOM level so we don't change UI component files.
 function removeDebugControls() {
-	const matchesDebugText = (text?: string) => {
+	const matchesDebugText = (text: string | null | undefined) => {
 		if (!text) return false;
 		const t = text.trim().toLowerCase();
 		return t === "hide debug" || t === "hide-debug" || t === "debug";

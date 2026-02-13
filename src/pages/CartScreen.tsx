@@ -44,7 +44,7 @@ const timeSlots = [
 
 const CartScreen = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeFromCart, subtotal, currentLabName, isLoading } = useCart();
+  const { items, updateQuantity, removeFromCart, subtotal, currentLabName, currentLabId, isLoading } = useCart();
   const { supabaseUserId } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");

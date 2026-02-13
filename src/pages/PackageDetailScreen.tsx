@@ -167,13 +167,13 @@ const PackageDetailScreen = () => {
           description: data.description,
           tests_count: data.tests_count || 0,
           price: data.price,
-          original_price: data.original_price || undefined,
-          discount_percent: data.discount_percent || undefined,
-          icon: data.icon,
-          color: data.color,
-          lab_id: data.diagnostic_centers?.id,
-          lab_name: data.diagnostic_centers?.name,
-          lab_logo: data.diagnostic_centers?.logo_url,
+          original_price: data.original_price ?? null,
+          discount_percent: data.discount_percent ?? null,
+          icon: data.icon ?? null,
+          color: data.color ?? null,
+          lab_id: data.diagnostic_centers?.id ?? null,
+          lab_name: data.diagnostic_centers?.name ?? null,
+          lab_logo: data.diagnostic_centers?.logo_url ?? null,
         });
       }
     } catch (err) {

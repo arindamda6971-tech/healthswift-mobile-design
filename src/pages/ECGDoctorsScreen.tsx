@@ -37,8 +37,8 @@ interface Doctor {
   name: string;
   specialization: string;
   experience: number;
-  rating: number;
-  reviews_count: number;
+  rating: number | null;
+  reviews_count: number | null;
   fee: number;
   availability: string;
   qualification: string;
@@ -51,15 +51,15 @@ interface DiagnosticCenter {
   city: string;
   phone: string | null;
   logo_url: string | null;
-  rating: number;
-  reviews_count: number;
-  is_verified: boolean;
-  ecg_price: number;
-  opening_time: string;
-  closing_time: string;
+  rating: number | null;
+  reviews_count: number | null;
+  is_verified: boolean | null;
+  ecg_price: number | null;
+  opening_time: string | null;
+  closing_time: string | null;
   latitude: number | null;
   longitude: number | null;
-  home_collection_available: boolean;
+  home_collection_available: boolean | null;
 }
 
 // Mock doctors data - in production, this would come from the database
@@ -152,7 +152,7 @@ const ECGDoctorsScreen = () => {
       const { data, error } = await supabase
         .from("diagnostic_centers")
         .select("*")
-        .eq("id", labId)
+        .eq("id", labId as string)
         .single();
 
       if (error) throw error;

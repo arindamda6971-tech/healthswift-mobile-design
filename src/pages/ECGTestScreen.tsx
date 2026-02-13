@@ -200,7 +200,7 @@ const ECGTestScreen = () => {
                     className="w-full mt-3 h-10"
                     onClick={() => handleBookDoctor(doctor)}
                   >
-                    Book Now - ₹{doctor.fee}
+                    Book home visit - ₹{doctor.fee}
                   </Button>
                 </motion.div>
               ))}

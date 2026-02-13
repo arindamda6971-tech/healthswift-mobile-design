@@ -49,6 +49,13 @@ const ConsultationBookingScreen = () => {
   const { professional, type } = state;
 
   const isAudio = type === "audio";
+  const professionalType = state.professionalType || "doctor";
+
+  // Determine consultation fee from provided professional object. Support both
+  // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`).
+  const consultationFee = (professional as any).consultationFee ?? (isAudio
+    ? (professional as any).audioCallFee
+    : (professional as any).videoCallFee) ?? 0;
   const { user, supabaseUserId } = useAuth();
   const [isBooking, setIsBooking] = useState(false);
 
@@ -71,7 +78,8 @@ const ConsultationBookingScreen = () => {
 
     setIsBooking(true);
     try {
-      const orderNumber = `DOC${Date.now()}`;
+      const prefix = professionalType === "physiotherapist" ? "PHY" : "DOC";
+      const orderNumber = `${prefix}${Date.now()}`;
 
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
@@ -80,8 +88,8 @@ const ConsultationBookingScreen = () => {
           order_number: orderNumber,
           scheduled_date: new Date().toISOString().split("T")[0],
           scheduled_time_slot: selectedSlot,
-          subtotal: professional.consultationFee,
-          total: professional.consultationFee,
+          subtotal: consultationFee,
+          total: consultationFee,
           status: "confirmed",
           payment_status: "pending",
         })
@@ -90,8 +98,9 @@ const ConsultationBookingScreen = () => {
 
       if (orderError) throw orderError;
 
+      const profLabel = professionalType === "physiotherapist" ? "Physiotherapist" : "Doctor";
       toast.success("Appointment booked", {
-        description: `Doctor will call you within 10 minutes at ${isAudio ? phone : "your app"}`,
+        description: `${profLabel} will call you within 10 minutes at ${isAudio ? phone : "your app"}`,
       });
 
       setTimeout(() => navigate("/bookings"), 800);

@@ -104,12 +104,13 @@ const PhysioConsultScreen = () => {
       return;
     }
 
-    // Navigate to booking screen with physio details
-    navigate("/physio-booking", { 
-      state: { 
-        physio, 
-        consultationType: type 
-      } 
+    // Navigate to the unified consultation booking screen (same as doctor booking)
+    navigate("/consultation-booking", {
+      state: {
+        type,
+        professional: physio,
+        professionalType: "physiotherapist",
+      },
     });
   };
 

@@ -142,25 +142,45 @@ const DoctorConsultScreen = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">Call Pricing</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Video className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-muted-foreground">Video:</span>
-                        <span className="font-semibold text-foreground">₹{doctor.videoCallFee}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-muted-foreground">Audio:</span>
-                        <span className="font-semibold text-foreground">₹{doctor.audioCallFee}</span>
-                      </div>
-                    </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (!doctor.available) {
+                          toast.error("Doctor is currently offline", {
+                            description: `Next available: ${doctor.nextSlot}`,
+                          });
+                          return;
+                        }
+                        navigate("/consultation-booking", {
+                          state: { type: "video", professional: doctor, professionalType: "doctor" },
+                        });
+                      }}
+                      className="py-3 px-4 rounded-xl flex items-center gap-2 bg-primary text-primary-foreground"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span className="font-medium">Video ₹{doctor.videoCallFee}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!doctor.available) {
+                          toast.error("Doctor is currently offline", {
+                            description: `Next available: ${doctor.nextSlot}`,
+                          });
+                          return;
+                        }
+                        navigate("/consultation-booking", {
+                          state: { type: "audio", professional: doctor, professionalType: "doctor" },
+                        });
+                      }}
+                      className="py-3 px-4 rounded-xl flex items-center gap-2 border border-border text-foreground"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span className="font-medium">Audio ₹{doctor.audioCallFee}</span>
+                    </button>
                   </div>
-                  <Button variant="soft" size="sm">
-                    Book Now
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                  <div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  </div>
                 </div>
               </motion.div>
             ))}

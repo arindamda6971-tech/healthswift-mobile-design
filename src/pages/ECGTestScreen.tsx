@@ -194,7 +194,6 @@ const ECGTestScreen = () => {
                     </div>
                   </div>
 
-                  {/* Book Button */}
                   <Button
                     variant="hero"
                     className="w-full mt-3 h-10"

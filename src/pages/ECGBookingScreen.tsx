@@ -201,33 +201,23 @@ const ECGBookingScreen = () => {
     }
   };
 
+  // Navigate to the same consultation booking flow used for doctor booking
   const handleProceedToPayment = () => {
     if (!doctor) return;
-    
-    if (!selectedAddressId && addresses.length > 0) {
-      toast.error("Please select an address");
-      return;
-    }
 
-    if (addresses.length === 0) {
-      toast.error("Please add an address to proceed");
-      return;
-    }
+    const professional = {
+      id: Number(doctor.id) || 0,
+      name: doctor.name,
+      specialty: doctor.specialization,
+      image: "",
+      consultationFee: doctor.fee,
+    };
 
-    navigate("/payment", {
+    navigate("/consultation-booking", {
       state: {
-        cartItems: [{
-          id: `ecg-${doctor.id}`,
-          name: `12-Lead ECG Test with ${doctor.name}`,
-          price: doctor.fee,
-          quantity: 1,
-        }],
-        addressId: selectedAddressId,
-        scheduledDate: dates[selectedDate].fullDate,
-        scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
-        subtotal: doctor.fee,
-        bookingType: "ecg",
-        doctorName: doctor.name,
+        type: "video",
+        professional,
+        professionalType: "doctor",
       },
     });
   };
@@ -463,10 +453,9 @@ const ECGBookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          disabled={!selectedAddressId || addresses.length === 0}
           onClick={handleProceedToPayment}
         >
-          Proceed to Pay • ₹{doctor.fee}
+          Book Appointment • ₹{doctor.fee}
         </Button>
       </motion.div>
 

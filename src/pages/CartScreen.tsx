@@ -58,6 +58,7 @@ const CartScreen = () => {
   const [prescriptionPreview, setPrescriptionPreview] = useState<string | null>(null);
   const [uploadingPrescription, setUploadingPrescription] = useState(false);
   const [prescriptionUrl, setPrescriptionUrl] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   
   // Add Address Modal State
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
@@ -487,11 +488,12 @@ const CartScreen = () => {
           ) : (
             <div className="soft-card">
               <div className="flex items-start gap-4">
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-border">
+                  <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-border">
                   <img
                     src={prescriptionPreview}
                     alt="Prescription preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => setShowPreviewModal(true)}
                   />
                   {prescriptionUrl && (
                     <div className="absolute inset-0 bg-success/20 flex items-center justify-center">
@@ -823,6 +825,23 @@ const CartScreen = () => {
             >
               {savingAddress ? "Saving..." : "Save Address"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Prescription Preview Modal */}
+      <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
+        <DialogContent className="max-w-[640px]">
+          <DialogHeader>
+            <DialogTitle>Prescription Preview</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            {prescriptionPreview && (
+              <img src={prescriptionPreview} alt="Prescription full preview" className="w-full h-auto rounded-lg" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPreviewModal(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

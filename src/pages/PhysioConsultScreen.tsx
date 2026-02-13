@@ -114,6 +114,30 @@ const PhysioConsultScreen = () => {
     });
   };
 
+  const handleProceedToBook = (physio: typeof physiotherapists[0]) => {
+    if (!user) {
+      toast.error("Please login to book a session");
+      navigate("/login");
+      return;
+    }
+
+    // Map to PhysioBookingScreen's expected shape
+    const mapped = {
+      id: String(physio.id),
+      name: physio.name,
+      specialty: physio.specialty,
+      experience: physio.experience,
+      rating: physio.rating,
+      reviews_count: physio.reviews,
+      fee: physio.videoCallFee ?? physio.audioCallFee ?? 0,
+      available: physio.available,
+      qualification: "",
+      image: physio.image,
+    };
+
+    navigate("/physio-booking", { state: { physio: mapped } });
+  };
+
   return (
     <MobileLayout showNav={false}>
       <ScreenHeader title="Book a Physiotherapist" />
@@ -216,7 +240,7 @@ const PhysioConsultScreen = () => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
                     <Button
                       variant="soft"
                       className="flex-1"
@@ -232,6 +256,11 @@ const PhysioConsultScreen = () => {
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       Audio ₹{physio.audioCallFee}
+                    </Button>
+                  </div>
+                  <div>
+                    <Button className="w-full" variant="hero" onClick={() => handleProceedToBook(physio)}>
+                      Book Home Visit • ₹{physio.videoCallFee}
                     </Button>
                   </div>
                 </div>

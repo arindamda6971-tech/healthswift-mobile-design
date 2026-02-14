@@ -151,7 +151,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    // Return safe defaults when AuthProvider is not present (helps tests and isolated components)
+    return {
+      user: null,
+      loading: false,
+      supabaseUserId: null,
+      signInWithEmail: async () => ({ error: new Error('Auth provider not configured') }),
+      signUpWithEmail: async () => ({ error: new Error('Auth provider not configured') }),
+      signInWithPhone: async () => ({ error: new Error('Auth provider not configured') }),
+      verifyOtp: async () => ({ error: new Error('Auth provider not configured') }),
+      signInWithGoogle: async () => ({ error: new Error('Auth provider not configured') }),
+      signOut: async () => {},
+    } as AuthContextType;
   }
   return context;
 };

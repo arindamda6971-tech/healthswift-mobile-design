@@ -67,6 +67,10 @@ describe('ConsultationBooking -> Payment navigation', () => {
     expect(await screen.findByText(/Physiotherapist will call you shortly/i)).toBeInTheDocument();
     expect(screen.getByText(/Physiotherapist will call this number/i)).toBeInTheDocument();
 
+    // Enter a valid phone number for audio consultations
+    const phoneInput = await screen.findByPlaceholderText(/Enter phone number/i);
+    await user.type(phoneInput, '9876543210');
+
     const btn = await screen.findByRole('button', { name: /Book Appointment/i });
     await user.click(btn);
 

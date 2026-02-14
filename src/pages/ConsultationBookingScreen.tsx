@@ -15,7 +15,9 @@ interface Professional {
   name: string;
   specialty: string;
   image: string;
-  consultationFee: number;
+  consultationFee?: number;
+  videoCallFee?: number;
+  audioCallFee?: number;
 }
 
 type LocationState = {
@@ -39,6 +41,8 @@ const ConsultationBookingScreen = () => {
   const { prescription, savePrescription, deletePrescription } = usePrescriptionStorage();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { supabaseUserId } = useAuth();
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     if (prescription?.image_url) setUploadedImage(prescription.image_url);
@@ -53,11 +57,7 @@ const ConsultationBookingScreen = () => {
 
   // Determine consultation fee from provided professional object. Support both
   // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`).
-  const consultationFee = (professional as any).consultationFee ?? (isAudio
-    ? (professional as any).audioCallFee
-    : (professional as any).videoCallFee) ?? 0;
-  const { supabaseUserId } = useAuth();
-  const [isBooking, setIsBooking] = useState(false);
+  const consultationFee = professional.consultationFee ?? (isAudio ? professional.audioCallFee : professional.videoCallFee) ?? 0;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

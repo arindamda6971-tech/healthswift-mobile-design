@@ -53,12 +53,14 @@ export const usePrescriptionStorage = () => {
 
   // Upload and save prescription image
   const savePrescription = useCallback(async (imageBase64: string): Promise<string | null> => {
+    console.log('usePrescriptionStorage.savePrescription called');
     if (!user) {
       toast.error("Please log in to upload prescription");
       return null;
     }
 
     try {
+      console.log('usePrescriptionStorage.savePrescription - converting base64');
       // Convert base64 to blob
       const base64Data = imageBase64.split(",")[1];
       const byteCharacters = atob(base64Data);
@@ -71,12 +73,15 @@ export const usePrescriptionStorage = () => {
 
       // Upload to storage
       const fileName = `${user.id}/${Date.now()}.jpg`;
+      console.log('usePrescriptionStorage.savePrescription - uploading to', fileName);
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("prescriptions")
         .upload(fileName, blob, {
           contentType: "image/jpeg",
           upsert: true,
         });
+
+      console.log('usePrescriptionStorage.savePrescription - upload result', { uploadData, uploadError });
 
       if (uploadError) {
         console.error("Upload error:", uploadError);
@@ -85,11 +90,13 @@ export const usePrescriptionStorage = () => {
       }
 
       // Get public URL
+      console.log('usePrescriptionStorage.savePrescription - getting public URL');
       const { data: urlData } = supabase.storage
         .from("prescriptions")
         .getPublicUrl(fileName);
 
       const imageUrl = urlData.publicUrl;
+      console.log('usePrescriptionStorage.savePrescription - got public URL', imageUrl);
 
       // Delete any existing pending prescriptions
       await supabase
@@ -99,6 +106,7 @@ export const usePrescriptionStorage = () => {
         .eq("status", "pending");
 
       // Save to database
+      console.log('usePrescriptionStorage.savePrescription - inserting record');
       const { data, error } = await supabase
         .from("user_prescriptions")
         .insert({
@@ -108,6 +116,8 @@ export const usePrescriptionStorage = () => {
         })
         .select()
         .single();
+
+      console.log('usePrescriptionStorage.savePrescription - insert result', { data, error });
 
       if (error) {
         console.error("Error saving prescription:", error);
@@ -123,6 +133,7 @@ export const usePrescriptionStorage = () => {
         created_at: data.created_at,
       });
 
+      console.log('usePrescriptionStorage.savePrescription - state updated, returning', imageUrl);
       return imageUrl;
     } catch (err) {
       console.error("Error saving prescription:", err);

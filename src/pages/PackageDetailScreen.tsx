@@ -325,6 +325,19 @@ const PackageDetailScreen = () => {
               </Badge>
             </div>
 
+            {/* Show lab info when package is tied to a specific diagnostic center */}
+            {packageData.lab_id && (
+              <div className="mt-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-md bg-muted/50 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{packageData.lab_name || selectedLab.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedLab.rating} • {selectedLab.reviews.toLocaleString()} reviews</p>
+                </div>
+              </div>
+            )}
+
             {packageData.description && (
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {packageData.description}

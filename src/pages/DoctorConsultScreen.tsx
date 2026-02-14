@@ -139,42 +139,44 @@ const DoctorConsultScreen = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        if (!doctor.available) {
-                          toast.error("Doctor is currently offline", {
-                            description: `Next available: ${doctor.nextSlot}`,
-                          });
-                          return;
-                        }
-                        navigate("/consultation-booking", {
-                          state: { type: "video", professional: doctor, professionalType: "doctor" },
+                  <div className="grid grid-cols-2 gap-2 w-full">
+                  <Button
+                    variant="soft"
+                    className="flex-1"
+                    onClick={() => {
+                      if (!doctor.available) {
+                        toast.error("Doctor is currently offline", {
+                          description: `Next available: ${doctor.nextSlot}`,
                         });
-                      }}
-                      className="py-3 px-4 rounded-xl flex items-center gap-2 bg-primary text-primary-foreground"
-                    >
-                      <Video className="w-4 h-4" />
-                      <span className="font-medium">Video ₹{doctor.videoCallFee}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (!doctor.available) {
-                          toast.error("Doctor is currently offline", {
-                            description: `Next available: ${doctor.nextSlot}`,
-                          });
-                          return;
-                        }
-                        navigate("/consultation-booking", {
-                          state: { type: "audio", professional: doctor, professionalType: "doctor" },
+                        return;
+                      }
+                      navigate("/consultation-booking", {
+                        state: { type: "video", professional: doctor, professionalType: "doctor" },
+                      });
+                    }}
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    <span className="font-medium">Video ₹{doctor.videoCallFee}</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      if (!doctor.available) {
+                        toast.error("Doctor is currently offline", {
+                          description: `Next available: ${doctor.nextSlot}`,
                         });
-                      }}
-                      className="py-3 px-4 rounded-xl flex items-center gap-2 border border-border text-foreground"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span className="font-medium">Audio ₹{doctor.audioCallFee}</span>
-                    </button>
-                  </div>
+                        return;
+                      }
+                      navigate("/consultation-booking", {
+                        state: { type: "audio", professional: doctor, professionalType: "doctor" },
+                      });
+                    }}
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    <span className="font-medium">Audio ₹{doctor.audioCallFee}</span>
+                  </Button>
+                </div>
                 </div>
               </motion.div>
             ))}

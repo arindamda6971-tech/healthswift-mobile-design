@@ -8,7 +8,6 @@ import {
   Phone,
   Calendar,
   Shield,
-  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -177,9 +176,6 @@ const DoctorConsultScreen = () => {
                       <Phone className="w-4 h-4" />
                       <span className="font-medium">Audio ₹{doctor.audioCallFee}</span>
                     </button>
-                  </div>
-                  <div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </div>
               </motion.div>

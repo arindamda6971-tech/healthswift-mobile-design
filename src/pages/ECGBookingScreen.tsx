@@ -81,16 +81,35 @@ const ECGBookingScreen = () => {
     is_default: false,
   });
 
-  const generateSlots = () => {
-    const now = new Date();
-    const slots: string[] = [];
-    for (let i = 1; i <= 6; i++) {
-      const slot = new Date(now.getTime() + i * 30 * 60 * 1000);
-      slots.push(slot.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
+
+  const timeWindows = [
+    "6:00 AM - 8:00 AM",
+    "8:00 AM - 10:00 AM",
+    "10:00 AM - 12:00 PM",
+    "12:00 PM - 2:00 PM",
+    "2:00 PM - 4:00 PM",
+    "4:00 PM - 6:00 PM",
+    "6:00 PM - 8:00 PM",
+    "8:00 PM - 10:00 PM",
+  ];
+
+  const slots = timeWindows;
+
+  const getNext7Days = () => {
+    const days: { iso: string; weekday: string; day: number; month: string }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      days.push({
+        iso: d.toISOString().split("T")[0],
+        weekday: d.toLocaleDateString(undefined, { weekday: "short" }),
+        day: d.getDate(),
+        month: d.toLocaleDateString(undefined, { month: "short" }),
+      });
     }
-    return slots;
-  };
-  const slots = generateSlots();
+    return days;
+  }; 
 
   const fetchAddresses = async () => {
     if (!supabaseUserId) {
@@ -211,7 +230,7 @@ const ECGBookingScreen = () => {
           quantity: 1,
         }],
         addressId: selectedAddressId,
-        scheduledDate: new Date().toISOString().split("T")[0],
+        scheduledDate: selectedDate,
         scheduledTimeSlot: selectedTime || "",
         subtotal: doctor.fee,
         bookingType: "ecg",
@@ -264,7 +283,7 @@ const ECGBookingScreen = () => {
           </Badge>
         </motion.div>
 
-        {/* Time slot selection (doctor-style half-hour slots) */}
+        {/* Select Date */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,10 +292,31 @@ const ECGBookingScreen = () => {
         >
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Select Time Slot</h3>
-            <Badge variant="soft">30 min slots</Badge>
+            <h3 className="font-semibold text-foreground">Select Date</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {getNext7Days().map((d) => (
+              <button
+                key={d.iso}
+                onClick={() => setSelectedDate(d.iso)}
+                className={`min-w-[68px] py-3 px-3 rounded-2xl flex flex-col items-center gap-1 transition-all ${
+                  selectedDate === d.iso ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                }`}
+              >
+                <span className="text-xs font-medium">{d.weekday}</span>
+                <span className="text-lg font-bold">{d.day}</span>
+                <span className="text-[10px] text-muted-foreground">{d.month}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-center gap-2 mb-3">
+            <h3 className="font-semibold text-foreground">Select Time Slot</h3>
+            <Badge variant="soft" className="text-xs">24/7 Available</Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             {slots.map((s) => (
               <button
                 key={s}
@@ -289,7 +329,7 @@ const ECGBookingScreen = () => {
               </button>
             ))}
           </div>
-        </motion.div>
+        </motion.div> 
 
         
 

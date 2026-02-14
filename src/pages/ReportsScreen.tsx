@@ -42,6 +42,13 @@ const ReportsScreen = () => {
   const [selectedReport, setSelectedReport] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
+  const categoryColors: Record<string, { bg: string; text: string }> = {
+    "Health Tests": { bg: "bg-primary/10", text: "text-primary" },
+    "ECG Tests": { bg: "bg-destructive/10", text: "text-destructive" },
+    "Physiotherapy": { bg: "bg-secondary/10", text: "text-secondary" },
+    "Consultations": { bg: "bg-primary/10", text: "text-primary" },
+  };
+
   const getRiskIcon = (risk: string) => {
     switch (risk) {
       case "low":
@@ -62,26 +69,32 @@ const ReportsScreen = () => {
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="px-4 py-3">
           <div className="flex flex-wrap gap-2">
-            {["All", ...Array.from(new Set(reports.map((r) => r.category)))].map((c) => (
-              <motion.button
-                key={c}
-                onClick={() => setSelectedCategory(c)}
-                whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                  selectedCategory === c
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {c !== "All" && (
-                  <CategoryIcon 
-                    category={c} 
-                    className={`w-3.5 h-3.5 ${selectedCategory === c ? "text-primary-foreground" : "text-muted-foreground"}`} 
-                  />
-                )}
-                <span>{c}</span>
-              </motion.button>
-            ))}
+            {["All", ...Array.from(new Set(reports.map((r) => r.category)))].map((c) => {
+              const colors = categoryColors[c];
+              const isAll = c === "All";
+              return (
+                <motion.button
+                  key={c}
+                  onClick={() => setSelectedCategory(c)}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    selectedCategory === c
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : isAll
+                      ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                      : `${colors.bg} ${colors.text}`
+                  }`}
+                >
+                  {c !== "All" && (
+                    <CategoryIcon 
+                      category={c} 
+                      className={`w-3.5 h-3.5 ${selectedCategory === c ? "text-primary-foreground" : (colors ? colors.text : "text-muted-foreground")}`} 
+                    />
+                  )}
+                  <span className={selectedCategory === c ? undefined : (!isAll && colors ? colors.text : undefined)}>{c}</span>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -149,11 +162,15 @@ const ReportsScreen = () => {
                 const items = grouped[cat] || [];
                 if (items.length === 0) return null;
 
-                return (
-                  <div key={cat} className="space-y-2">
-                    <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                      <CategoryIcon category={cat} className="w-4 h-4 text-foreground/80" />
-                      {cat}
+              const colors = categoryColors[cat];
+
+              return (
+                <div key={cat} className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                    <span className={`p-1 rounded-md ${colors ? colors.bg : ""}`}>
+                      <CategoryIcon category={cat} className={`w-4 h-4 ${colors ? colors.text : "text-foreground/80"}`} />
+                    </span>
+                    <span className="ml-1">{cat}</span>
                     </h4>
                     <div className="space-y-3">
                       {items.map((report, idx) => {

@@ -92,6 +92,11 @@ const DoctorConsultScreen = () => {
       })
     : doctors;
 
+  // Human-friendly label for the currently selected specialization (used in empty state)
+  const selectedSpecLabel = selectedSpecialization
+    ? specializations.find((s) => s.id === selectedSpecialization)?.label ?? selectedSpecialization
+    : null;
+
   return (
     <MobileLayout showNav={false}>
       <ScreenHeader title="Book a Doctor" />
@@ -154,89 +159,100 @@ const DoctorConsultScreen = () => {
             <button className="text-primary text-sm font-medium">View all</button>
           </div>
           <div className="space-y-3">
-            {filteredDoctors.map((doctor, index) => (
-              <motion.div
-                key={doctor.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + index * 0.1 }}
-                onClick={() => setSelectedDoctor(doctor.id)}
-                className={`soft-card cursor-pointer transition-all ${
-                  selectedDoctor === doctor.id ? "ring-2 ring-primary" : ""
-                }`}
-              >
-                <div className="flex gap-4">
-                  <img
-                    src={doctor.image}
-                    alt={doctor.name}
-                    className="w-16 h-16 rounded-2xl object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-foreground">{doctor.name}</h4>
-                      <Badge variant={doctor.available ? "live" : "secondary"}>
-                        {doctor.available ? "Online" : "Offline"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
-                    <p className="text-xs text-muted-foreground">{doctor.experience} experience</p>
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-warning fill-warning" />
-                        <span className="text-sm font-medium">{doctor.rating}</span>
-                        <span className="text-xs text-muted-foreground">({doctor.reviews})</span>
+            {filteredDoctors.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="font-semibold text-foreground">
+                  {selectedSpecialization
+                    ? `There are no ${selectedSpecLabel} doctors available right now.`
+                    : "No doctors available right now."}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">Try another specialization or check back later.</p>
+              </div>
+            ) : (
+              filteredDoctors.map((doctor, index) => (
+                <motion.div
+                  key={doctor.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1 }}
+                  onClick={() => setSelectedDoctor(doctor.id)}
+                  className={`soft-card cursor-pointer transition-all ${
+                    selectedDoctor === doctor.id ? "ring-2 ring-primary" : ""
+                  }`}
+                >
+                  <div className="flex gap-4">
+                    <img
+                      src={doctor.image}
+                      alt={doctor.name}
+                      className="w-16 h-16 rounded-2xl object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-foreground">{doctor.name}</h4>
+                        <Badge variant={doctor.available ? "live" : "secondary"}>
+                          {doctor.available ? "Online" : "Offline"}
+                        </Badge>
                       </div>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        {doctor.nextSlot}
+                      <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+                      <p className="text-xs text-muted-foreground">{doctor.experience} experience</p>
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-warning fill-warning" />
+                          <span className="text-sm font-medium">{doctor.rating}</span>
+                          <span className="text-xs text-muted-foreground">({doctor.reviews})</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {doctor.nextSlot}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <Button
-                      variant="soft"
-                      className="flex-1"
-                      onClick={() => {
-                        if (!doctor.available) {
-                          toast.error("Doctor is currently offline", {
-                            description: `Next available: ${doctor.nextSlot}`,
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <Button
+                        variant="soft"
+                        className="flex-1"
+                        onClick={() => {
+                          if (!doctor.available) {
+                            toast.error("Doctor is currently offline", {
+                              description: `Next available: ${doctor.nextSlot}`,
+                            });
+                            return;
+                          }
+                          navigate("/consultation-booking", {
+                            state: { type: "video", professional: doctor, professionalType: "doctor" },
                           });
-                          return;
-                        }
-                        navigate("/consultation-booking", {
-                          state: { type: "video", professional: doctor, professionalType: "doctor" },
-                        });
-                      }}
-                    >
-                      <Video className="w-4 h-4 mr-2" />
-                      Video ₹{doctor.videoCallFee}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        if (!doctor.available) {
-                          toast.error("Doctor is currently offline", {
-                            description: `Next available: ${doctor.nextSlot}`,
+                        }}
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Video ₹{doctor.videoCallFee}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          if (!doctor.available) {
+                            toast.error("Doctor is currently offline", {
+                              description: `Next available: ${doctor.nextSlot}`,
+                            });
+                            return;
+                          }
+                          navigate("/consultation-booking", {
+                            state: { type: "audio", professional: doctor, professionalType: "doctor" },
                           });
-                          return;
-                        }
-                        navigate("/consultation-booking", {
-                          state: { type: "audio", professional: doctor, professionalType: "doctor" },
-                        });
-                      }}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Audio ₹{doctor.audioCallFee}
-                    </Button>
+                        }}
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        Audio ₹{doctor.audioCallFee}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.div>
       </div>

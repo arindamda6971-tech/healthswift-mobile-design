@@ -86,7 +86,7 @@ const ConsultationBookingScreen = () => {
     setUploadedImage(null);
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (isAudio && phone.trim().length < 6) {
       toast.error("Please enter a valid phone number");
       return;
@@ -98,40 +98,29 @@ const ConsultationBookingScreen = () => {
       return;
     }
 
+    // Pass the consultation as a single cart item so the Payment -> Tracking flow
+    // can process the booking (subtotal, payment, order creation) consistently.
     setIsBooking(true);
-    try {
-      const prefix = professionalType === "physiotherapist" ? "PHY" : "DOC";
-      const orderNumber = `${prefix}${Date.now()}`;
-
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: supabaseUserId,
-          order_number: orderNumber,
-          scheduled_date: new Date().toISOString().split("T")[0],
-          scheduled_time_slot: null,
-          subtotal: consultationFee,
-          total: consultationFee,
-          status: "confirmed",
-          payment_status: "pending",
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const profLabel = professionalType === "physiotherapist" ? "Physiotherapist" : "Doctor";
-      toast.success("Appointment booked", {
-        description: `${profLabel} will call you shortly. Keep your network connection active.`,
-      });
-
-      setTimeout(() => navigate("/bookings"), 800);
-    } catch (err) {
-      console.error("Booking error:", err);
-      toast.error("Failed to create booking. Please try again.");
-    } finally {
-      setIsBooking(false);
-    }
+    navigate("/payment", {
+      state: {
+        cartItems: [
+          {
+            id: `consult-${professional.id}`,
+            name: `${professional.name} Consultation (${isAudio ? "Audio" : "Video"})`,
+            price: consultationFee,
+            quantity: 1,
+          },
+        ],
+        addressId: null,
+        scheduledDate: new Date().toISOString().split("T")[0],
+        scheduledTimeSlot: null,
+        subtotal: consultationFee,
+        bookingType: "consultation",
+        professionalId: professional.id,
+        professionalName: professional.name,
+        consultationMode: isAudio ? "audio" : "video",
+      },
+    });
   };
 
   return (

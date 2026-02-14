@@ -6,7 +6,6 @@ import {
   Clock,
   Video,
   Phone,
-  Calendar,
   Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,6 @@ const doctors = [
 const DoctorConsultScreen = () => {
   const navigate = useNavigate();
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<"video" | "audio">("video");
 
   return (
     <MobileLayout showNav={false}>
@@ -184,71 +182,7 @@ const DoctorConsultScreen = () => {
         </motion.div>
       </div>
 
-      {/* Bottom CTA */}
-      {selectedDoctor && (
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-card/95 backdrop-blur-xl border-t border-border px-4 py-4 safe-area-bottom"
-        >
-          <div className="space-y-3 mb-4">
-            <button
-              onClick={() => setSelectedType("video")}
-              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
-                selectedType === "video"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Video className="w-5 h-5" />
-                <span className="font-medium">Video Call</span>
-              </div>
-              <span className="font-semibold">₹{doctors.find(d => d.id === selectedDoctor)?.videoCallFee}</span>
-            </button>
-            <button
-              onClick={() => setSelectedType("audio")}
-              className={`w-full py-3 px-4 rounded-xl flex items-center justify-between transition-all ${
-                selectedType === "audio"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Audio Call</span>
-              </div>
-              <span className="font-semibold">₹{doctors.find(d => d.id === selectedDoctor)?.audioCallFee}</span>
-            </button>
-          </div>
-          <Button
-            variant="hero"
-            className="w-full"
-            size="lg"
-            onClick={() => {
-              const doctor = doctors.find(d => d.id === selectedDoctor);
-              if (doctor) {
-                if (!doctor.available) {
-                  toast.error("Doctor is currently offline", {
-                    description: `Next available: ${doctor.nextSlot}`,
-                  });
-                  return;
-                }
-                navigate("/consultation-booking", {
-                  state: {
-                    type: selectedType,
-                    professional: doctor,
-                    professionalType: "doctor",
-                  },
-                });
-              }
-            }}
-          >
-            {selectedType === "video" ? <Video className="w-5 h-5 mr-2" /> : <Phone className="w-5 h-5 mr-2" />}
-            Book {selectedType === "video" ? "Video" : "Audio"} Call
-          </Button>
-        </motion.div>
-      )}
+
     </MobileLayout>
   );
 };

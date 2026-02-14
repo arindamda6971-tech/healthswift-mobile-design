@@ -86,10 +86,13 @@ const ReportsScreen = () => {
                   }`}
                 >
                   {c !== "All" && (
-                    <CategoryIcon 
-                      category={c} 
-                      className={`w-3.5 h-3.5 ${selectedCategory === c ? "text-primary-foreground" : (colors ? colors.text : "text-muted-foreground")}`} 
-                    />
+                    selectedCategory === c ? (
+                      <CategoryIcon category={c} className="w-5 h-5 text-primary-foreground" />
+                    ) : (
+                      <span className={`inline-flex items-center justify-center p-2 rounded-xl ${colors ? colors.bg : 'bg-muted'}`}>
+                        <CategoryIcon category={c} className={`${colors ? colors.text : 'text-muted-foreground'} w-5 h-5`} />
+                      </span>
+                    )
                   )}
                   <span className={selectedCategory === c ? undefined : (!isAll && colors ? colors.text : undefined)}>{c}</span>
                 </motion.button>
@@ -167,8 +170,8 @@ const ReportsScreen = () => {
               return (
                 <div key={cat} className="space-y-2">
                   <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                    <span className={`p-1 rounded-md ${colors ? colors.bg : ""}`}>
-                      <CategoryIcon category={cat} className={`w-4 h-4 ${colors ? colors.text : "text-foreground/80"}`} />
+                    <span className={`p-2 rounded-xl ${colors ? colors.bg : ""}`}>
+                      <CategoryIcon category={cat} className={`w-5 h-5 ${colors ? colors.text : "text-foreground/80"}`} />
                     </span>
                     <span className="ml-1">{cat}</span>
                     </h4>

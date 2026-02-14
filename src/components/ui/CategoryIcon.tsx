@@ -8,7 +8,8 @@ type Props = {
 
 // Use the same lucide icons/style as `DoctorConsultScreen` so report
 // category pills visually match the "Book a Doctor" page.
-const CategoryIcon: React.FC<Props> = ({ category, className = "w-4 h-4" }) => {
+// Default size aligned with Doctor specializations.
+const CategoryIcon: React.FC<Props> = ({ category, className = "w-5 h-5" }) => {
   switch (category) {
     case "Health Tests":
       return <FileText className={className} />;

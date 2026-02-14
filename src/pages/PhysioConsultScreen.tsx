@@ -98,12 +98,6 @@ const PhysioConsultScreen = () => {
     : physiotherapists;
 
   const handleBookPhysio = (physio: typeof physiotherapists[0], type: "video" | "audio") => {
-    if (!user) {
-      toast.error("Please login to book a consultation");
-      navigate("/login");
-      return;
-    }
-
     // Navigate to the unified consultation booking screen (same as doctor booking)
     navigate("/consultation-booking", {
       state: {

@@ -48,4 +48,29 @@ describe('ConsultationBooking -> Payment navigation', () => {
     const payment = await screen.findByTestId('payment-spy');
     expect(payment).toHaveTextContent('Subtotal: ₹350');
   });
+
+  it('shows physiotherapist copy and still navigates using physiotherapist professionalType', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/consultation-booking', state: { type: 'audio', professional: PROFESSIONAL, professionalType: 'physiotherapist' } }]}
+      >
+        <Routes>
+          <Route path="/consultation-booking" element={<ConsultationBookingScreen />} />
+          <Route path="/payment" element={<PaymentSpy />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Physiotherapist-specific help text should be visible
+    expect(await screen.findByText(/Physiotherapist will call you shortly/i)).toBeInTheDocument();
+    expect(screen.getByText(/Physiotherapist will call this number/i)).toBeInTheDocument();
+
+    const btn = await screen.findByRole('button', { name: /Book Appointment/i });
+    await user.click(btn);
+
+    const payment = await screen.findByTestId('payment-spy');
+    expect(payment).toHaveTextContent('Subtotal: ₹250');
+  });
 });

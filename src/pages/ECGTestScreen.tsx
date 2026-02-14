@@ -6,6 +6,8 @@ import {
   Award,
   Star,
   Clock,
+  Phone,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -192,6 +194,48 @@ const ECGTestScreen = () => {
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{doctor.availability}</p>
                     </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <Button
+                      variant="soft"
+                      className="flex-1"
+                      onClick={() => {
+                        const prof = {
+                          id: doctor.id,
+                          name: doctor.name,
+                          specialty: doctor.specialization,
+                          image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face',
+                          videoCallFee: doctor.fee,
+                          audioCallFee: doctor.fee,
+                          consultationFee: doctor.fee,
+                        } as any;
+                        navigate('/consultation-booking', { state: { type: 'video', professional: prof, professionalType: 'doctor' } });
+                      }}
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Video ₹{doctor.fee}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        const prof = {
+                          id: doctor.id,
+                          name: doctor.name,
+                          specialty: doctor.specialization,
+                          image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face',
+                          videoCallFee: doctor.fee,
+                          audioCallFee: doctor.fee,
+                          consultationFee: doctor.fee,
+                        } as any;
+                        navigate('/consultation-booking', { state: { type: 'audio', professional: prof, professionalType: 'doctor' } });
+                      }}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Audio ₹{doctor.fee}
+                    </Button>
                   </div>
 
                   <Button

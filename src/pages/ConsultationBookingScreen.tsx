@@ -143,7 +143,9 @@ const ConsultationBookingScreen = () => {
           <div className="soft-card p-4 mt-6 flex items-start gap-3 bg-amber-700/5 border-amber-300/20">
             <AlertCircle className="w-5 h-5 text-warning mt-1" />
             <div>
-              <p className="font-semibold text-foreground">Doctor will call you shortly</p>
+              <p className="font-semibold text-foreground">
+                {professionalType === "doctor" ? "Doctor will call you shortly" : "Physiotherapist will call you shortly"}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">Keep your network connection active.</p>
             </div>
           </div>
@@ -189,7 +191,9 @@ const ConsultationBookingScreen = () => {
                 placeholder="Enter phone number"
                 className="w-full py-3 px-4 rounded-xl bg-input border border-border"
               />
-              <p className="text-xs text-muted-foreground mt-2">Doctor will call this number for the audio consultation.</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {professionalType === "doctor" ? "Doctor will call this number for the audio consultation." : "Physiotherapist will call this number for the audio consultation."}
+              </p>
             </div>
           )}
 

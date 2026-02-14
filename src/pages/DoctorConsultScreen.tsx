@@ -7,6 +7,12 @@ import {
   Video,
   Phone,
   Shield,
+  Stethoscope,
+  Activity,
+  Bone,
+  Brain,
+  Heart,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,9 +62,35 @@ const doctors = [
   },
 ];
 
+const specializations = [
+  { id: "gp", icon: Stethoscope, label: "General Physician", color: "bg-primary/10 text-primary" },
+  { id: "med", icon: User, label: "Internal Medicine", color: "bg-success/10 text-success" },
+  { id: "peds", icon: Activity, label: "Pediatrics", color: "bg-pink-100 text-pink-600" },
+  { id: "ortho", icon: Bone, label: "Orthopaedic", color: "bg-success/10 text-success" },
+  { id: "dental", icon: User, label: "Dental", color: "bg-secondary/10 text-secondary" },
+  { id: "cardio", icon: Heart, label: "Cardiology", color: "bg-destructive/10 text-destructive" },
+  { id: "derm", icon: Activity, label: "Dermatology", color: "bg-warning/10 text-warning" },
+  { id: "neuro", icon: Brain, label: "Neurology", color: "bg-indigo-100 text-indigo-600" },
+];
+
 const DoctorConsultScreen = () => {
   const navigate = useNavigate();
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null);
+  const [selectedSpecialization, setSelectedSpecialization] = useState<string | null>(null);
+
+  const filteredDoctors = selectedSpecialization
+    ? doctors.filter((d) => {
+        if (selectedSpecialization === "gp") return /General/i.test(d.specialty);
+        if (selectedSpecialization === "med") return /Internal|Medicine/i.test(d.specialty);
+        if (selectedSpecialization === "peds") return /Pediatr|Paediatr/i.test(d.specialty);
+        if (selectedSpecialization === "ortho") return /Ortho/i.test(d.specialty);
+        if (selectedSpecialization === "dental") return /Dent|Dental|Oral/i.test(d.specialty);
+        if (selectedSpecialization === "cardio") return /Cardio|Cardiolog/i.test(d.specialty);
+        if (selectedSpecialization === "derm") return /Derm/i.test(d.specialty);
+        if (selectedSpecialization === "neuro") return /Neuro/i.test(d.specialty);
+        return true;
+      })
+    : doctors;
 
   return (
     <MobileLayout showNav={false}>
@@ -86,6 +118,30 @@ const DoctorConsultScreen = () => {
           </div>
         </motion.div>
 
+        {/* Specializations */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mt-6"
+        >
+          <h3 className="font-semibold text-foreground mb-3">Specializations</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {specializations.map((spec) => (
+              <button
+                key={spec.id}
+                onClick={() => setSelectedSpecialization(selectedSpecialization === spec.id ? null : spec.id)}
+                className={`py-3 px-2 rounded-xl flex flex-col items-center gap-2 transition-all ${
+                  selectedSpecialization === spec.id ? "bg-primary text-primary-foreground" : spec.color
+                }`}
+              >
+                <spec.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium text-center leading-tight">{spec.label}</span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Available doctors */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -98,7 +154,7 @@ const DoctorConsultScreen = () => {
             <button className="text-primary text-sm font-medium">View all</button>
           </div>
           <div className="space-y-3">
-            {doctors.map((doctor, index) => (
+            {filteredDoctors.map((doctor, index) => (
               <motion.div
                 key={doctor.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -138,45 +194,46 @@ const DoctorConsultScreen = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                  <div className="grid grid-cols-2 gap-2 w-full">
-                  <Button
-                    variant="soft"
-                    className="flex-1"
-                    onClick={() => {
-                      if (!doctor.available) {
-                        toast.error("Doctor is currently offline", {
-                          description: `Next available: ${doctor.nextSlot}`,
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <Button
+                      variant="soft"
+                      className="flex-1"
+                      onClick={() => {
+                        if (!doctor.available) {
+                          toast.error("Doctor is currently offline", {
+                            description: `Next available: ${doctor.nextSlot}`,
+                          });
+                          return;
+                        }
+                        navigate("/consultation-booking", {
+                          state: { type: "video", professional: doctor, professionalType: "doctor" },
                         });
-                        return;
-                      }
-                      navigate("/consultation-booking", {
-                        state: { type: "video", professional: doctor, professionalType: "doctor" },
-                      });
-                    }}
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    <span className="font-medium">Video ₹{doctor.videoCallFee}</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      if (!doctor.available) {
-                        toast.error("Doctor is currently offline", {
-                          description: `Next available: ${doctor.nextSlot}`,
+                      }}
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Video ₹{doctor.videoCallFee}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        if (!doctor.available) {
+                          toast.error("Doctor is currently offline", {
+                            description: `Next available: ${doctor.nextSlot}`,
+                          });
+                          return;
+                        }
+                        navigate("/consultation-booking", {
+                          state: { type: "audio", professional: doctor, professionalType: "doctor" },
                         });
-                        return;
-                      }
-                      navigate("/consultation-booking", {
-                        state: { type: "audio", professional: doctor, professionalType: "doctor" },
-                      });
-                    }}
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    <span className="font-medium">Audio ₹{doctor.audioCallFee}</span>
-                  </Button>
-                </div>
+                      }}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Audio ₹{doctor.audioCallFee}
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ))}

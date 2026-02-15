@@ -51,6 +51,15 @@ const CartScreen = () => {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedDate, setSelectedDate] = useState(0);
   const [selectedTime, setSelectedTime] = useState(2);
+
+  // Patient details required at booking (collected in Cart)
+  const [patientName, setPatientName] = useState<string>("");
+  const [patientAge, setPatientAge] = useState<string>("");
+  const isPatientInfoValid =
+    patientName.trim().length > 0 &&
+    /^\d{1,3}$/.test(patientAge) &&
+    Number(patientAge) > 0 &&
+    Number(patientAge) <= 120;
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -688,6 +697,44 @@ const CartScreen = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Patient details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-6 soft-card"
+        >
+          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="patient_name">Patient name</Label>
+              <Input
+                id="patient_name"
+                placeholder="Full name"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient_age">Age</Label>
+              <Input
+                id="patient_age"
+                placeholder="Age"
+                value={patientAge}
+                onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient age"
+                maxLength={3}
+              />
+            </div>
+          </div>
+          {!isPatientInfoValid && (
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name and age (1–120).</div>
+          )}
+        </motion.div>
       </div>
 
       {/* Bottom CTA - Positioned above bottom navigation */}
@@ -709,23 +756,25 @@ const CartScreen = () => {
             className="flex-1 max-w-[200px]"
             size="lg"
             onClick={() => {
-              // If no lab selected yet, go to lab selection screen
+              // If no lab selected yet, go to lab selection screen (preserve patient info)
               if (!currentLabId) {
-                navigate("/lab-selection");
+                navigate("/lab-selection", { state: { patientName: patientName.trim(), patientAge: patientAge ? Number(patientAge) : null } });
               } else {
-                // If lab already selected, proceed to payment
+                // If lab already selected, proceed to payment and include patient info
                 navigate("/payment", { 
                   state: { 
                     cartItems: items, 
                     addressId: selectedAddressId, 
                     scheduledDate: dates[selectedDate].fullDate,
                     scheduledTimeSlot: timeSlots.find(s => s.id === selectedTime)?.time || "",
-                    subtotal 
+                    subtotal,
+                    patientName: patientName.trim(),
+                    patientAge: patientAge ? Number(patientAge) : null,
                   } 
                 });
               }
             }}
-            disabled={!selectedAddressId && addresses.length > 0}
+            disabled={(!selectedAddressId && addresses.length > 0) || !isPatientInfoValid}
           >
             {currentLabId ? "Proceed to Pay" : "Book Now"}
           </Button>

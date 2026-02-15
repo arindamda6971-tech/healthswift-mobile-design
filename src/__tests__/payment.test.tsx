@@ -4,36 +4,46 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 
-// Mock useCart to provide subtotal
-vi.mock('@/contexts/CartContext', () => ({ useCart: () => ({ subtotal: 500 }) }));
+// Mock useCart for CartScreen
+vi.mock('@/contexts/CartContext', () => ({
+  useCart: () => ({
+    items: [{ id: 'test-1', name: 'CBC', price: 300, quantity: 1 }],
+    subtotal: 300,
+    currentLabId: 'lab-1',
+    isLoading: false,
+  })
+}));
 
-import PaymentScreen from '@/pages/PaymentScreen';
+// Mock useAuth to avoid address fetch
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ supabaseUserId: null }) }));
 
-function TrackingSpy() {
+import CartScreen from '@/pages/CartScreen';
+
+function PaymentSpy() {
   const location = useLocation();
   const state: any = location.state || {};
   return (
-    <div data-testid="tracking-spy">
+    <div data-testid="payment-spy">
       patientName: {state.patientName ?? 'none'} | patientAge: {String(state.patientAge ?? 'none')}
     </div>
   );
 }
 
-describe('PaymentScreen — patient details required', () => {
-  it('requires patient name & age before enabling Pay Now and forwards them to /tracking', async () => {
+describe('CartScreen — patient details in cart', () => {
+  it('requires patient name & age in cart and forwards them to /payment', async () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter initialEntries={[{ pathname: '/payment', state: { subtotal: 500 } }]}>
+      <MemoryRouter initialEntries={["/cart"]}>
         <Routes>
-          <Route path="/payment" element={<PaymentScreen />} />
-          <Route path="/tracking" element={<TrackingSpy />} />
+          <Route path="/cart" element={<CartScreen />} />
+          <Route path="/payment" element={<PaymentSpy />} />
         </Routes>
       </MemoryRouter>
     );
 
-    const payBtn = await screen.findByRole('button', { name: /Pay Now/i });
-    expect(payBtn).toBeDisabled();
+    const proceedBtn = await screen.findByRole('button', { name: /Proceed to Pay/i });
+    expect(proceedBtn).toBeDisabled();
 
     const nameInput = screen.getByLabelText(/Patient name/i);
     const ageInput = screen.getByLabelText(/Patient age/i);
@@ -41,11 +51,11 @@ describe('PaymentScreen — patient details required', () => {
     await user.type(nameInput, 'John Doe');
     await user.type(ageInput, '35');
 
-    expect(payBtn).toBeEnabled();
+    expect(proceedBtn).toBeEnabled();
 
-    await user.click(payBtn);
+    await user.click(proceedBtn);
 
-    const spy = await screen.findByTestId('tracking-spy');
+    const spy = await screen.findByTestId('payment-spy');
     expect(spy).toHaveTextContent('patientName: John Doe');
     expect(spy).toHaveTextContent('patientAge: 35');
   });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -72,6 +72,8 @@ const labs = [
 
 const LabSelectionScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = (location.state as { patientName?: string; patientAge?: number | string } | null) || null;
   const { items, updateLabForItems, subtotal } = useCart();
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -117,9 +119,9 @@ const LabSelectionScreen = () => {
       updateLabForItems(labId, labName);
       toast.success(`${labName} selected for your tests`);
       
-      // Navigate to payment screen with selection
+        // Navigate to payment screen with selection (preserve patient info if present)
       setTimeout(() => {
-        navigate("/payment");
+        navigate("/payment", { state: { patientName: locationState?.patientName, patientAge: locationState?.patientAge } });
       }, 500);
     } catch (error) {
       console.error("Error selecting lab:", error);

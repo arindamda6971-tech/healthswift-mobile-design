@@ -32,6 +32,7 @@ interface PaymentState {
   patientName?: string;
   patientAge?: number | string | null;
   patientGender?: string | null;
+  patientPhone?: string | null;
 }
 
 const PaymentScreen = () => {

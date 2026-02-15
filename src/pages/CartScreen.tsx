@@ -56,12 +56,14 @@ const CartScreen = () => {
   const [patientName, setPatientName] = useState<string>("");
   const [patientAge, setPatientAge] = useState<string>("");
   const [patientGender, setPatientGender] = useState<string>("");
+  const [patientPhone, setPatientPhone] = useState<string>("");
   const isPatientInfoValid =
     patientName.trim().length > 0 &&
     /^\d{1,3}$/.test(patientAge) &&
     Number(patientAge) > 0 &&
     Number(patientAge) <= 120 &&
-    patientGender.trim().length > 0;
+    patientGender.trim().length > 0 &&
+    /^\d{10}$/.test(patientPhone);
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -461,11 +463,79 @@ const CartScreen = () => {
           ) : null}
         </motion.div>
 
-        {/* Upload Prescription Section */}
+        {/* Patient details */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="mt-6 soft-card"
+        >
+          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="patient_name">Patient name</Label>
+              <Input
+                id="patient_name"
+                placeholder="Full name"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="patient_age">Age</Label>
+              <Input
+                id="patient_age"
+                placeholder="Age"
+                value={patientAge}
+                onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient age"
+                maxLength={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="patient_gender">Gender</Label>
+              <select
+                id="patient_gender"
+                aria-label="Patient gender"
+                value={patientGender}
+                onChange={(e) => setPatientGender(e.target.value)}
+                className="w-full py-3 px-3 rounded-xl bg-input border border-border"
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="patient_phone">Phone</Label>
+              <Input
+                id="patient_phone"
+                placeholder="10-digit mobile"
+                value={patientPhone}
+                onChange={(e) => setPatientPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient phone"
+                maxLength={10}
+              />
+            </div>
+          </div>
+          {!isPatientInfoValid && (
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120), gender and 10-digit phone number.</div>
+          )}
+        </motion.div>
+
+        {/* Upload Prescription Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
           className="mt-6"
         >
           <div className="flex items-center gap-2 mb-3">
@@ -700,60 +770,7 @@ const CartScreen = () => {
           </div>
         </motion.div>
 
-        {/* Patient details */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mt-6 soft-card"
-        >
-          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="patient_name">Patient name</Label>
-              <Input
-                id="patient_name"
-                placeholder="Full name"
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                className="bg-muted border-0 rounded-xl"
-                aria-label="Patient name"
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="patient_age">Age</Label>
-              <Input
-                id="patient_age"
-                placeholder="Age"
-                value={patientAge}
-                onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
-                className="bg-muted border-0 rounded-xl"
-                aria-label="Patient age"
-                maxLength={3}
-              />
-            </div>
-
-            <div className="space-y-2 col-span-3">
-              <Label htmlFor="patient_gender">Gender</Label>
-              <select
-                id="patient_gender"
-                aria-label="Patient gender"
-                value={patientGender}
-                onChange={(e) => setPatientGender(e.target.value)}
-                className="w-full py-3 px-3 rounded-xl bg-input border border-border"
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
-          {!isPatientInfoValid && (
-            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
-          )}
-        </motion.div>
       </div>
 
       {/* Bottom CTA - Positioned above bottom navigation */}
@@ -777,7 +794,7 @@ const CartScreen = () => {
             onClick={() => {
               // If no lab selected yet, go to lab selection screen (preserve patient info)
               if (!currentLabId) {
-                navigate("/lab-selection", { state: { patientName: patientName.trim(), patientAge: patientAge ? Number(patientAge) : null, patientGender } });
+                navigate("/lab-selection", { state: { patientName: patientName.trim(), patientAge: patientAge ? Number(patientAge) : null, patientGender, patientPhone: patientPhone.trim() } });
               } else {
                 // If lab already selected, proceed to payment and include patient info
                 navigate("/payment", { 
@@ -790,6 +807,7 @@ const CartScreen = () => {
                     patientName: patientName.trim(),
                     patientAge: patientAge ? Number(patientAge) : null,
                     patientGender: patientGender || null,
+                    patientPhone: patientPhone || null,
                   } 
                 });
               }

@@ -24,7 +24,7 @@ function PaymentSpy() {
   const state: any = location.state || {};
   return (
     <div data-testid="payment-spy">
-      patientName: {state.patientName ?? 'none'} | patientAge: {String(state.patientAge ?? 'none')} | patientGender: {state.patientGender ?? 'none'}
+      patientName: {state.patientName ?? 'none'} | patientAge: {String(state.patientAge ?? 'none')} | patientGender: {state.patientGender ?? 'none'} | patientPhone: {state.patientPhone ?? 'none'}
     </div>
   );
 }
@@ -55,6 +55,9 @@ describe('CartScreen — patient details in cart', () => {
     const genderSelect = screen.getByLabelText(/Patient gender/i);
     await user.selectOptions(genderSelect, 'Male');
 
+    const phoneInput = screen.getByLabelText(/Patient phone/i);
+    await user.type(phoneInput, '9876543210');
+
     expect(proceedBtn).toBeEnabled();
 
     await user.click(proceedBtn);
@@ -63,5 +66,6 @@ describe('CartScreen — patient details in cart', () => {
     expect(spy).toHaveTextContent('patientName: John Doe');
     expect(spy).toHaveTextContent('patientAge: 35');
     expect(spy).toHaveTextContent('patientGender: Male');
+    expect(spy).toHaveTextContent('patientPhone: 9876543210');
   });
 });

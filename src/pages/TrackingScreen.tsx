@@ -57,6 +57,7 @@ interface BookingState {
   patientName?: string;
   patientAge?: number | string;
   patientGender?: string | null;
+  patientPhone?: string | null;
 }
 
 const TrackingScreen = () => {
@@ -125,7 +126,7 @@ const TrackingScreen = () => {
             status: paymentVerified ? 'confirmed' : 'pending',
             payment_status: paymentVerified ? 'completed' : 'pending',
             special_instructions: bookingState?.patientName
-              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'}${bookingState.patientGender ? `, Gender: ${bookingState.patientGender}` : ''})`
+              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'}${bookingState.patientGender ? `, Gender: ${bookingState.patientGender}` : ''}${bookingState.patientPhone ? `, Phone: ${bookingState.patientPhone}` : ''})`
               : null,
           })
           .select()
@@ -280,6 +281,9 @@ const TrackingScreen = () => {
                   <p className="text-xs text-muted-foreground mt-1">
                     Age: {bookingState.patientAge ?? 'N/A'} • Gender: {bookingState.patientGender ?? 'N/A'}
                   </p>
+                  {bookingState.patientPhone && (
+                    <p className="text-xs text-muted-foreground mt-1">Phone: {bookingState.patientPhone}</p>
+                  )
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Scheduled</p>

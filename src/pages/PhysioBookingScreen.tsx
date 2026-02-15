@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import PatientPhonePill from "@/components/ui/PatientPhonePill";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -61,6 +62,7 @@ const PhysioBookingScreen = () => {
 
   const locationState = location.state as LocationState | null;
   const physio = locationState?.physio;
+  const incomingPatientPhone = (location.state as any)?.patientPhone ?? null;
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -236,6 +238,7 @@ const PhysioBookingScreen = () => {
         subtotal: physio.fee,
         bookingType: "physio",
         physioName: physio.name,
+        patientPhone: incomingPatientPhone || null,
       },
     });
   };
@@ -269,6 +272,13 @@ const PhysioBookingScreen = () => {
             {physio.available ? "Online" : "Offline"}
           </Badge>
         </motion.div>
+
+        {/* Patient phone (if provided) */}
+        {incomingPatientPhone && (
+          <div className="mt-4">
+            <PatientPhonePill phone={incomingPatientPhone} />
+          </div>
+        )}
 
         {/* Select Date */}
         <motion.div

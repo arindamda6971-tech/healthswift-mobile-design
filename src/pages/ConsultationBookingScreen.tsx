@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Phone, Video, ChevronLeft, Camera, Image, FileText, X, AlertCircle } from "lucide-react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
+import PatientPhonePill from "@/components/ui/PatientPhonePill";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +55,8 @@ const ConsultationBookingScreen = () => {
 
   const isAudio = type === "audio";
   const professionalType = state.professionalType || "doctor";
+  const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
+  const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : passedPatientPhone;
 
   // Determine consultation fee from provided professional object. Support both
   // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`).
@@ -119,6 +122,7 @@ const ConsultationBookingScreen = () => {
         professionalId: professional.id,
         professionalName: professional.name,
         consultationMode: isAudio ? "audio" : "video",
+        patientPhone: displayPhone || null,
       },
     });
   };
@@ -134,11 +138,11 @@ const ConsultationBookingScreen = () => {
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">{professional.name}</h3>
               <p className="text-xs text-muted-foreground">{professional.specialty}</p>
-            </div>
-            <div className="text-right">
-              <span className="text-sm font-semibold">{isAudio ? <Phone className="inline w-4 h-4 mr-1" /> : <Video className="inline w-4 h-4 mr-1" />}{isAudio ? "Audio" : "Video"}</span>
-            </div>
-          </div>
+              {displayPhone && (
+                <div className="mt-2">
+                  <PatientPhonePill phone={displayPhone} />
+                </div>
+              )}
 
           <div className="soft-card p-4 mt-6 flex items-start gap-3 bg-amber-700/5 border-amber-300/20">
             <AlertCircle className="w-5 h-5 text-warning mt-1" />

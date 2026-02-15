@@ -175,6 +175,8 @@ const ConsultationBookingScreen = () => {
                   <PatientPhonePill phone={displayPhone} />
                 </div>
               )}
+            </div>
+          </div>
 
           <div className="soft-card p-4 mt-6 flex items-start gap-3 bg-amber-700/5 border-amber-300/20">
             <AlertCircle className="w-5 h-5 text-warning mt-1" />
@@ -237,8 +239,10 @@ const ConsultationBookingScreen = () => {
                 </div>
                 <h4 className="font-semibold text-foreground mb-2">Upload prescription (optional)</h4>
                 <p className="text-sm text-muted-foreground mb-4">Snap a photo or choose from gallery — this helps the doctor prepare.</p>
+              </div>
+            ) : (
               <div className="relative mt-2">
-                <img src={uploadedImage} alt="Prescription" className="w-full rounded-2xl object-cover max-h-56" />
+                <img src={uploadedImage as string} alt="Prescription" className="w-full rounded-2xl object-cover max-h-56" />
                 <button onClick={handleRemoveImage} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive flex items-center justify-center">
                   <X className="w-4 h-4 text-destructive-foreground" />
                 </button>

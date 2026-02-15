@@ -56,6 +56,7 @@ interface BookingState {
   paymentVerified?: boolean;
   patientName?: string;
   patientAge?: number | string;
+  patientGender?: string | null;
 }
 
 const TrackingScreen = () => {
@@ -67,6 +68,9 @@ const TrackingScreen = () => {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
+
+  // expose booking state for UI (patient info / schedule)
+  const bookingState = location.state as BookingState | undefined;
 
   // Show phlebotomist personal details only to authenticated users with an order
   const showPhleboDetails = !!supabaseUserId && !!orderId;
@@ -121,7 +125,7 @@ const TrackingScreen = () => {
             status: paymentVerified ? 'confirmed' : 'pending',
             payment_status: paymentVerified ? 'completed' : 'pending',
             special_instructions: bookingState?.patientName
-              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'})`
+              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'}${bookingState.patientGender ? `, Gender: ${bookingState.patientGender}` : ''})`
               : null,
           })
           .select()
@@ -261,59 +265,30 @@ const TrackingScreen = () => {
           </div>
         </motion.div>
 
-        {/* Phlebotomist card (sensitive info hidden from unauthenticated users) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="soft-card mt-4"
-        >
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {showPhleboDetails ? (
-                <img
-                  src={phlebotomist.photo}
-                  alt={phlebotomist.name}
-                  className="w-16 h-16 rounded-2xl object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center text-xs text-muted-foreground">Assigned</div>
-              )}
-
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center border-2 border-card">
-                <Shield className="w-3 h-3 text-success-foreground" />
+          {/* Booking summary / patient info */}
+          {bookingState?.patientName && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="soft-card mt-4 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Patient</p>
+                  <p className="font-semibold text-foreground">{bookingState.patientName}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Age: {bookingState.patientAge ?? 'N/A'} • Gender: {bookingState.patientGender ?? 'N/A'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Scheduled</p>
+                  <p className="font-semibold text-foreground">{bookingState.scheduledDate ?? 'Today'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{bookingState.scheduledTimeSlot ?? 'Any time'}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex-1">
-              {showPhleboDetails ? (
-                <>
-                  <h3 className="font-bold text-foreground">{phlebotomist.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-warning fill-warning" />
-                      <span className="text-sm font-medium text-foreground">{phlebotomist.rating}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">({phlebotomist.reviews} reviews)</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">ID: {phlebotomist.verificationId} • {phlebotomist.experience}</p>
-                </>
-              ) : (
-                <>
-                  <h3 className="font-bold text-foreground">Phlebotomist assigned</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Details available after booking</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Action buttons (disabled when details are hidden) */}
-          <div className="flex gap-2 mt-4">
-            <Button variant="soft" className="flex-1" size="sm" disabled={!showPhleboDetails}>
-              <Phone className="w-4 h-4" />
-              Call
-            </Button>
-            <Button variant="softSuccess" className="flex-1" size="sm" disabled={!showPhleboDetails}>
+            </motion.div>
+          )
               <MessageCircle className="w-4 h-4" />
               Chat
             </Button>

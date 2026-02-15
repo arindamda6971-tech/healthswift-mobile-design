@@ -55,11 +55,13 @@ const CartScreen = () => {
   // Patient details required at booking (collected in Cart)
   const [patientName, setPatientName] = useState<string>("");
   const [patientAge, setPatientAge] = useState<string>("");
+  const [patientGender, setPatientGender] = useState<string>("");
   const isPatientInfoValid =
     patientName.trim().length > 0 &&
     /^\d{1,3}$/.test(patientAge) &&
     Number(patientAge) > 0 &&
-    Number(patientAge) <= 120;
+    Number(patientAge) <= 120 &&
+    patientGender.trim().length > 0;
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -706,8 +708,8 @@ const CartScreen = () => {
           className="mt-6 soft-card"
         >
           <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2 col-span-2">
               <Label htmlFor="patient_name">Patient name</Label>
               <Input
                 id="patient_name"
@@ -718,6 +720,7 @@ const CartScreen = () => {
                 aria-label="Patient name"
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="patient_age">Age</Label>
               <Input
@@ -730,9 +733,25 @@ const CartScreen = () => {
                 maxLength={3}
               />
             </div>
+
+            <div className="space-y-2 col-span-3">
+              <Label htmlFor="patient_gender">Gender</Label>
+              <select
+                id="patient_gender"
+                aria-label="Patient gender"
+                value={patientGender}
+                onChange={(e) => setPatientGender(e.target.value)}
+                className="w-full py-3 px-3 rounded-xl bg-input border border-border"
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
           {!isPatientInfoValid && (
-            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name and age (1–120).</div>
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
           )}
         </motion.div>
       </div>
@@ -758,7 +777,7 @@ const CartScreen = () => {
             onClick={() => {
               // If no lab selected yet, go to lab selection screen (preserve patient info)
               if (!currentLabId) {
-                navigate("/lab-selection", { state: { patientName: patientName.trim(), patientAge: patientAge ? Number(patientAge) : null } });
+                navigate("/lab-selection", { state: { patientName: patientName.trim(), patientAge: patientAge ? Number(patientAge) : null, patientGender } });
               } else {
                 // If lab already selected, proceed to payment and include patient info
                 navigate("/payment", { 
@@ -770,6 +789,7 @@ const CartScreen = () => {
                     subtotal,
                     patientName: patientName.trim(),
                     patientAge: patientAge ? Number(patientAge) : null,
+                    patientGender: patientGender || null,
                   } 
                 });
               }

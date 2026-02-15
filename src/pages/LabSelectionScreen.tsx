@@ -73,7 +73,7 @@ const labs = [
 const LabSelectionScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const locationState = (location.state as { patientName?: string; patientAge?: number | string } | null) || null;
+  const locationState = (location.state as { patientName?: string; patientAge?: number | string; patientGender?: string } | null) || null;
   const { items, updateLabForItems, subtotal } = useCart();
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -121,7 +121,7 @@ const LabSelectionScreen = () => {
       
         // Navigate to payment screen with selection (preserve patient info if present)
       setTimeout(() => {
-        navigate("/payment", { state: { patientName: locationState?.patientName, patientAge: locationState?.patientAge } });
+        navigate("/payment", { state: { patientName: locationState?.patientName, patientAge: locationState?.patientAge, patientGender: locationState?.patientGender } });
       }, 500);
     } catch (error) {
       console.error("Error selecting lab:", error);

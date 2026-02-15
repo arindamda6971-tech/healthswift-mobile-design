@@ -24,10 +24,14 @@ interface PaymentState {
     familyMemberId?: string;
     packageId?: string;
   }>;
-  addressId: string;
-  scheduledDate: string;
-  scheduledTimeSlot: string;
+  addressId: string | null;
+  scheduledDate: string | null;
+  scheduledTimeSlot: string | null;
   subtotal: number;
+  // optional patient info forwarded from cart
+  patientName?: string;
+  patientAge?: number | string | null;
+  patientGender?: string | null;
 }
 
 const PaymentScreen = () => {

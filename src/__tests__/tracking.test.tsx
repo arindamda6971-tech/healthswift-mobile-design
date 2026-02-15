@@ -66,6 +66,9 @@ describe('TrackingScreen phlebotomist visibility', () => {
       subtotal: 300,
       selectedPayment: 'cash',
       paymentVerified: true,
+      patientName: 'John Doe',
+      patientAge: 30,
+      patientGender: 'Male',
     };
 
     render(
@@ -85,5 +88,10 @@ describe('TrackingScreen phlebotomist visibility', () => {
     const chatBtn = screen.getByRole('button', { name: /Chat/i });
     expect(callBtn).toBeEnabled();
     expect(chatBtn).toBeEnabled();
+
+    // Patient info from bookingState should be visible on confirmation card
+    expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
+    expect(screen.getByText(/Age: 30/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gender: Male/i)).toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 const paymentMethods = [
   { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
@@ -41,6 +42,16 @@ const PaymentScreen = () => {
   const paymentState = location.state as PaymentState | undefined;
   const stateSubtotal = paymentState?.subtotal || subtotal;
 
+  // Patient details (required at booking)
+  const [patientName, setPatientName] = useState<string>(paymentState?.patientName || "");
+  const [patientAge, setPatientAge] = useState<string>(paymentState?.patientAge ? String(paymentState.patientAge) : "");
+  const isPatientInfoValid =
+    patientName.trim().length > 0 &&
+    /^\d{1,3}$/.test(patientAge) &&
+    Number(patientAge) > 0 &&
+    Number(patientAge) <= 120;
+
+
   const discount = couponApplied ? 100 : 0;
   const total = stateSubtotal - discount;
 
@@ -51,6 +62,11 @@ const PaymentScreen = () => {
   };
 
   const handlePayment = () => {
+    if (!isPatientInfoValid) {
+      toast.error("Please enter patient name and valid age before proceeding");
+      return;
+    }
+
     // NOTE: real payment gateway integration is required for non-cash methods.
     // We only mark `paymentVerified` for cash-on-delivery here. Non-cash
     // flows must set `paymentVerified: true` after confirmation by the
@@ -65,6 +81,8 @@ const PaymentScreen = () => {
         total,
         selectedPayment,
         paymentVerified,
+        patientName: patientName.trim(),
+        patientAge: Number(patientAge),
       }
     });
   };
@@ -104,6 +122,45 @@ const PaymentScreen = () => {
             <Badge variant="softSuccess" className="mt-2">
               Coupon HEALTH100 applied - ₹100 off
             </Badge>
+          )}
+        </motion.div>
+
+        {/* Patient details (required) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-6 soft-card"
+        >
+          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="block text-xs text-muted-foreground">Patient name</label>
+              <Input
+                placeholder="Full name"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs text-muted-foreground">Age</label>
+              <Input
+                placeholder="Age"
+                value={patientAge}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setPatientAge(val);
+                }}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Patient age"
+                maxLength={3}
+              />
+            </div>
+          </div>
+          {!isPatientInfoValid && (
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name and age (1–120).</div>
           )}
         </motion.div>
 
@@ -200,6 +257,7 @@ const PaymentScreen = () => {
           className="w-full"
           size="lg"
           onClick={handlePayment}
+          disabled={!isPatientInfoValid}
         >
           Pay Now • ₹{total}
         </Button>

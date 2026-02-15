@@ -45,14 +45,17 @@ interface BookingState {
     familyMemberId?: string;
     packageId?: string;
   }>;
-  addressId: string;
-  scheduledDate: string;
-  scheduledTimeSlot: string;
+  addressId: string | null;
+  scheduledDate: string | null;
+  scheduledTimeSlot: string | null;
   subtotal: number;
   couponApplied?: boolean;
   discount?: number;
   total?: number;
   selectedPayment?: string;
+  paymentVerified?: boolean;
+  patientName?: string;
+  patientAge?: number | string;
 }
 
 const TrackingScreen = () => {
@@ -117,6 +120,9 @@ const TrackingScreen = () => {
             payment_method: paymentMethod,
             status: paymentVerified ? 'confirmed' : 'pending',
             payment_status: paymentVerified ? 'completed' : 'pending',
+            special_instructions: bookingState?.patientName
+              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'})`
+              : null,
           })
           .select()
           .single();

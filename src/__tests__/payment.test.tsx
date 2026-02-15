@@ -68,4 +68,33 @@ describe('CartScreen — patient details in cart', () => {
     expect(spy).toHaveTextContent('patientGender: Male');
     expect(spy).toHaveTextContent('patientPhone: 9876543210');
   });
+
+  it('rejects invalid phone (not 10 digits) and keeps Proceed disabled', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/cart"]}>
+        <Routes>
+          <Route path="/cart" element={<CartScreen />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const proceedBtn = await screen.findByRole('button', { name: /Proceed to Pay/i });
+    expect(proceedBtn).toBeDisabled();
+
+    const nameInput = screen.getByLabelText(/Patient name/i);
+    const ageInput = screen.getByLabelText(/Patient age/i);
+    const genderSelect = screen.getByLabelText(/Patient gender/i);
+    const phoneInput = screen.getByLabelText(/Patient phone/i);
+
+    await user.type(nameInput, 'John Doe');
+    await user.type(ageInput, '35');
+    await user.selectOptions(genderSelect, 'Male');
+    await user.type(phoneInput, '12345');
+
+    // still invalid — proceed remains disabled and validation message visible
+    expect(proceedBtn).toBeDisabled();
+    expect(screen.getByText(/10-digit phone number/i)).toBeInTheDocument();
+  });
 });

@@ -278,12 +278,17 @@ const TrackingScreen = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Patient</p>
                   <p className="font-semibold text-foreground">{bookingState.patientName}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Age: {bookingState.patientAge ?? 'N/A'} • Gender: {bookingState.patientGender ?? 'N/A'}
-                  </p>
-                  {bookingState.patientPhone && (
-                    <p className="text-xs text-muted-foreground mt-1">Phone: {bookingState.patientPhone}</p>
-                  )
+
+                  <div className="mt-2 flex items-center gap-3">
+                    {bookingState.patientPhone && (
+                      <div className="flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full">
+                        <Phone className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">{bookingState.patientPhone}</span>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">Age: {bookingState.patientAge ?? 'N/A'} • Gender: {bookingState.patientGender ?? 'N/A'}</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Scheduled</p>
@@ -292,12 +297,38 @@ const TrackingScreen = () => {
                 </div>
               </div>
             </motion.div>
-          )
-              <MessageCircle className="w-4 h-4" />
-              Chat
-            </Button>
-          </div>
-        </motion.div>
+          )}
+
+          {/* Phlebotomist details (visible to authenticated users with an order) */}
+          {showPhleboDetails && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="soft-card mt-4 p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden">
+                  <img src={phlebotomist.photo} alt={phlebotomist.name} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Phlebotomist</p>
+                  <p className="font-semibold text-foreground">{phlebotomist.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Experience: {phlebotomist.experience}</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button variant="soft" size="sm" className="h-8">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Call
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
         {/* Tracking timeline */}
         <motion.div

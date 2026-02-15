@@ -69,6 +69,7 @@ describe('TrackingScreen phlebotomist visibility', () => {
       patientName: 'John Doe',
       patientAge: 30,
       patientGender: 'Male',
+      patientPhone: '9876543210',
     };
 
     render(
@@ -93,5 +94,7 @@ describe('TrackingScreen phlebotomist visibility', () => {
     expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
     expect(screen.getByText(/Age: 30/i)).toBeInTheDocument();
     expect(screen.getByText(/Gender: Male/i)).toBeInTheDocument();
+    // Phone should be prominently visible
+    expect(screen.getByText(/9876543210/)).toBeInTheDocument();
   });
 });

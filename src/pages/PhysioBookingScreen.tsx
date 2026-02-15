@@ -256,7 +256,7 @@ const PhysioBookingScreen = () => {
           className="mt-4 mb-4 flex items-center gap-3 p-4 rounded-2xl bg-secondary/10 border border-secondary/20"
         >
           <img
-            src={physio.image}
+            src={physio.image ?? undefined}
             alt={physio.name}
             className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
           />

@@ -36,12 +36,59 @@ const getCorsHeaders = (request: Request): Record<string, string> => {
   };
 };
 
+// Simple runtime authentication: require Authorization header and validate the token
+// against Supabase Auth to prevent anonymous access to the prescription analyzer.
+const ensureAuthenticated = async (request: Request, corsHeaders: Record<string, string>) => {
+  const authHeader = request.headers.get('authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized: missing or invalid Authorization header' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+  if (!SUPABASE_URL) {
+    console.error('SUPABASE_URL is not configured');
+    return new Response(
+      JSON.stringify({ error: 'Server misconfiguration' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Validate token using Supabase Auth's /user endpoint
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: authHeader },
+    });
+    if (!res.ok) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // token valid — return null to indicate OK
+    return null;
+  } catch (err) {
+    console.error('Error validating auth token', err);
+    return new Response(
+      JSON.stringify({ error: 'Auth validation failed' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+};
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Enforce authentication at runtime (extra safety even if verify_jwt is enabled)
+  const authCheck = await ensureAuthenticated(req, corsHeaders);
+  if (authCheck) return authCheck;
 
   try {
     const { imageBase64 } = await req.json();

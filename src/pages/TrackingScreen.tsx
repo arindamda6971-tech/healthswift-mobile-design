@@ -85,8 +85,22 @@ const TrackingScreen = () => {
         const subtotal = bookingState?.subtotal || stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
         const discount = bookingState?.discount || 0;
         const total = bookingState?.total || subtotal;
-        
-        // Create order with booking details
+
+        // Enforce payment verification: do not create orders for non-cash payments unless
+        // `paymentVerified` is explicitly true in the navigation state.
+        const paymentMethod = bookingState?.selectedPayment || null;
+        const paymentVerified = bookingState?.paymentVerified === true;
+
+        if (paymentMethod && paymentMethod !== 'cash' && !paymentVerified) {
+          // Block order creation — payment not verified
+          setOrderError('Payment not verified. Please complete payment before booking.');
+          setIsCreatingOrder(false);
+          // Send user back to payment screen to complete verification
+          navigate('/payment', { state: bookingState });
+          return;
+        }
+
+        // Create order with booking details — mark payment/status appropriately
         const { data: orderData, error: orderError } = await supabase
           .from("orders")
           .insert({
@@ -97,9 +111,9 @@ const TrackingScreen = () => {
             subtotal: subtotal,
             discount: discount,
             total: total,
-            payment_method: bookingState?.selectedPayment || null,
-            status: "confirmed",
-            payment_status: "completed", // Since payment is done
+            payment_method: paymentMethod,
+            status: paymentVerified ? 'confirmed' : 'pending',
+            payment_status: paymentVerified ? 'completed' : 'pending',
           })
           .select()
           .single();

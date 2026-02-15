@@ -1,5 +1,6 @@
 project_id = "dmfqfswgnfpqeseqswhl"
 
 [functions.analyze-prescription]
-verify_jwt = false
+verify_jwt = true
+# Runtime still performs a token validation check against Supabase Auth for extra safety
 

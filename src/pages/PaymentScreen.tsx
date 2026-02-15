@@ -51,7 +51,12 @@ const PaymentScreen = () => {
   };
 
   const handlePayment = () => {
-    // Navigate to tracking with payment info
+    // NOTE: real payment gateway integration is required for non-cash methods.
+    // We only mark `paymentVerified` for cash-on-delivery here. Non-cash
+    // flows must set `paymentVerified: true` after confirmation by the
+    // payment provider (webhook / client verification).
+    const paymentVerified = selectedPayment === 'cash';
+
     navigate("/tracking", {
       state: {
         ...paymentState,
@@ -59,6 +64,7 @@ const PaymentScreen = () => {
         discount,
         total,
         selectedPayment,
+        paymentVerified,
       }
     });
   };
@@ -140,6 +146,13 @@ const PaymentScreen = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Warning about payment verification */}
+        {selectedPayment !== 'cash' && (
+          <div className="mt-3 px-3 py-2 rounded-md bg-warning/10 border border-warning/20 text-xs text-warning-foreground">
+            Online payments require gateway verification — orders will not be created until payment is confirmed.
+          </div>
+        )}
 
         {/* Price breakdown */}
         <motion.div

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Activity, Zap, Phone, Mail, Lock, Eye, EyeOff, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,14 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
-  // Redirect if already logged in
+  // Redirect if already logged in — respect `state.from` so users return to where they started
+  const location = useLocation();
   useEffect(() => {
     if (user) {
-      navigate("/home", { replace: true });
+      const destination = (location.state as any)?.from?.pathname || "/home";
+      navigate(destination, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location]);
 
   const handleEmailAuth = async () => {
     try {

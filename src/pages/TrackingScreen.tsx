@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Phone,
@@ -63,21 +63,68 @@ interface BookingState {
 const TrackingScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
+  const paramOrderId = params.orderId;
   const { supabaseUserId } = useAuth();
   const { items: cartItems, clearCart } = useCart();
   const [eta, setEta] = useState(12);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [fetchedBooking, setFetchedBooking] = useState<BookingState | undefined>(undefined);
 
   // expose booking state for UI (patient info / schedule)
   const bookingState = location.state as BookingState | undefined;
+  const effectiveBookingState = bookingState || fetchedBooking;
 
   // Show phlebotomist personal details only to authenticated users with an order
   const showPhleboDetails = !!supabaseUserId && !!orderId;
 
+  // If :orderId exists in the URL, fetch and display the existing order instead of creating a new one
+  useEffect(() => {
+    if (!paramOrderId) return;
+    const fetchOrder = async () => {
+      try {
+        const { data: orderData, error } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("id", paramOrderId)
+          .single();
+
+        if (error || !orderData) {
+          setOrderError("Order not found");
+          return;
+        }
+
+        setOrderId(orderData.id);
+        setFetchedBooking({
+          cartItems: [],
+          addressId: orderData.address_id || null,
+          scheduledDate: orderData.scheduled_date || null,
+          scheduledTimeSlot: orderData.scheduled_time_slot || null,
+          subtotal: orderData.subtotal ?? 0,
+          couponApplied: orderData.coupon_applied || false,
+          discount: orderData.discount ?? 0,
+          total: orderData.total ?? orderData.subtotal ?? 0,
+          selectedPayment: orderData.payment_method || null,
+          paymentVerified: orderData.payment_status === "completed",
+          patientName: null,
+          patientAge: null,
+          patientGender: null,
+          patientPhone: null,
+        });
+      } catch (err) {
+        if (import.meta.env.DEV) console.error("Error fetching order:", err);
+        setOrderError("Failed to fetch order");
+      }
+    };
+
+    fetchOrder();
+  }, [paramOrderId]);
+
   useEffect(() => {
     const createOrder = async () => {
+      if (paramOrderId) return; // don't create when viewing existing order
       if (isCreatingOrder || orderId) return;
 
       const bookingState = location.state as BookingState | undefined;
@@ -267,7 +314,7 @@ const TrackingScreen = () => {
         </motion.div>
 
           {/* Booking summary / patient info */}
-          {bookingState?.patientName && (
+          {effectiveBookingState?.patientName && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -277,23 +324,23 @@ const TrackingScreen = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Patient</p>
-                  <p className="font-semibold text-foreground">{bookingState.patientName}</p>
+                  <p className="font-semibold text-foreground">{effectiveBookingState.patientName}</p>
 
                   <div className="mt-2 flex items-center gap-3">
-                    {bookingState.patientPhone && (
+                    {effectiveBookingState.patientPhone && (
                       <div className="flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full">
                         <Phone className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-medium text-foreground">{bookingState.patientPhone}</span>
+                        <span className="text-sm font-medium text-foreground">{effectiveBookingState.patientPhone}</span>
                       </div>
                     )}
 
-                    <p className="text-xs text-muted-foreground">Age: {bookingState.patientAge ?? 'N/A'} • Gender: {bookingState.patientGender ?? 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">Age: {effectiveBookingState.patientAge ?? 'N/A'} • Gender: {effectiveBookingState.patientGender ?? 'N/A'}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Scheduled</p>
-                  <p className="font-semibold text-foreground">{bookingState.scheduledDate ?? 'Today'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{bookingState.scheduledTimeSlot ?? 'Any time'}</p>
+                  <p className="font-semibold text-foreground">{effectiveBookingState.scheduledDate ?? 'Today'}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{effectiveBookingState.scheduledTimeSlot ?? 'Any time'}</p>
                 </div>
               </div>
             </motion.div>

@@ -65,6 +65,9 @@ const TrackingScreen = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
 
+  // Show phlebotomist personal details only to authenticated users with an order
+  const showPhleboDetails = !!supabaseUserId && !!orderId;
+
   useEffect(() => {
     const createOrder = async () => {
       if (isCreatingOrder || orderId) return;
@@ -252,7 +255,7 @@ const TrackingScreen = () => {
           </div>
         </motion.div>
 
-        {/* Phlebotomist card */}
+        {/* Phlebotomist card (sensitive info hidden from unauthenticated users) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -261,37 +264,50 @@ const TrackingScreen = () => {
         >
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img
-                src={phlebotomist.photo}
-                alt={phlebotomist.name}
-                className="w-16 h-16 rounded-2xl object-cover"
-              />
+              {showPhleboDetails ? (
+                <img
+                  src={phlebotomist.photo}
+                  alt={phlebotomist.name}
+                  className="w-16 h-16 rounded-2xl object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center text-xs text-muted-foreground">Assigned</div>
+              )}
+
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center border-2 border-card">
                 <Shield className="w-3 h-3 text-success-foreground" />
               </div>
             </div>
+
             <div className="flex-1">
-              <h3 className="font-bold text-foreground">{phlebotomist.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-warning fill-warning" />
-                  <span className="text-sm font-medium text-foreground">{phlebotomist.rating}</span>
-                </div>
-                <span className="text-xs text-muted-foreground">({phlebotomist.reviews} reviews)</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                ID: {phlebotomist.verificationId} • {phlebotomist.experience}
-              </p>
+              {showPhleboDetails ? (
+                <>
+                  <h3 className="font-bold text-foreground">{phlebotomist.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-warning fill-warning" />
+                      <span className="text-sm font-medium text-foreground">{phlebotomist.rating}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">({phlebotomist.reviews} reviews)</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">ID: {phlebotomist.verificationId} • {phlebotomist.experience}</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-bold text-foreground">Phlebotomist assigned</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Details available after booking</p>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons (disabled when details are hidden) */}
           <div className="flex gap-2 mt-4">
-            <Button variant="soft" className="flex-1" size="sm">
+            <Button variant="soft" className="flex-1" size="sm" disabled={!showPhleboDetails}>
               <Phone className="w-4 h-4" />
               Call
             </Button>
-            <Button variant="softSuccess" className="flex-1" size="sm">
+            <Button variant="softSuccess" className="flex-1" size="sm" disabled={!showPhleboDetails}>
               <MessageCircle className="w-4 h-4" />
               Chat
             </Button>

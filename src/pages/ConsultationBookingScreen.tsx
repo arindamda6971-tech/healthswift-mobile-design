@@ -6,6 +6,9 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import PatientPhonePill from "@/components/ui/PatientPhonePill";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +40,20 @@ const ConsultationBookingScreen = () => {
 
   const [phone, setPhone] = useState("");
 
+  const incomingPatientName = (location.state as any)?.patientName ?? "";
+  const incomingPatientAge = (location.state as any)?.patientAge ?? "";
+  const incomingPatientGender = (location.state as any)?.patientGender ?? "";
+
+  const [patientName, setPatientName] = useState<string>(String(incomingPatientName || ""));
+  const [patientAge, setPatientAge] = useState<string>(incomingPatientAge ? String(incomingPatientAge) : "");
+  const [patientGender, setPatientGender] = useState<string>(String(incomingPatientGender || ""));
+  const isPatientInfoValid =
+    patientName.trim().length > 0 &&
+    /^\d{1,3}$/.test(patientAge) &&
+    Number(patientAge) > 0 &&
+    Number(patientAge) <= 120 &&
+    patientGender.trim().length > 0;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { prescription, savePrescription, deletePrescription } = usePrescriptionStorage();
@@ -56,7 +73,7 @@ const ConsultationBookingScreen = () => {
   const isAudio = type === "audio";
   const professionalType = state.professionalType || "doctor";
   const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
-  const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : passedPatientPhone;
+  const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : passedPatientPhone; 
 
   // Determine consultation fee from provided professional object. Support both
   // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`).
@@ -95,6 +112,11 @@ const ConsultationBookingScreen = () => {
       return;
     }
 
+    if (!isPatientInfoValid) {
+      toast.error("Please provide valid patient details");
+      return;
+    }
+
     if (!supabaseUserId) {
       toast.error("Please login to book a consultation");
       navigate("/login");
@@ -122,6 +144,9 @@ const ConsultationBookingScreen = () => {
         professionalId: professional.id,
         professionalName: professional.name,
         consultationMode: isAudio ? "audio" : "video",
+        patientName: patientName.trim() || null,
+        patientAge: patientAge ? Number(patientAge) : null,
+        patientGender: patientGender || null,
         patientPhone: displayPhone || null,
       },
     });
@@ -138,6 +163,13 @@ const ConsultationBookingScreen = () => {
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">{professional.name}</h3>
               <p className="text-xs text-muted-foreground">{professional.specialty}</p>
+              {patientName && (
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground">Patient</p>
+                  <p className="font-semibold text-foreground">{patientName}</p>
+                  <p className="text-xs text-muted-foreground">Age: {patientAge || 'N/A'} • Gender: {patientGender || 'N/A'}</p>
+                </div>
+              )}
               {displayPhone && (
                 <div className="mt-2">
                   <PatientPhonePill phone={displayPhone} />
@@ -154,6 +186,49 @@ const ConsultationBookingScreen = () => {
             </div>
           </div>
 
+          {/* Patient details */}
+          <div className="mt-4 p-4 rounded-2xl bg-muted/50 border border-border">
+            <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="patient_name">Patient name</Label>
+                <Input
+                  id="patient_name"
+                  placeholder="e.g. John Doe"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  aria-label="Patient name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_age">Age</Label>
+                <Input
+                  id="patient_age"
+                  placeholder="e.g. 35"
+                  value={patientAge}
+                  onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
+                  aria-label="Patient age"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patient_gender">Gender</Label>
+                <Select value={patientGender} onValueChange={(value) => setPatientGender(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {!isPatientInfoValid && (
+              <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
+            )}
+          </div>
+
           <div className="mt-4">
             {!uploadedImage ? (
               <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center bg-muted/30">
@@ -162,20 +237,6 @@ const ConsultationBookingScreen = () => {
                 </div>
                 <h4 className="font-semibold text-foreground mb-2">Upload prescription (optional)</h4>
                 <p className="text-sm text-muted-foreground mb-4">Snap a photo or choose from gallery — this helps the doctor prepare.</p>
-
-                <div className="flex gap-3 justify-center">
-                  <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-
-                  <Button variant="outline" className="gap-2" onClick={() => cameraInputRef.current?.click()} disabled={isUploading}>
-                    <Camera className="w-4 h-4" /> Camera
-                  </Button>
-                  <Button variant="outline" className="gap-2" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                    <Image className="w-4 h-4" /> Gallery
-                  </Button>
-                </div>
-              </div>
-            ) : (
               <div className="relative mt-2">
                 <img src={uploadedImage} alt="Prescription" className="w-full rounded-2xl object-cover max-h-56" />
                 <button onClick={handleRemoveImage} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive flex items-center justify-center">
@@ -202,7 +263,7 @@ const ConsultationBookingScreen = () => {
           )}
 
           <div className="mt-8">
-            <Button className="w-full rounded-xl" onClick={handleConfirm} size="lg" disabled={isBooking}>
+            <Button className="w-full rounded-xl" onClick={handleConfirm} size="lg" disabled={isBooking || !isPatientInfoValid || (isAudio && phone.trim().length < 6)}>
               {isBooking ? "Booking..." : "Book Appointment"}
             </Button>
           </div>

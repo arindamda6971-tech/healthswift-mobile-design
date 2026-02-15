@@ -64,7 +64,20 @@ const ECGBookingScreen = () => {
   const locationState = location.state as LocationState | null;
   const doctor = locationState?.doctor;
   const incomingPatientPhone = (location.state as any)?.patientPhone ?? null;
+  const incomingPatientName = (location.state as any)?.patientName ?? "";
+  const incomingPatientAge = (location.state as any)?.patientAge ?? "";
+  const incomingPatientGender = (location.state as any)?.patientGender ?? "";
   
+  const [patientName, setPatientName] = useState<string>(String(incomingPatientName || ""));
+  const [patientAge, setPatientAge] = useState<string>(incomingPatientAge ? String(incomingPatientAge) : "");
+  const [patientGender, setPatientGender] = useState<string>(String(incomingPatientGender || ""));
+  const isPatientInfoValid =
+    patientName.trim().length > 0 &&
+    /^\d{1,3}$/.test(patientAge) &&
+    Number(patientAge) > 0 &&
+    Number(patientAge) <= 120 &&
+    patientGender.trim().length > 0;
+
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(true);
@@ -237,6 +250,9 @@ const ECGBookingScreen = () => {
         subtotal: doctor.fee,
         bookingType: "ecg",
         doctorName: doctor.name,
+        patientName: patientName.trim() || null,
+        patientAge: patientAge ? Number(patientAge) : null,
+        patientGender: patientGender || null,
         patientPhone: incomingPatientPhone || null,
       },
     });
@@ -264,11 +280,61 @@ const ECGBookingScreen = () => {
             <p className="text-xs text-primary/80 font-medium">12-Lead ECG Test with</p>
             <p className="font-semibold text-primary truncate">{doctor.name}</p>
             <p className="text-xs text-muted-foreground">{doctor.specialization}</p>
+            {patientName && (
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground">Patient</p>
+                <p className="font-semibold text-foreground">{patientName}</p>
+                <p className="text-xs text-muted-foreground">Age: {patientAge || 'N/A'} • Gender: {patientGender || 'N/A'}</p>
+              </div>
+            )}
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-lg font-bold text-primary">₹{doctor.fee}</p>
           </div>
         </motion.div>
+
+        {/* Patient details */}
+        <div className="mt-4 p-4 rounded-2xl bg-muted/50 border border-border">
+          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="patient_name">Patient name</Label>
+              <Input
+                id="patient_name"
+                placeholder="e.g. John Doe"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                aria-label="Patient name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient_age">Age</Label>
+              <Input
+                id="patient_age"
+                placeholder="e.g. 35"
+                value={patientAge}
+                onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
+                aria-label="Patient age"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient_gender">Gender</Label>
+              <Select value={patientGender} onValueChange={(value) => setPatientGender(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {!isPatientInfoValid && (
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
+          )}
+        </div>
 
         {/* Patient phone (if provided) */}
         {incomingPatientPhone && (
@@ -445,7 +511,7 @@ const ECGBookingScreen = () => {
           variant="hero"
           className="w-full"
           size="lg"
-          disabled={!selectedAddressId || addresses.length === 0 || !selectedTime}
+          disabled={!selectedAddressId || addresses.length === 0 || !selectedTime || !isPatientInfoValid}
           onClick={handleProceedToPayment}
         >
           Proceed to Pay • ₹{doctor.fee}

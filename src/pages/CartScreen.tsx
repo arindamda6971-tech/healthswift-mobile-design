@@ -57,13 +57,17 @@ const CartScreen = () => {
   const [patientAge, setPatientAge] = useState<string>("");
   const [patientGender, setPatientGender] = useState<string>("");
   const [patientPhone, setPatientPhone] = useState<string>("");
+  const [contactPhone, setContactPhone] = useState<string>("");
+  const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+  const isHomeCollection = selectedAddress?.type === "Home";
   const isPatientInfoValid =
     patientName.trim().length > 0 &&
     /^\d{1,3}$/.test(patientAge) &&
     Number(patientAge) > 0 &&
     Number(patientAge) <= 120 &&
     patientGender.trim().length > 0 &&
-    /^\d{10}$/.test(patientPhone);
+    /^\d{10}$/.test(patientPhone) &&
+    (!isHomeCollection || /^\d{10}$/.test(contactPhone));
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -525,9 +529,26 @@ const CartScreen = () => {
                 maxLength={10}
               />
             </div>
+
+            {isHomeCollection && (
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="contact_phone">Contact Phone (for home visit)</Label>
+                <Input
+                  id="contact_phone"
+                  placeholder="10-digit mobile"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="bg-muted border-0 rounded-xl"
+                  aria-label="Contact phone"
+                  maxLength={10}
+                />
+              </div>
+            )}
           </div>
           {!isPatientInfoValid && (
-            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120), gender and 10-digit phone number.</div>
+            <div className="mt-3 text-xs text-destructive">
+              Please provide a valid patient name, age (1–120), gender and 10-digit phone number{isHomeCollection ? ' and contact phone' : ''}.
+            </div>
           )}
         </motion.div>
 
@@ -808,6 +829,7 @@ const CartScreen = () => {
                     patientAge: patientAge ? Number(patientAge) : null,
                     patientGender: patientGender || null,
                     patientPhone: patientPhone || null,
+                    contactPhone: contactPhone || null,
                   } 
                 });
               }

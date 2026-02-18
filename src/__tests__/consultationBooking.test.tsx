@@ -49,7 +49,9 @@ describe('ConsultationBooking -> Payment navigation', () => {
     await user.type(ageInput, '35');
 
     const genderSelect = await screen.findByRole('combobox');
-    await user.selectOptions(genderSelect, 'Male');
+    await user.click(genderSelect);
+    const maleOption = await screen.findByRole('option', { name: 'Male' });
+    await user.click(maleOption);
 
     const btn = await screen.findByRole('button', { name: /Book Appointment/i });
     await user.click(btn);
@@ -81,7 +83,9 @@ describe('ConsultationBooking -> Payment navigation', () => {
     await user.type(ageInput, '35');
 
     const genderSelect = await screen.findByRole('combobox');
-    await user.selectOptions(genderSelect, 'Male');
+    await user.click(genderSelect);
+    const maleOption = await screen.findByRole('option', { name: 'Male' });
+    await user.click(maleOption);
 
     // Physiotherapist-specific help text should be visible
     expect(await screen.findByText(/Physiotherapist will call you shortly/i)).toBeInTheDocument();

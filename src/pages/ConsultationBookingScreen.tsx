@@ -252,8 +252,9 @@ const ConsultationBookingScreen = () => {
 
           {isAudio && (
             <div className="mt-6">
-              <label className="block text-xs text-muted-foreground mb-2">Phone number to call</label>
+              <label htmlFor="phone_number" className="block text-xs text-muted-foreground mb-2">Phone number to call</label>
               <input
+                id="phone_number"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}

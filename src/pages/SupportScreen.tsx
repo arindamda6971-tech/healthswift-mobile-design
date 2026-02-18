@@ -21,7 +21,7 @@ const supportOptions = [
     label: "WhatsApp Support",
     description: "Chat with us on WhatsApp",
     action: () => {
-      window.open(`https://wa.me/91${SUPPORT_PHONE}`, "_blank");
+      window.location.href = `https://wa.me/91${SUPPORT_PHONE}`;
     },
     color: "bg-green-500/10",
     iconColor: "text-green-500",

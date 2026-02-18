@@ -98,7 +98,7 @@ const DoctorConsultScreen = () => {
     : null;
 
   return (
-    <MobileLayout showNav={false}>
+    <MobileLayout showNav={true}>
       <ScreenHeader title="Book a Doctor" />
 
       <div className="px-4 pb-32">

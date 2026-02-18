@@ -115,7 +115,7 @@ const ECGTestScreen = () => {
   };
 
   return (
-    <MobileLayout showNav={false}>
+    <MobileLayout showNav={true}>
       <ScreenHeader title="Book ECG Test" />
 
       <div className="px-4 pb-8">

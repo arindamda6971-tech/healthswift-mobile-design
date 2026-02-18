@@ -195,7 +195,7 @@ const ECGDoctorsScreen = () => {
 
   if (!lab) {
     return (
-      <MobileLayout showNav={false}>
+      <MobileLayout showNav={true}>
         <ScreenHeader 
           title="ECG Doctors" 
           onBack={() => navigate(-1)}
@@ -223,7 +223,7 @@ const ECGDoctorsScreen = () => {
   }
 
   return (
-    <MobileLayout showNav={false}>
+    <MobileLayout showNav={true}>
       <ScreenHeader 
         title="Select a Doctor" 
         onBack={() => navigate(-1)}

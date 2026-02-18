@@ -133,7 +133,7 @@ const PhysioConsultScreen = () => {
   };
 
   return (
-    <MobileLayout showNav={false}>
+    <MobileLayout showNav={true}>
       <ScreenHeader title="Book a Physiotherapist" />
 
       <div className="px-4 pb-8">

@@ -264,7 +264,7 @@ const PhysioBookingScreen = () => {
   }
 
   return (
-    <MobileLayout showNav={false}>
+    <MobileLayout showNav={true}>
       <ScreenHeader title="Book Physio Appointment" />
 
       <div className="px-4 pb-44">

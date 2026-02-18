@@ -211,10 +211,10 @@ const DoctorConsultScreen = () => {
                   </div>
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="mb-3">
                       <Button
-                        variant="soft"
-                        className="flex-1"
+                        variant="hero"
+                        className="w-full"
                         onClick={() => {
                           if (!doctor.available) {
                             toast.error("Doctor is currently offline", {
@@ -228,25 +228,7 @@ const DoctorConsultScreen = () => {
                         }}
                       >
                         <Video className="w-4 h-4 mr-2" />
-                        Video ₹{doctor.videoCallFee}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => {
-                          if (!doctor.available) {
-                            toast.error("Doctor is currently offline", {
-                              description: `Next available: ${doctor.nextSlot}`,
-                            });
-                            return;
-                          }
-                          navigate("/consultation-booking", {
-                            state: { type: "audio", professional: doctor, professionalType: "doctor" },
-                          });
-                        }}
-                      >
-                        <Phone className="w-4 h-4 mr-2" />
-                        Audio ₹{doctor.audioCallFee}
+                        Video Call • ₹{doctor.videoCallFee}
                       </Button>
                     </div>
                   </div>

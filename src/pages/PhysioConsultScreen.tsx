@@ -234,22 +234,14 @@ const PhysioConsultScreen = () => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-3">Choose consultation type:</p>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="mb-3">
                     <Button
-                      variant="soft"
-                      className="flex-1"
+                      variant="hero"
+                      className="w-full"
                       onClick={() => handleBookPhysio(physio, "video")}
                     >
                       <Video className="w-4 h-4 mr-2" />
-                      Video ₹{physio.videoCallFee}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleBookPhysio(physio, "audio")}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Audio ₹{physio.audioCallFee}
+                      Video Call • ₹{physio.videoCallFee}
                     </Button>
                   </div>
                   <div>

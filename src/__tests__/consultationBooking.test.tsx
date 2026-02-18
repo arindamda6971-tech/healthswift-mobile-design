@@ -41,6 +41,16 @@ describe('ConsultationBooking -> Payment navigation', () => {
       </MemoryRouter>
     );
 
+    // Fill patient details
+    const nameInput = await screen.findByPlaceholderText(/e.g. John Doe/i);
+    await user.type(nameInput, 'John Doe');
+
+    const ageInput = await screen.findByPlaceholderText(/e.g. 35/i);
+    await user.type(ageInput, '35');
+
+    const genderSelect = await screen.findByRole('combobox');
+    await user.selectOptions(genderSelect, 'Male');
+
     const btn = await screen.findByRole('button', { name: /Book Appointment/i });
     await user.click(btn);
 
@@ -62,6 +72,16 @@ describe('ConsultationBooking -> Payment navigation', () => {
         </Routes>
       </MemoryRouter>
     );
+
+    // Fill patient details
+    const nameInput = await screen.findByPlaceholderText(/e.g. John Doe/i);
+    await user.type(nameInput, 'John Doe');
+
+    const ageInput = await screen.findByPlaceholderText(/e.g. 35/i);
+    await user.type(ageInput, '35');
+
+    const genderSelect = await screen.findByRole('combobox');
+    await user.selectOptions(genderSelect, 'Male');
 
     // Physiotherapist-specific help text should be visible
     expect(await screen.findByText(/Physiotherapist will call you shortly/i)).toBeInTheDocument();

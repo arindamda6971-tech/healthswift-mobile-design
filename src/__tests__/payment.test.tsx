@@ -58,6 +58,9 @@ describe('CartScreen — patient details in cart', () => {
     const phoneInput = screen.getByLabelText(/Patient phone/i);
     await user.type(phoneInput, '9876543210');
 
+    const contactPhoneInput = screen.getByLabelText(/Valid phone number/i);
+    await user.type(contactPhoneInput, '9876543210');
+
     expect(proceedBtn).toBeEnabled();
 
     await user.click(proceedBtn);
@@ -87,11 +90,13 @@ describe('CartScreen — patient details in cart', () => {
     const ageInput = screen.getByLabelText(/Patient age/i);
     const genderSelect = screen.getByLabelText(/Patient gender/i);
     const phoneInput = screen.getByLabelText(/Patient phone/i);
+    const contactPhoneInput = screen.getByLabelText(/Valid phone number/i);
 
     await user.type(nameInput, 'John Doe');
     await user.type(ageInput, '35');
     await user.selectOptions(genderSelect, 'Male');
     await user.type(phoneInput, '12345');
+    await user.type(contactPhoneInput, '9876543210');
 
     // still invalid — proceed remains disabled and validation message visible
     expect(proceedBtn).toBeDisabled();

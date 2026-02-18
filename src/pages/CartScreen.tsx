@@ -67,7 +67,7 @@ const CartScreen = () => {
     Number(patientAge) <= 120 &&
     patientGender.trim().length > 0 &&
     /^\d{10}$/.test(patientPhone) &&
-    (!isHomeCollection || /^\d{10}$/.test(contactPhone));
+    /^\d{10}$/.test(contactPhone);
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -530,24 +530,22 @@ const CartScreen = () => {
               />
             </div>
 
-            {isHomeCollection && (
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="contact_phone">Contact Phone (for home visit)</Label>
-                <Input
-                  id="contact_phone"
-                  placeholder="10-digit mobile"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                  className="bg-muted border-0 rounded-xl"
-                  aria-label="Contact phone"
-                  maxLength={10}
-                />
-              </div>
-            )}
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="valid_phone">Enter your valid phone number</Label>
+              <Input
+                id="valid_phone"
+                placeholder="10-digit mobile"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                className="bg-muted border-0 rounded-xl"
+                aria-label="Valid phone number"
+                maxLength={10}
+              />
+            </div>
           </div>
           {!isPatientInfoValid && (
             <div className="mt-3 text-xs text-destructive">
-              Please provide a valid patient name, age (1–120), gender and 10-digit phone number{isHomeCollection ? ' and contact phone' : ''}.
+              Please provide a valid patient name, age (1–120), gender, 10-digit phone number, and valid contact phone number.
             </div>
           )}
         </motion.div>

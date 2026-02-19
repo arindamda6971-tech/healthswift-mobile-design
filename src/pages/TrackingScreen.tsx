@@ -103,15 +103,15 @@ const TrackingScreen = () => {
           scheduledDate: orderData.scheduled_date || null,
           scheduledTimeSlot: orderData.scheduled_time_slot || null,
           subtotal: orderData.subtotal ?? 0,
-          couponApplied: orderData.coupon_applied || false,
+          couponApplied: !!orderData.coupon_code,
           discount: orderData.discount ?? 0,
           total: orderData.total ?? orderData.subtotal ?? 0,
-          selectedPayment: orderData.payment_method || null,
+          selectedPayment: orderData.payment_method ?? undefined,
           paymentVerified: orderData.payment_status === "completed",
-          patientName: null,
-          patientAge: null,
-          patientGender: null,
-          patientPhone: null,
+          patientName: undefined,
+          patientAge: undefined,
+          patientGender: undefined,
+          patientPhone: undefined,
         });
       } catch (err) {
         if (import.meta.env.DEV) console.error("Error fetching order:", err);

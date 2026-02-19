@@ -56,6 +56,21 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         runtimeCaching: [
           {
+            // Cache bundled woff2 fonts from same origin for repeat visits
+            urlPattern: /\/assets\/.*\.woff2$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "local-fonts-cache",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
             options: {

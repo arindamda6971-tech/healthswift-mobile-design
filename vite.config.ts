@@ -1,8 +1,34 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+// Plugin to inject font preload links into the HTML at build time
+function fontPreloadPlugin(): Plugin {
+  return {
+    name: "font-preload",
+    enforce: "post",
+    transformIndexHtml(html, ctx) {
+      // Only in build mode when we have the bundle info
+      if (!ctx.bundle) return html;
+      const fontFiles: string[] = [];
+      for (const [fileName] of Object.entries(ctx.bundle)) {
+        if (fileName.endsWith(".woff2") && fileName.startsWith("assets/")) {
+          fontFiles.push(fileName);
+        }
+      }
+      const preloadTags = fontFiles
+        .map(
+          (f) =>
+            `<link rel="preload" as="font" type="font/woff2" crossorigin="anonymous" href="/${f}" />`
+        )
+        .join("\n    ");
+      // Insert preload tags right before </head>
+      return html.replace("</head>", `    ${preloadTags}\n  </head>`);
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -13,6 +39,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    fontPreloadPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "script-defer",

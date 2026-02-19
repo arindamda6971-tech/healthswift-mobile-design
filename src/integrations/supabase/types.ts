@@ -746,7 +746,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      phlebotomists_public: {
+        Row: {
+          experience_years: number | null
+          id: string | null
+          is_available: boolean | null
+          name: string | null
+          photo_url: string | null
+          rating: number | null
+          reviews_count: number | null
+        }
+        Insert: {
+          experience_years?: number | null
+          id?: string | null
+          is_available?: boolean | null
+          name?: string | null
+          photo_url?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+        }
+        Update: {
+          experience_years?: number | null
+          id?: string | null
+          is_available?: boolean | null
+          name?: string | null
+          photo_url?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

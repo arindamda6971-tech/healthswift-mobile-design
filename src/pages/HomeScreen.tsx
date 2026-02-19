@@ -234,9 +234,7 @@ const HomeScreen = () => {
       
       <MobileLayout>
       {/* Header */}
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      <header
         className="px-4 pt-4 pb-2"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 12px) + 16px)" }}
       >
@@ -323,7 +321,7 @@ const HomeScreen = () => {
             )}
           </AnimatePresence>
         </div>
-      </motion.header>
+      </header>
 
       {/* Diagnostic Centers Carousel */}
       <DiagnosticCentersCarousel centers={diagnosticCenters} />

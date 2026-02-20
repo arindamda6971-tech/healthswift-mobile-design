@@ -4,3 +4,7 @@ project_id = "dmfqfswgnfpqeseqswhl"
 verify_jwt = true
 # Runtime still performs a token validation check against Supabase Auth for extra safety
 
+[functions.create-order]
+verify_jwt = false
+# JWT validation done in code via getClaims()
+

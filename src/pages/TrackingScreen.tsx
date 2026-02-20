@@ -143,61 +143,46 @@ const TrackingScreen = () => {
         const subtotal = bookingState?.subtotal || stateCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
         const discount = bookingState?.discount || 0;
         const total = bookingState?.total || subtotal;
-
-        // Enforce payment verification: do not create orders for non-cash payments unless
-        // `paymentVerified` is explicitly true in the navigation state.
         const paymentMethod = bookingState?.selectedPayment || null;
-        const paymentVerified = bookingState?.paymentVerified === true;
 
-        if (paymentMethod && paymentMethod !== 'cash' && !paymentVerified) {
-          // Block order creation — payment not verified
-          setOrderError('Payment not verified. Please complete payment before booking.');
+        // Create order via server-side edge function for price validation
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) {
+          setOrderError("Please log in to complete your booking");
           setIsCreatingOrder(false);
-          // Send user back to payment screen to complete verification
-          navigate('/payment', { state: bookingState });
           return;
         }
 
-        // Create order with booking details — mark payment/status appropriately
-        const { data: orderData, error: orderError } = await supabase
-          .from("orders")
-          .insert({
-            user_id: supabaseUserId,
-            address_id: bookingState?.addressId || null,
-            scheduled_date: bookingState?.scheduledDate || null,
-            scheduled_time_slot: bookingState?.scheduledTimeSlot || null,
-            subtotal: subtotal,
-            discount: discount,
-            total: total,
-            payment_method: paymentMethod,
-            status: paymentVerified ? 'confirmed' : 'pending',
-            payment_status: paymentVerified ? 'completed' : 'pending',
-            special_instructions: bookingState?.patientName
-              ? `Patient: ${bookingState.patientName} (Age: ${bookingState.patientAge ?? 'N/A'}${bookingState.patientGender ? `, Gender: ${bookingState.patientGender}` : ''}${bookingState.patientPhone ? `, Phone: ${bookingState.patientPhone}` : ''})`
-              : null,
-          })
-          .select()
-          .single();
+        const { data: fnData, error: fnError } = await supabase.functions.invoke("create-order", {
+          body: {
+            cartItems: stateCartItems.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              familyMemberId: item.familyMemberId || null,
+              packageId: item.packageId || null,
+            })),
+            addressId: bookingState?.addressId || null,
+            scheduledDate: bookingState?.scheduledDate || null,
+            scheduledTimeSlot: bookingState?.scheduledTimeSlot || null,
+            subtotal,
+            discount,
+            total,
+            paymentMethod,
+            couponCode: bookingState?.couponApplied ? "HEALTH100" : null,
+            patientName: bookingState?.patientName,
+            patientAge: bookingState?.patientAge,
+            patientGender: bookingState?.patientGender,
+            patientPhone: bookingState?.patientPhone,
+          },
+        });
 
-        if (orderError) throw orderError;
+        if (fnError) throw fnError;
+        if (fnData?.error) throw new Error(fnData.error);
 
-        setOrderId(orderData.id);
-
-        // Create order items with family_member_id
-        const orderItems = stateCartItems.map((item: any) => ({
-          order_id: orderData.id,
-          test_id: item.id,
-          package_id: item.packageId || null,
-          quantity: item.quantity,
-          price: item.price,
-          family_member_id: item.familyMemberId || null,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from("order_items")
-          .insert(orderItems);
-
-        if (itemsError) throw itemsError;
+        setOrderId(fnData.orderId);
 
         // Clear cart after successful order creation
         clearCart();

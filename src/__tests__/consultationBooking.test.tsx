@@ -24,6 +24,7 @@ const PROFESSIONAL = {
   image: 'https://example.com/doc.jpg',
   videoCallFee: 350,
   audioCallFee: 250,
+  physicalCallFee: 450,
 };
 
 describe('ConsultationBooking -> Payment navigation', () => {
@@ -100,5 +101,39 @@ describe('ConsultationBooking -> Payment navigation', () => {
 
     const payment = await screen.findByTestId('payment-spy');
     expect(payment).toHaveTextContent('Subtotal: ₹250');
+  });
+
+  it('navigates to /payment with physical consultation subtotal when Book Appointment is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: '/consultation-booking', state: { type: 'physical', professional: PROFESSIONAL, professionalType: 'doctor' } }]}
+      >
+        <Routes>
+          <Route path="/consultation-booking" element={<ConsultationBookingScreen />} />
+          <Route path="/payment" element={<PaymentSpy />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Fill patient details
+    const nameInput = await screen.findByPlaceholderText(/e.g. John Doe/i);
+    await user.type(nameInput, 'John Doe');
+
+    const ageInput = await screen.findByPlaceholderText(/e.g. 35/i);
+    await user.type(ageInput, '35');
+
+    const genderSelect = await screen.findByRole('combobox');
+    await user.click(genderSelect);
+    const maleOption = await screen.findByRole('option', { name: 'Male' });
+    await user.click(maleOption);
+
+    const btn = await screen.findByRole('button', { name: /Book Appointment/i });
+    await user.click(btn);
+
+    // PaymentSpy should be rendered with subtotal = physicalCallFee
+    const payment = await screen.findByTestId('payment-spy');
+    expect(payment).toHaveTextContent('Subtotal: ₹450');
   });
 });

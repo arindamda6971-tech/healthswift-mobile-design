@@ -22,10 +22,11 @@ interface Professional {
   consultationFee?: number;
   videoCallFee?: number;
   audioCallFee?: number;
+  physicalCallFee?: number;
 }
 
 type LocationState = {
-  type: "video" | "audio";
+  type: "video" | "audio" | "physical";
   professional: Professional;
   professionalType: "doctor" | "physiotherapist";
 } | null;
@@ -71,13 +72,14 @@ const ConsultationBookingScreen = () => {
   const { professional, type } = state;
 
   const isAudio = type === "audio";
+  const isPhysical = type === "physical";
   const professionalType = state.professionalType || "doctor";
   const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
   const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : passedPatientPhone; 
 
   // Determine consultation fee from provided professional object. Support both
-  // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`).
-  const consultationFee = professional.consultationFee ?? (isAudio ? professional.audioCallFee : professional.videoCallFee) ?? 0;
+  // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`/`physicalCallFee`).
+  const consultationFee = professional.consultationFee ?? (isAudio ? professional.audioCallFee : isPhysical ? professional.physicalCallFee : professional.videoCallFee) ?? 0;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -131,7 +133,7 @@ const ConsultationBookingScreen = () => {
         cartItems: [
           {
             id: `consult-${professional.id}`,
-            name: `${professional.name} Consultation (${isAudio ? "Audio" : "Video"})`,
+            name: `${professional.name} Consultation (${isAudio ? "Audio" : isPhysical ? "Physical" : "Video"})`,
             price: consultationFee,
             quantity: 1,
           },
@@ -143,7 +145,7 @@ const ConsultationBookingScreen = () => {
         bookingType: "consultation",
         professionalId: professional.id,
         professionalName: professional.name,
-        consultationMode: isAudio ? "audio" : "video",
+        consultationMode: isAudio ? "audio" : isPhysical ? "physical" : "video",
         patientName: patientName.trim() || null,
         patientAge: patientAge ? Number(patientAge) : null,
         patientGender: patientGender || null,

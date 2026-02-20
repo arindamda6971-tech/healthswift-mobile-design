@@ -13,6 +13,7 @@ import {
   Brain,
   Heart,
   User,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ const doctors = [
     nextSlot: "Available now",
     videoCallFee: 299,
     audioCallFee: 199,
+    physicalCallFee: 499,
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&crop=face",
   },
   {
@@ -45,6 +47,7 @@ const doctors = [
     nextSlot: "In 15 mins",
     videoCallFee: 399,
     audioCallFee: 299,
+    physicalCallFee: 599,
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
   },
   {
@@ -58,6 +61,7 @@ const doctors = [
     nextSlot: "Tomorrow 10 AM",
     videoCallFee: 599,
     audioCallFee: 499,
+    physicalCallFee: 799,
     image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=200&h=200&fit=crop&crop=face",
   },
 ];
@@ -229,6 +233,26 @@ const DoctorConsultScreen = () => {
                       >
                         <Video className="w-4 h-4 mr-2" />
                         Video Call • ₹{doctor.videoCallFee}
+                      </Button>
+                    </div>
+                    <div className="mb-3">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          if (!doctor.available) {
+                            toast.error("Doctor is currently offline", {
+                              description: `Next available: ${doctor.nextSlot}`,
+                            });
+                            return;
+                          }
+                          navigate("/consultation-booking", {
+                            state: { type: "physical", professional: doctor, professionalType: "doctor" },
+                          });
+                        }}
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Physical Appointment • ₹{doctor.physicalCallFee}
                       </Button>
                     </div>
                   </div>

@@ -70,12 +70,14 @@ const PhysioBookingScreen = () => {
   const [patientName, setPatientName] = useState<string>(String(incomingPatientName || ""));
   const [patientAge, setPatientAge] = useState<string>(incomingPatientAge ? String(incomingPatientAge) : "");
   const [patientGender, setPatientGender] = useState<string>(String(incomingPatientGender || ""));
+  const [patientPhone, setPatientPhone] = useState<string>(incomingPatientPhone ? String(incomingPatientPhone) : "");
   const isPatientInfoValid =
     patientName.trim().length > 0 &&
     /^\d{1,3}$/.test(patientAge) &&
     Number(patientAge) > 0 &&
     Number(patientAge) <= 120 &&
-    patientGender.trim().length > 0; 
+    patientGender.trim().length > 0 &&
+    /^\d{10}$/.test(patientPhone); 
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -254,7 +256,7 @@ const PhysioBookingScreen = () => {
         patientName: patientName.trim() || null,
         patientAge: patientAge ? Number(patientAge) : null,
         patientGender: patientGender || null,
-        patientPhone: incomingPatientPhone || null,
+        patientPhone: patientPhone.trim() || null,
       },
     });
   };
@@ -333,16 +335,27 @@ const PhysioBookingScreen = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="patient_phone">Phone number</Label>
+              <Input
+                id="patient_phone"
+                placeholder="10-digit mobile number"
+                value={patientPhone}
+                onChange={(e) => setPatientPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                aria-label="Patient phone"
+                maxLength={10}
+              />
+            </div>
           </div>
           {!isPatientInfoValid && (
-            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
+            <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120), gender, and 10-digit phone number.</div>
           )}
         </div>
 
         {/* Patient phone (if provided) */}
-        {incomingPatientPhone && (
+        {patientPhone && (
           <div className="mt-4">
-            <PatientPhonePill phone={incomingPatientPhone} />
+            <PatientPhonePill phone={patientPhone} />
           </div>
         )}
 

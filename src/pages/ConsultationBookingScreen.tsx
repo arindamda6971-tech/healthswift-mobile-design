@@ -48,12 +48,14 @@ const ConsultationBookingScreen = () => {
   const [patientName, setPatientName] = useState<string>(String(incomingPatientName || ""));
   const [patientAge, setPatientAge] = useState<string>(incomingPatientAge ? String(incomingPatientAge) : "");
   const [patientGender, setPatientGender] = useState<string>(String(incomingPatientGender || ""));
+  const [patientPhone, setPatientPhone] = useState<string>(passedPatientPhone ? String(passedPatientPhone) : "");
   const isPatientInfoValid =
     patientName.trim().length > 0 &&
     /^\d{1,3}$/.test(patientAge) &&
     Number(patientAge) > 0 &&
     Number(patientAge) <= 120 &&
-    patientGender.trim().length > 0;
+    patientGender.trim().length > 0 &&
+    (isPhysical ? /^\d{10}$/.test(patientPhone) : true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -75,7 +77,7 @@ const ConsultationBookingScreen = () => {
   const isPhysical = type === "physical";
   const professionalType = state.professionalType || "doctor";
   const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
-  const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : passedPatientPhone; 
+  const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : (isPhysical ? patientPhone : passedPatientPhone); 
 
   // Determine consultation fee from provided professional object. Support both
   // older `consultationFee` field and newer per-type fees (`videoCallFee`/`audioCallFee`/`physicalCallFee`).
@@ -227,9 +229,22 @@ const ConsultationBookingScreen = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {isPhysical && (
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="patient_phone">Phone number</Label>
+                  <Input
+                    id="patient_phone"
+                    placeholder="10-digit mobile number"
+                    value={patientPhone}
+                    onChange={(e) => setPatientPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                    aria-label="Patient phone"
+                    maxLength={10}
+                  />
+                </div>
+              )}
             </div>
             {!isPatientInfoValid && (
-              <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120) and gender.</div>
+              <div className="mt-3 text-xs text-destructive">Please provide a valid patient name, age (1–120), gender{isPhysical ? ', and 10-digit phone number' : ''}.</div>
             )}
           </div>
 

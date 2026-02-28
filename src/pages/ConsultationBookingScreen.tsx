@@ -44,18 +44,12 @@ const ConsultationBookingScreen = () => {
   const incomingPatientName = (location.state as any)?.patientName ?? "";
   const incomingPatientAge = (location.state as any)?.patientAge ?? "";
   const incomingPatientGender = (location.state as any)?.patientGender ?? "";
+  const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
 
   const [patientName, setPatientName] = useState<string>(String(incomingPatientName || ""));
   const [patientAge, setPatientAge] = useState<string>(incomingPatientAge ? String(incomingPatientAge) : "");
   const [patientGender, setPatientGender] = useState<string>(String(incomingPatientGender || ""));
   const [patientPhone, setPatientPhone] = useState<string>(passedPatientPhone ? String(passedPatientPhone) : "");
-  const isPatientInfoValid =
-    patientName.trim().length > 0 &&
-    /^\d{1,3}$/.test(patientAge) &&
-    Number(patientAge) > 0 &&
-    Number(patientAge) <= 120 &&
-    patientGender.trim().length > 0 &&
-    (isPhysical ? /^\d{10}$/.test(patientPhone) : true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +70,14 @@ const ConsultationBookingScreen = () => {
   const isAudio = type === "audio";
   const isPhysical = type === "physical";
   const professionalType = state.professionalType || "doctor";
-  const passedPatientPhone = (location.state as any)?.patientPhone ?? null;
+
+  const isPatientInfoValid =
+    patientName.trim().length > 0 &&
+    /^\d{1,3}$/.test(patientAge) &&
+    Number(patientAge) > 0 &&
+    Number(patientAge) <= 120 &&
+    patientGender.trim().length > 0 &&
+    (isPhysical ? /^\d{10}$/.test(patientPhone) : true);
   const displayPhone = isAudio ? (phone.trim() || passedPatientPhone) : (isPhysical ? patientPhone : passedPatientPhone); 
 
   // Determine consultation fee from provided professional object. Support both

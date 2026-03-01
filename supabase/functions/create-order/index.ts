@@ -109,22 +109,75 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Server-side pricing for ECG items: look up from diagnostic_centers
+    const ecgItems = cartItems.filter((i) => i.id.startsWith("ecg-"));
+    if (ecgItems.length > 0) {
+      // ECG item IDs follow pattern: ecg-{labId}-{doctorId} or ecg-{doctorId}
+      const labIds = ecgItems
+        .map((i) => {
+          const parts = i.id.replace("ecg-", "").split("-");
+          // If 2+ UUID-length parts, first is labId
+          return parts.length >= 2 ? parts[0] : null;
+        })
+        .filter(Boolean) as string[];
+
+      if (labIds.length > 0) {
+        const { data: centers } = await adminClient
+          .from("diagnostic_centers")
+          .select("id, ecg_price")
+          .in("id", labIds);
+
+        if (centers) {
+          for (const c of centers) {
+            if (c.ecg_price != null) {
+              // Map all ECG items from this lab to the lab's ecg_price
+              for (const item of ecgItems) {
+                if (item.id.includes(c.id)) {
+                  priceMap[item.id] = Number(c.ecg_price);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Server-side pricing for AI-recommended tests (from prescription analysis)
+    // These have fixed category-based pricing maintained server-side
+    const AI_TEST_PRICES: Record<string, number> = {
+      "Blood": 299, "Thyroid": 399, "Liver": 449, "Kidney": 499,
+      "Diabetes": 199, "Heart": 599, "Vitamin": 549, "Urine": 149,
+      "Imaging": 999, "Other": 399,
+    };
+
     // Validate and compute server-side subtotal
     let serverSubtotal = 0;
     for (const item of cartItems) {
       const serverPrice = priceMap[item.id];
       if (serverPrice !== undefined) {
-        // Use the server price, not client-supplied price
         serverSubtotal += serverPrice * item.quantity;
-      } else {
-        // For ECG/AI items not in DB, accept client price but cap at reasonable amount
-        if (item.price > 50000) {
-          return new Response(
-            JSON.stringify({ error: "Invalid item price" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+      } else if (item.id.startsWith("ai-")) {
+        // AI-recommended tests: validate against known category prices
+        // Find matching price from known values
+        const knownPrices = Object.values(AI_TEST_PRICES);
+        if (knownPrices.includes(item.price)) {
+          serverSubtotal += item.price * item.quantity;
+        } else {
+          // Default to "Other" category price
+          serverSubtotal += AI_TEST_PRICES["Other"] * item.quantity;
         }
-        serverSubtotal += item.price * item.quantity;
+      } else if (item.id.startsWith("ecg-") && priceMap[item.id] === undefined) {
+        // ECG item with no lab price found - reject
+        return new Response(
+          JSON.stringify({ error: "Could not verify ECG test pricing. Please try again." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } else {
+        // Unknown item type - reject entirely
+        return new Response(
+          JSON.stringify({ error: "Unknown item in order" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 
@@ -136,12 +189,17 @@ Deno.serve(async (req) => {
 
     const serverTotal = Math.max(0, serverSubtotal - serverDiscount);
 
-    // Determine payment status
-    // Only cash-on-delivery is currently supported as "verified"
-    // Online payment methods require gateway integration (not yet implemented)
-    const isCash = paymentMethod === "cash";
-    const paymentStatus = isCash ? "completed" : "pending";
-    const orderStatus = isCash ? "confirmed" : "pending";
+    // Payment verification: only cash-on-delivery is supported without a payment gateway
+    // Online payment methods are NOT accepted until a real payment gateway (Stripe/Razorpay) is integrated
+    if (paymentMethod && paymentMethod !== "cash") {
+      return new Response(
+        JSON.stringify({ error: "Online payments are not yet available. Please select Cash on Delivery." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const paymentStatus = "completed";
+    const orderStatus = "confirmed";
 
     // Build special instructions
     let specialInstructions: string | null = null;

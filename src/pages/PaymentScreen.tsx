@@ -10,9 +10,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import { useCart } from "@/contexts/CartContext";
 
 const paymentMethods = [
-  { id: "upi", icon: Smartphone, name: "UPI", subtitle: "Google Pay, PhonePe, Paytm" },
-  { id: "card", icon: CreditCard, name: "Card", subtitle: "Credit / Debit Card" },
-  { id: "wallet", icon: Wallet, name: "Wallet", subtitle: "Paytm, Amazon Pay" },
+  { id: "cash", icon: Wallet, name: "Cash on Delivery", subtitle: "Pay when sample is collected" },
 ];
 
 interface PaymentState {
@@ -40,7 +38,7 @@ const PaymentScreen = () => {
   const location = useLocation();
   const { subtotal } = useCart();
   const [couponCode, setCouponCode] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState("upi");
+  const [selectedPayment, setSelectedPayment] = useState("cash");
   const [couponApplied, setCouponApplied] = useState(false);
 
   const paymentState = location.state as PaymentState | undefined;
@@ -157,12 +155,10 @@ const PaymentScreen = () => {
           </div>
         </motion.div>
 
-        {/* Warning about payment verification */}
-        {selectedPayment !== 'cash' && (
-          <div className="mt-3 px-3 py-2 rounded-md bg-warning/10 border border-warning/20 text-xs text-warning-foreground">
-            Online payments require gateway verification — orders will not be created until payment is confirmed.
-          </div>
-        )}
+        {/* Online payments notice */}
+        <div className="mt-3 px-3 py-2 rounded-md bg-muted border border-border text-xs text-muted-foreground">
+          Online payment options (UPI, Cards, Wallets) coming soon.
+        </div>
 
         {/* Price breakdown */}
         <motion.div

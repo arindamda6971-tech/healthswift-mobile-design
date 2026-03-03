@@ -75,5 +75,12 @@ export function useFamilyMembers() {
     [members, persist]
   );
 
-  return { members, addMember, removeMember };
+  const updateMember = useCallback(
+    (id: string, data: Omit<FamilyMember, "id">) => {
+      persist(members.map((m) => (m.id === id ? { ...data, id } : m)));
+    },
+    [members, persist]
+  );
+
+  return { members, addMember, removeMember, updateMember };
 }

@@ -49,6 +49,7 @@ const ECGBookingScreen = lazy(() => import("./pages/ECGBookingScreen"));
 const ConsultationCallScreen = lazy(() => import("./pages/ConsultationCallScreen"));
 const ConsultationBookingScreen = lazy(() => import("./pages/ConsultationBookingScreen"));
 const TrackingScreen = lazy(() => import("./pages/TrackingScreen"));
+const FamilyMembersScreen = lazy(() => import("./pages/FamilyMembersScreen"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -92,7 +93,7 @@ const App = () => (
                     <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
                     <Route path="/subscription" element={<ProtectedRoute><SubscriptionScreen /></ProtectedRoute>} />
                     <Route path="/doctor-consult" element={<ProtectedRoute><DoctorConsultScreen /></ProtectedRoute>} />
-                    {/* Family screen removed */}
+                    <Route path="/family-members" element={<ProtectedRoute><FamilyMembersScreen /></ProtectedRoute>} />
                     <Route path="/partner-labs" element={<ProtectedRoute><PartnerLabsScreen /></ProtectedRoute>} />
                     <Route path="/lab/:labId" element={<ProtectedRoute><LabDetailScreen /></ProtectedRoute>} />
                     <Route path="/package/:packageId" element={<ProtectedRoute><PackageDetailScreen /></ProtectedRoute>} />

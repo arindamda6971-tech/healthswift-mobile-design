@@ -24,11 +24,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAddresses } from "@/contexts/AddressContext";
 import { useFamilyMembers } from "@/hooks/useFamilyMembers";
-import AddFamilyMemberDialog from "@/components/AddFamilyMemberDialog";
+
 
 const menuItems: { icon: any; label: string; path: string; badge?: string | null }[] = [
   { icon: MapPin, label: "Saved Addresses", path: "/saved-addresses", badge: null },
-  { icon: Users, label: "Family Members", path: "#family", badge: null },
+  { icon: Users, label: "Family Members", path: "/family-members", badge: null },
   { icon: Crown, label: "Subscription Plans", path: "/subscription", badge: null },
   { icon: HelpCircle, label: "Help & Support", path: "/support", badge: null },
 ];
@@ -40,7 +40,7 @@ const ProfileScreen = () => {
   const { membershipType, isActive } = useSubscription();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
   const { members: familyMembers, addMember } = useFamilyMembers();
-  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  
 
   useEffect(() => {
     const loadProfileImage = async () => {
@@ -156,13 +156,7 @@ const ProfileScreen = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.05 }}
-              onClick={() => {
-                if (item.path === "#family") {
-                  setShowAddMemberDialog(true);
-                } else {
-                  navigate(item.path);
-                }
-              }}
+              onClick={() => navigate(item.path)}
               className="w-full soft-card flex items-center gap-4"
             >
               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
@@ -221,11 +215,6 @@ const ProfileScreen = () => {
         </motion.p>
       </div>
 
-      <AddFamilyMemberDialog
-        open={showAddMemberDialog}
-        onOpenChange={setShowAddMemberDialog}
-        onAdd={addMember}
-      />
     </MobileLayout>
   );
 };

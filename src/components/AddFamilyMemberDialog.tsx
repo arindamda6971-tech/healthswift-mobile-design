@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,15 +23,35 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (member: Omit<FamilyMember, "id">) => void;
+  editMember?: FamilyMember | null;
+  onEdit?: (id: string, data: Omit<FamilyMember, "id">) => void;
 }
 
-const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd }: Props) => {
+const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd, editMember, onEdit }: Props) => {
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [phone, setPhone] = useState("");
   const [relationship, setRelationship] = useState("");
   const [customRelationship, setCustomRelationship] = useState("");
+
+  // Populate fields when editing
+  const populateFromMember = (member: FamilyMember) => {
+    setFullName(member.fullName);
+    setAge(member.age);
+    setGender(member.gender);
+    setPhone(member.phone);
+    setRelationship(member.relationship);
+    setCustomRelationship(member.customRelationship || "");
+  };
+
+  useEffect(() => {
+    if (open && editMember) {
+      populateFromMember(editMember);
+    } else if (open && !editMember) {
+      reset();
+    }
+  }, [open, editMember]);
 
   const reset = () => {
     setFullName("");
@@ -50,15 +70,22 @@ const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd }: Props) => {
     if (!relationship) { toast.error("Relationship is required"); return; }
     if (relationship === "Other" && !customRelationship.trim()) { toast.error("Please specify relationship"); return; }
 
-    onAdd({
+    const memberData = {
       fullName: fullName.trim(),
       age,
       gender,
       phone,
       relationship,
       customRelationship: relationship === "Other" ? customRelationship.trim() : undefined,
-    });
-    toast.success("Family member added");
+    };
+
+    if (editMember && onEdit) {
+      onEdit(editMember.id, memberData);
+      toast.success("Family member updated");
+    } else {
+      onAdd(memberData);
+      toast.success("Family member added");
+    }
     reset();
     onOpenChange(false);
   };
@@ -67,7 +94,7 @@ const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd }: Props) => {
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-[95vw] rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add Family Member</DialogTitle>
+          <DialogTitle>{editMember ? "Edit Family Member" : "Add Family Member"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -159,7 +186,7 @@ const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd }: Props) => {
             Cancel
           </Button>
           <Button variant="hero" onClick={handleSubmit}>
-            Add Member
+            {editMember ? "Save Changes" : "Add Member"}
           </Button>
         </DialogFooter>
       </DialogContent>

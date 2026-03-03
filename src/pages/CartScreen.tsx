@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar, Upload, FileImage, X, Check, Building2 } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingCart, MapPin, ChevronRight, Clock, Calendar, Upload, FileImage, X, Check, Building2, UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { useFamilyMembers } from "@/hooks/useFamilyMembers";
+import AddFamilyMemberDialog from "@/components/AddFamilyMemberDialog";
 
 type Address = Tables<"addresses">;
 
@@ -46,6 +48,9 @@ const CartScreen = () => {
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, subtotal, currentLabName, currentLabId, isLoading } = useCart();
   const { supabaseUserId } = useAuth();
+  const { members: familyMembers, addMember } = useFamilyMembers();
+  const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | "self">("self");
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
@@ -68,6 +73,24 @@ const CartScreen = () => {
     patientGender.trim().length > 0 &&
     /^\d{10}$/.test(patientPhone) &&
     /^\d{10}$/.test(contactPhone);
+
+  // When a family member is selected, auto-fill patient fields
+  useEffect(() => {
+    if (selectedMemberId === "self") {
+      setPatientName("");
+      setPatientAge("");
+      setPatientGender("");
+      setPatientPhone("");
+    } else {
+      const member = familyMembers.find((m) => m.id === selectedMemberId);
+      if (member) {
+        setPatientName(member.fullName);
+        setPatientAge(member.age);
+        setPatientGender(member.gender);
+        setPatientPhone(member.phone);
+      }
+    }
+  }, [selectedMemberId, familyMembers]);
   
   // Prescription upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -474,13 +497,56 @@ const CartScreen = () => {
           transition={{ delay: 0.1 }}
           className="mt-6 soft-card"
         >
-          <h3 className="font-semibold text-foreground mb-3">Patient details</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="patient_name">Patient name</Label>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-foreground">Patient Details</h3>
+            <button
+              onClick={() => setShowAddMemberDialog(true)}
+              className="flex items-center gap-1 text-xs font-medium text-primary"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Member
+            </button>
+          </div>
+
+          {/* Family member selector */}
+          {familyMembers.length > 0 && (
+            <div className="mb-4">
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Select Patient</Label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedMemberId("self")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    selectedMemberId === "self"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-foreground border-border"
+                  }`}
+                >
+                  Self
+                </button>
+                {familyMembers.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedMemberId(m.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      selectedMemberId === m.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-foreground border-border"
+                    }`}
+                  >
+                    {m.fullName} ({m.relationship === "Other" ? m.customRelationship : m.relationship})
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {/* Line 1: Full Name (full width) */}
+            <div className="space-y-1.5">
+              <Label htmlFor="patient_name">Full Name *</Label>
               <Input
                 id="patient_name"
-                placeholder="Full name"
+                placeholder="Enter full name"
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
                 className="bg-muted border-0 rounded-xl"
@@ -488,67 +554,87 @@ const CartScreen = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="patient_age">Age</Label>
-              <Input
-                id="patient_age"
-                placeholder="Age"
-                value={patientAge}
-                onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
-                className="bg-muted border-0 rounded-xl"
-                aria-label="Patient age"
-                maxLength={3}
-              />
+            {/* Line 2: Age + Gender (same row) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="patient_age">Age *</Label>
+                <Input
+                  id="patient_age"
+                  placeholder="Age"
+                  value={patientAge}
+                  onChange={(e) => setPatientAge(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="bg-muted border-0 rounded-xl"
+                  aria-label="Patient age"
+                  maxLength={3}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="patient_gender">Gender *</Label>
+                <Select value={patientGender} onValueChange={setPatientGender}>
+                  <SelectTrigger className="bg-muted border-0 rounded-xl">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="patient_gender">Gender</Label>
-              <select
-                id="patient_gender"
-                aria-label="Patient gender"
-                value={patientGender}
-                onChange={(e) => setPatientGender(e.target.value)}
-                className="w-full py-3 px-3 rounded-xl bg-input border border-border"
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+            {/* Line 3: Contact Phone with +91 prefix */}
+            <div className="space-y-1.5">
+              <Label htmlFor="patient_phone">Patient Phone *</Label>
+              <div className="flex items-center gap-2">
+                <span className="flex h-10 items-center rounded-xl bg-muted px-3 text-sm font-medium text-muted-foreground select-none">
+                  +91
+                </span>
+                <Input
+                  id="patient_phone"
+                  placeholder="10-digit number"
+                  value={patientPhone}
+                  onChange={(e) => setPatientPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="bg-muted border-0 rounded-xl flex-1"
+                  aria-label="Patient phone"
+                  maxLength={10}
+                />
+              </div>
             </div>
 
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="patient_phone">Phone</Label>
-              <Input
-                id="patient_phone"
-                placeholder="10-digit mobile"
-                value={patientPhone}
-                onChange={(e) => setPatientPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                className="bg-muted border-0 rounded-xl"
-                aria-label="Patient phone"
-                maxLength={10}
-              />
-            </div>
-
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="valid_phone">Enter your valid phone number</Label>
-              <Input
-                id="valid_phone"
-                placeholder="10-digit mobile"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ""))}
-                className="bg-muted border-0 rounded-xl"
-                aria-label="Valid phone number"
-                maxLength={10}
-              />
+            {/* Contact Phone */}
+            <div className="space-y-1.5">
+              <Label htmlFor="valid_phone">Contact Phone Number *</Label>
+              <div className="flex items-center gap-2">
+                <span className="flex h-10 items-center rounded-xl bg-muted px-3 text-sm font-medium text-muted-foreground select-none">
+                  +91
+                </span>
+                <Input
+                  id="valid_phone"
+                  placeholder="10-digit number"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="bg-muted border-0 rounded-xl flex-1"
+                  aria-label="Contact phone number"
+                  maxLength={10}
+                />
+              </div>
             </div>
           </div>
-          {!isPatientInfoValid && (
+
+          {!isPatientInfoValid && (patientName || patientAge || patientPhone || contactPhone) && (
             <div className="mt-3 text-xs text-destructive">
-              Please provide a valid patient name, age (1–120), gender, 10-digit phone number, and valid contact phone number.
+              Please provide a valid full name, age (1–120), gender, 10-digit patient phone, and contact phone.
             </div>
           )}
         </motion.div>
+
+        {/* Add Family Member Dialog */}
+        <AddFamilyMemberDialog
+          open={showAddMemberDialog}
+          onOpenChange={setShowAddMemberDialog}
+          onAdd={addMember}
+        />
 
         {/* Upload Prescription Section */}
         <motion.div

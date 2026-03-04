@@ -23,6 +23,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Check if location has been verified (skip for the location-check page itself)
+  if (location.pathname !== "/location-check") {
+    const locationChecked = localStorage.getItem(`location_checked_${user.id}`);
+    if (locationChecked !== "true") {
+      return <Navigate to="/location-check" replace />;
+    }
+  }
+
   return <>{children}</>;
 };
 

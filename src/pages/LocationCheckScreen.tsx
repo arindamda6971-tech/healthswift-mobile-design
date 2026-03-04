@@ -1,12 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { MapPin, Navigation, Loader2, AlertCircle, Bell } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, Navigation, Loader2, AlertCircle, Bell, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+
+interface ServiceableArea {
+  pincode: string;
+  city: string | null;
+  state: string | null;
+}
 
 const LocationCheckScreen = () => {
   const navigate = useNavigate();
@@ -17,18 +23,9 @@ const LocationCheckScreen = () => {
   const [locationName, setLocationName] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Check if user already has a saved address (location already checked)
-  useEffect(() => {
-    if (!user) return;
-    const checkExisting = async () => {
-      const locationChecked = localStorage.getItem(`location_checked_${user.id}`);
-      if (locationChecked === "true") {
-        navigate("/home", { replace: true });
-      }
-    };
-    checkExisting();
-  }, [user, navigate]);
+  const [showAreas, setShowAreas] = useState(false);
+  const [areas, setAreas] = useState<ServiceableArea[]>([]);
+  const [areasLoading, setAreasLoading] = useState(false);
 
   const reverseGeocode = async (lat: number, lon: number): Promise<{ pincode: string; display: string }> => {
     try {
@@ -57,6 +54,18 @@ const LocationCheckScreen = () => {
     return !error && !!data;
   };
 
+  const fetchServiceableAreas = async () => {
+    setAreasLoading(true);
+    const { data } = await supabase
+      .from("serviceable_pincodes")
+      .select("pincode, city, state")
+      .eq("is_active", true)
+      .order("city");
+    setAreas((data as ServiceableArea[]) || []);
+    setAreasLoading(false);
+    setShowAreas(true);
+  };
+
   const saveAddressAndProceed = async (pc: string, displayName: string, lat?: number, lon?: number) => {
     if (!user) return;
     try {
@@ -74,7 +83,7 @@ const LocationCheckScreen = () => {
     } catch (e) {
       console.error("Failed to save address:", e);
     }
-    localStorage.setItem(`location_checked_${user.id}`, "true");
+    sessionStorage.setItem(`location_checked_${user.id}`, "true");
     navigate("/home", { replace: true });
   };
 
@@ -137,6 +146,61 @@ const LocationCheckScreen = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute top-20 right-[-40px] w-40 h-40 rounded-full bg-primary/5 blur-3xl" />
       <div className="absolute bottom-20 left-[-40px] w-40 h-40 rounded-full bg-success/5 blur-3xl" />
+
+      {/* View Available Areas FAB */}
+      <button
+        onClick={fetchServiceableAreas}
+        className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-full px-4 py-2 text-xs font-semibold transition-colors"
+      >
+        <List className="w-4 h-4" />
+        Available Areas
+      </button>
+
+      {/* Available Areas Bottom Sheet */}
+      <AnimatePresence>
+        {showAreas && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            onClick={() => setShowAreas(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-background rounded-t-2xl w-full max-w-[430px] max-h-[70vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                <h3 className="text-base font-bold text-foreground">Serviceable Areas</h3>
+                <button onClick={() => setShowAreas(false)} className="text-muted-foreground text-sm">Close</button>
+              </div>
+              <div className="overflow-y-auto flex-1 px-5 py-3">
+                {areasLoading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                ) : areas.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-8">No serviceable areas found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {areas.map((a) => (
+                      <div key={a.pincode} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{a.city || "Unknown City"}{a.state ? `, ${a.state}` : ""}</p>
+                          <p className="text-xs text-muted-foreground">PIN: {a.pincode}</p>
+                        </div>
+                        <span className="text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">Active</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Ask Permission */}
       {step === "ask" && (
@@ -235,17 +299,9 @@ const LocationCheckScreen = () => {
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
           >
-            <motion.div
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-            >
+            <motion.div initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}>
               <svg className="w-12 h-12 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <motion.path
-                  d="M5 13l4 4L19 7"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                />
+                <motion.path d="M5 13l4 4L19 7" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.2 }} />
               </svg>
             </motion.div>
           </motion.div>
@@ -253,9 +309,7 @@ const LocationCheckScreen = () => {
           <p className="text-muted-foreground text-sm mb-1">
             PIN Code: <span className="font-semibold text-foreground">{detectedPincode}</span>
           </p>
-          {locationName && (
-            <p className="text-muted-foreground text-xs mb-4">{locationName}</p>
-          )}
+          {locationName && <p className="text-muted-foreground text-xs mb-4">{locationName}</p>}
           <p className="text-success text-sm font-medium">Redirecting to home...</p>
           <Loader2 className="w-5 h-5 animate-spin text-primary mt-4" />
         </motion.div>

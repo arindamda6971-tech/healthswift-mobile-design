@@ -563,6 +563,33 @@ export type Database = {
         }
         Relationships: []
       }
+      serviceable_pincodes: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          pincode: string
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pincode: string
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pincode?: string
+          state?: string | null
+        }
+        Relationships: []
+      }
       test_categories: {
         Row: {
           created_at: string

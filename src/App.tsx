@@ -19,6 +19,7 @@ import OnboardingScreen from "./pages/OnboardingScreen";
 import LoginScreen from "./pages/LoginScreen";
 
 // All other screens — lazily loaded to reduce initial bundle
+const LocationCheckScreen = lazy(() => import("./pages/LocationCheckScreen"));
 const InstallScreen = lazy(() => import("./pages/InstallScreen"));
 const HomeScreen = lazy(() => import("./pages/HomeScreen"));
 const CategoriesScreen = lazy(() => import("./pages/CategoriesScreen"));
@@ -73,6 +74,9 @@ const App = () => (
                     <Route path="/onboarding" element={<OnboardingScreen />} />
                     <Route path="/login" element={<LoginScreen />} />
                     <Route path="/install" element={<InstallScreen />} />
+                    
+                    {/* Location Gate */}
+                    <Route path="/location-check" element={<ProtectedRoute><LocationCheckScreen /></ProtectedRoute>} />
                     
                     {/* Protected Routes */}
                     <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />

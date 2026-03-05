@@ -590,6 +590,48 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          end_date: string
+          id: string
+          is_auto_renew: boolean
+          membership_type: string
+          start_date: string
+          status: string
+          subscription_plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          end_date: string
+          id?: string
+          is_auto_renew?: boolean
+          membership_type?: string
+          start_date?: string
+          status?: string
+          subscription_plan: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_auto_renew?: boolean
+          membership_type?: string
+          start_date?: string
+          status?: string
+          subscription_plan?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_categories: {
         Row: {
           created_at: string

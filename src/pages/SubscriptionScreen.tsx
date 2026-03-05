@@ -67,7 +67,7 @@ const SubscriptionScreen = () => {
         return;
       }
 
-      await purchaseSubscription(selectedPlan as "monthly" | "yearly", selectedPlanData.price);
+      await purchaseSubscription(selectedPlan as "monthly" | "yearly");
       
       toast.success(`🎉 Welcome to BloodLyn Gold! Your ${selectedPlanData.name} subscription is active.`);
       

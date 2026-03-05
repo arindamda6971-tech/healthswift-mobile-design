@@ -22,7 +22,7 @@ interface UseSubscriptionReturn {
   membershipType: string | null;
   isLoading: boolean;
   error: Error | null;
-  purchaseSubscription: (plan: "monthly" | "yearly", price: number) => Promise<void>;
+  purchaseSubscription: (plan: "monthly" | "yearly") => Promise<void>;
   cancelSubscription: () => Promise<void>;
   refetchSubscription: () => Promise<void>;
 }
@@ -44,7 +44,6 @@ export const useSubscription = (): UseSubscriptionReturn => {
       setIsLoading(true);
       setError(null);
 
-      // Use any type to avoid TypeScript errors with new tables not yet synced to client types
       const { data, error: subscriptionError } = await (supabase
         .from("subscriptions" as any)
         .select("*")
@@ -71,62 +70,21 @@ export const useSubscription = (): UseSubscriptionReturn => {
   }, [fetchSubscription]);
 
   const purchaseSubscription = useCallback(
-    async (plan: "monthly" | "yearly", price: number) => {
+    async (plan: "monthly" | "yearly") => {
       if (!user) {
         throw new Error("User must be logged in to purchase subscription");
       }
 
-      try {
-        // Calculate end date based on plan
-        const endDate = new Date();
-        if (plan === "monthly") {
-          endDate.setMonth(endDate.getMonth() + 1);
-        } else {
-          endDate.setFullYear(endDate.getFullYear() + 1);
-        }
+      // Call edge function instead of direct DB insert
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "purchase-subscription",
+        { body: { plan, action: "purchase" } }
+      );
 
-        // First, cancel any previous subscription
-        const { data: existingSubscriptions } = await (supabase
-          .from("subscriptions" as any)
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("status", "active") as any);
+      if (fnError) throw new Error(fnError.message || "Failed to purchase subscription");
+      if (data?.error) throw new Error(data.error);
 
-        if (existingSubscriptions && existingSubscriptions.length > 0) {
-          await (supabase
-            .from("subscriptions" as any)
-            .update({ status: "cancelled" })
-            .eq("id", existingSubscriptions[0].id) as any);
-        }
-
-        // Insert new subscription
-        const { data: newSubscription, error } = await (supabase
-          .from("subscriptions" as any)
-          .insert({
-            user_id: user.id,
-            subscription_plan: plan,
-            membership_type: "gold",
-            end_date: endDate.toISOString(),
-            status: "active",
-            amount_paid: price,
-            is_auto_renew: true,
-          })
-          .select()
-          .single() as any);
-
-        if (error) throw error;
-
-        // Update user profile subscription type
-        await (supabase
-          .from("profiles")
-          .update({ subscription_type: "gold" as any } as any)
-          .eq("id", user.id) as any);
-
-        setSubscription(newSubscription as Subscription);
-      } catch (err) {
-        console.error("Error purchasing subscription:", err);
-        throw err instanceof Error ? err : new Error("Failed to purchase subscription");
-      }
+      setSubscription(data.subscription as Subscription);
     },
     [user]
   );
@@ -136,28 +94,17 @@ export const useSubscription = (): UseSubscriptionReturn => {
       throw new Error("No active subscription to cancel");
     }
 
-    try {
-      const { error } = await (supabase
-        .from("subscriptions" as any)
-        .update({ status: "cancelled" })
-        .eq("id", subscription.id) as any);
+    // Call edge function instead of direct DB update
+    const { data, error: fnError } = await supabase.functions.invoke(
+      "purchase-subscription",
+      { body: { action: "cancel" } }
+    );
 
-      if (error) throw error;
+    if (fnError) throw new Error(fnError.message || "Failed to cancel subscription");
+    if (data?.error) throw new Error(data.error);
 
-      // Update user profile if we have a user id
-      if (user?.id) {
-        await (supabase
-          .from("profiles")
-          .update({ subscription_type: "none" as any } as any)
-          .eq("id", user.id) as any);
-      }
-
-      setSubscription(null);
-    } catch (err) {
-      console.error("Error cancelling subscription:", err);
-      throw err instanceof Error ? err : new Error("Failed to cancel subscription");
-    }
-  }, [subscription, user?.id]);
+    setSubscription(null);
+  }, [subscription]);
 
   const refetchSubscription = useCallback(async () => {
     await fetchSubscription();

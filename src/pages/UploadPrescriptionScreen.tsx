@@ -230,6 +230,7 @@ const UploadPrescriptionScreen = () => {
           original_price: test.originalPrice,
           discount_percent: parseInt(test.discount),
           report_time_hours: parseInt(test.reportTime),
+          category: test.category,
         }
       } 
     });

@@ -100,6 +100,22 @@ serve(async (req) => {
       );
     }
 
+    // Validate payload size and format
+    const MAX_B64_BYTES = 7_000_000; // ~5 MB image in base64
+    if (typeof imageBase64 !== 'string' || imageBase64.length > MAX_B64_BYTES) {
+      return new Response(
+        JSON.stringify({ error: "Image too large. Maximum size is 5 MB." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!imageBase64.startsWith('data:image/')) {
+      return new Response(
+        JSON.stringify({ error: "Invalid image format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");

@@ -238,7 +238,11 @@ Deno.serve(async (req) => {
       test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
       package_id: item.packageId || null,
       quantity: item.quantity,
-      price: priceMap[item.id] !== undefined ? priceMap[item.id] : item.price,
+      price: priceMap[item.id] !== undefined
+        ? priceMap[item.id]
+        : item.id.startsWith("ai-")
+          ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
+          : item.price,
       family_member_id: item.familyMemberId || null,
     }));
 

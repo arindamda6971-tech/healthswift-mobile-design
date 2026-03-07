@@ -163,6 +163,7 @@ const TrackingScreen = () => {
               quantity: item.quantity,
               familyMemberId: item.familyMemberId || null,
               packageId: item.packageId || null,
+              category: item.category || null,
             })),
             addressId: bookingState?.addressId || null,
             scheduledDate: bookingState?.scheduledDate || null,

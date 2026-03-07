@@ -13,6 +13,7 @@ interface OrderItemInput {
   quantity: number;
   familyMemberId?: string;
   packageId?: string;
+  category?: string;
 }
 
 interface CreateOrderRequest {

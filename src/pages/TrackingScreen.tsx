@@ -19,14 +19,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
 
-const phlebotomist = {
-  name: "Rahul Sharma",
-  photo: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-  rating: 4.9,
-  reviews: 234,
-  verificationId: "HS-2024-8721",
-  experience: "5+ years",
-};
+interface PhlebotomistInfo {
+  name: string;
+  photo_url: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  experience_years: number | null;
+}
 
 const trackingSteps = [
   { id: 1, title: "Booking Confirmed", time: "10:30 AM", completed: true },

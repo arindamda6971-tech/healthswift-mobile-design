@@ -71,13 +71,41 @@ const TrackingScreen = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [fetchedBooking, setFetchedBooking] = useState<BookingState | undefined>(undefined);
+  const [phlebotomist, setPhlebotomist] = useState<PhlebotomistInfo | null>(null);
 
   // expose booking state for UI (patient info / schedule)
   const bookingState = location.state as BookingState | undefined;
   const effectiveBookingState = bookingState || fetchedBooking;
 
-  // Show phlebotomist personal details only to authenticated users with an order
-  const showPhleboDetails = !!supabaseUserId && !!orderId;
+  // Show phlebotomist personal details only to authenticated users with an order and assigned phlebotomist
+  const showPhleboDetails = !!supabaseUserId && !!orderId && !!phlebotomist;
+
+  // Fetch phlebotomist info when order is loaded
+  useEffect(() => {
+    if (!orderId || !supabaseUserId) return;
+    const fetchPhlebotomist = async () => {
+      try {
+        // Get phlebotomist_id from order
+        const { data: orderData } = await supabase
+          .from("orders")
+          .select("phlebotomist_id")
+          .eq("id", orderId)
+          .single();
+        if (!orderData?.phlebotomist_id) return;
+
+        // Fetch safe fields from the public view
+        const { data: phlebo } = await supabase
+          .from("phlebotomists_public")
+          .select("name, photo_url, rating, reviews_count, experience_years")
+          .eq("id", orderData.phlebotomist_id)
+          .single();
+        if (phlebo) setPhlebotomist(phlebo);
+      } catch {
+        // silently fail — phlebotomist section just won't show
+      }
+    };
+    fetchPhlebotomist();
+  }, [orderId, supabaseUserId]);
 
   // If :orderId exists in the URL, fetch and display the existing order instead of creating a new one
   useEffect(() => {

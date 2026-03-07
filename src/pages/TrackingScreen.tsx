@@ -99,7 +99,7 @@ const TrackingScreen = () => {
           .select("name, photo_url, rating, reviews_count, experience_years")
           .eq("id", orderData.phlebotomist_id)
           .single();
-        if (phlebo) setPhlebotomist(phlebo);
+        if (phlebo && phlebo.name) setPhlebotomist(phlebo as PhlebotomistInfo);
       } catch {
         // silently fail — phlebotomist section just won't show
       }

@@ -19,14 +19,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
 
-const phlebotomist = {
-  name: "Rahul Sharma",
-  photo: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=face",
-  rating: 4.9,
-  reviews: 234,
-  verificationId: "HS-2024-8721",
-  experience: "5+ years",
-};
+interface PhlebotomistInfo {
+  name: string;
+  photo_url: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  experience_years: number | null;
+}
 
 const trackingSteps = [
   { id: 1, title: "Booking Confirmed", time: "10:30 AM", completed: true },
@@ -72,13 +71,41 @@ const TrackingScreen = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [fetchedBooking, setFetchedBooking] = useState<BookingState | undefined>(undefined);
+  const [phlebotomist, setPhlebotomist] = useState<PhlebotomistInfo | null>(null);
 
   // expose booking state for UI (patient info / schedule)
   const bookingState = location.state as BookingState | undefined;
   const effectiveBookingState = bookingState || fetchedBooking;
 
-  // Show phlebotomist personal details only to authenticated users with an order
-  const showPhleboDetails = !!supabaseUserId && !!orderId;
+  // Show phlebotomist personal details only to authenticated users with an order and assigned phlebotomist
+  const showPhleboDetails = !!supabaseUserId && !!orderId && !!phlebotomist;
+
+  // Fetch phlebotomist info when order is loaded
+  useEffect(() => {
+    if (!orderId || !supabaseUserId) return;
+    const fetchPhlebotomist = async () => {
+      try {
+        // Get phlebotomist_id from order
+        const { data: orderData } = await supabase
+          .from("orders")
+          .select("phlebotomist_id")
+          .eq("id", orderId)
+          .single();
+        if (!orderData?.phlebotomist_id) return;
+
+        // Fetch safe fields from the public view
+        const { data: phlebo } = await supabase
+          .from("phlebotomists_public")
+          .select("name, photo_url, rating, reviews_count, experience_years")
+          .eq("id", orderData.phlebotomist_id)
+          .single();
+        if (phlebo && phlebo.name) setPhlebotomist(phlebo as PhlebotomistInfo);
+      } catch {
+        // silently fail — phlebotomist section just won't show
+      }
+    };
+    fetchPhlebotomist();
+  }, [orderId, supabaseUserId]);
 
   // If :orderId exists in the URL, fetch and display the existing order instead of creating a new one
   useEffect(() => {
@@ -282,11 +309,13 @@ const TrackingScreen = () => {
             transition={{ duration: 2, repeat: Infinity }}
           >
             <div className="w-12 h-12 rounded-full border-4 border-card overflow-hidden shadow-xl">
-              <img
-                src={phlebotomist.photo}
-                alt={phlebotomist.name}
-                className="w-full h-full object-cover"
-              />
+              {phlebotomist?.photo_url ? (
+                <img src={phlebotomist.photo_url} alt={phlebotomist.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                  <Navigation className="w-5 h-5 text-primary" />
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -342,12 +371,18 @@ const TrackingScreen = () => {
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden">
-                  <img src={phlebotomist.photo} alt={phlebotomist.name} className="w-full h-full object-cover" />
+                  {phlebotomist!.photo_url ? (
+                    <img src={phlebotomist!.photo_url} alt={phlebotomist!.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                      <Navigation className="w-5 h-5 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Phlebotomist</p>
-                  <p className="font-semibold text-foreground">{phlebotomist.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Experience: {phlebotomist.experience}</p>
+                  <p className="font-semibold text-foreground">{phlebotomist!.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Experience: {phlebotomist!.experience_years ? `${phlebotomist!.experience_years}+ years` : 'Experienced'}</p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button variant="soft" size="sm" className="h-8">

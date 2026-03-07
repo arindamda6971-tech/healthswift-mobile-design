@@ -309,11 +309,13 @@ const TrackingScreen = () => {
             transition={{ duration: 2, repeat: Infinity }}
           >
             <div className="w-12 h-12 rounded-full border-4 border-card overflow-hidden shadow-xl">
-              <img
-                src={phlebotomist.photo}
-                alt={phlebotomist.name}
-                className="w-full h-full object-cover"
-              />
+              {phlebotomist?.photo_url ? (
+                <img src={phlebotomist.photo_url} alt={phlebotomist.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                  <Navigation className="w-5 h-5 text-primary" />
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -369,12 +371,18 @@ const TrackingScreen = () => {
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden">
-                  <img src={phlebotomist.photo} alt={phlebotomist.name} className="w-full h-full object-cover" />
+                  {phlebotomist!.photo_url ? (
+                    <img src={phlebotomist!.photo_url} alt={phlebotomist!.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                      <Navigation className="w-5 h-5 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Phlebotomist</p>
-                  <p className="font-semibold text-foreground">{phlebotomist.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Experience: {phlebotomist.experience}</p>
+                  <p className="font-semibold text-foreground">{phlebotomist!.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Experience: {phlebotomist!.experience_years ? `${phlebotomist!.experience_years}+ years` : 'Experienced'}</p>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button variant="soft" size="sm" className="h-8">

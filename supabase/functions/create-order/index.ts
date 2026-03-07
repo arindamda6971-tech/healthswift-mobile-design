@@ -13,6 +13,7 @@ interface OrderItemInput {
   quantity: number;
   familyMemberId?: string;
   packageId?: string;
+  category?: string;
 }
 
 interface CreateOrderRequest {
@@ -157,15 +158,11 @@ Deno.serve(async (req) => {
       if (serverPrice !== undefined) {
         serverSubtotal += serverPrice * item.quantity;
       } else if (item.id.startsWith("ai-")) {
-        // AI-recommended tests: validate against known category prices
-        // Find matching price from known values
-        const knownPrices = Object.values(AI_TEST_PRICES);
-        if (knownPrices.includes(item.price)) {
-          serverSubtotal += item.price * item.quantity;
-        } else {
-          // Default to "Other" category price
-          serverSubtotal += AI_TEST_PRICES["Other"] * item.quantity;
-        }
+        // AI-recommended tests: look up price by category, ignoring client-supplied price
+        const category = item.category || "Other";
+        const validCategory = AI_TEST_PRICES[category] !== undefined ? category : "Other";
+        const aiPrice = AI_TEST_PRICES[validCategory];
+        serverSubtotal += aiPrice * item.quantity;
       } else if (item.id.startsWith("ecg-") && priceMap[item.id] === undefined) {
         // ECG item with no lab price found - reject
         return new Response(
@@ -241,7 +238,11 @@ Deno.serve(async (req) => {
       test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
       package_id: item.packageId || null,
       quantity: item.quantity,
-      price: priceMap[item.id] !== undefined ? priceMap[item.id] : item.price,
+      price: priceMap[item.id] !== undefined
+        ? priceMap[item.id]
+        : item.id.startsWith("ai-")
+          ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
+          : item.price,
       family_member_id: item.familyMemberId || null,
     }));
 

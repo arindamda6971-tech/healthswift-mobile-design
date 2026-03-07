@@ -10,6 +10,7 @@ interface CartItem {
   labName?: string;
   quantity: number;
   familyMemberId?: string;
+  category?: string;
 }
 
 interface PendingItem {

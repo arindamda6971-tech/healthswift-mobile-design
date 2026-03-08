@@ -8,6 +8,7 @@ interface CartItem {
   price: number;
   labId?: string;
   labName?: string;
+  vendorId?: string;
   quantity: number;
   familyMemberId?: string;
   category?: string;

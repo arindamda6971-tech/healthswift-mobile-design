@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CreateOrderRequest = await req.json();
-    const { cartItems, addressId, scheduledDate, scheduledTimeSlot, discount, paymentMethod, couponCode, patientName, patientAge, patientGender, patientPhone } = body;
+    const { cartItems, addressId, scheduledDate, scheduledTimeSlot, discount, paymentMethod, couponCode, patientName, patientAge, patientGender, patientPhone, labId, labName, vendorId } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return new Response(

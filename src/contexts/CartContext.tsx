@@ -122,7 +122,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (cartItems.length > 0) {
         const cartItemsToInsert = cartItems.map((item) => ({
           user_id: userId,
-          test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
+          test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-") ? null : item.id,
           test_name: item.name,
           price: item.price,
           lab_id: item.labId || null,

@@ -83,6 +83,13 @@ const labBrandData: Record<string, {
     tagline: "Healthcare You Can Trust",
     accentColor: "#0284c7"
   },
+  "LifeCare Diagnostics": {
+    logo: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100&q=80",
+    bannerGradient: "from-[#047857] via-[#059669] to-[#10b981]",
+    bannerImage: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80",
+    tagline: "Quality Care, Affordable Prices",
+    accentColor: "#059669"
+  },
 };
 
 // Fallback gradients for unknown labs

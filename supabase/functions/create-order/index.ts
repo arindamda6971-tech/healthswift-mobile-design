@@ -14,6 +14,9 @@ interface OrderItemInput {
   familyMemberId?: string;
   packageId?: string;
   category?: string;
+  labId?: string;
+  labName?: string;
+  vendorId?: string;
 }
 
 interface CreateOrderRequest {
@@ -30,6 +33,9 @@ interface CreateOrderRequest {
   patientAge?: number | string | null;
   patientGender?: string | null;
   patientPhone?: string | null;
+  labId?: string | null;
+  labName?: string | null;
+  vendorId?: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -69,7 +75,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: CreateOrderRequest = await req.json();
-    const { cartItems, addressId, scheduledDate, scheduledTimeSlot, discount, paymentMethod, couponCode, patientName, patientAge, patientGender, patientPhone } = body;
+    const { cartItems, addressId, scheduledDate, scheduledTimeSlot, discount, paymentMethod, couponCode, patientName, patientAge, patientGender, patientPhone, labId, labName, vendorId } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return new Response(
@@ -204,6 +210,23 @@ Deno.serve(async (req) => {
       specialInstructions = `Patient: ${patientName} (Age: ${patientAge ?? "N/A"}${patientGender ? `, Gender: ${patientGender}` : ""}${patientPhone ? `, Phone: ${patientPhone}` : ""})`;
     }
 
+    // Extract vendor_id from cart items or request body
+    // If a diagnostic center is selected, look up its vendor_id
+    let orderVendorId = vendorId || null;
+    const firstLabId = labId || cartItems[0]?.labId;
+    
+    if (!orderVendorId && firstLabId) {
+      const { data: centerData } = await adminClient
+        .from("diagnostic_centers")
+        .select("vendor_id")
+        .eq("id", firstLabId)
+        .single();
+      
+      if (centerData?.vendor_id) {
+        orderVendorId = centerData.vendor_id;
+      }
+    }
+
     // Create order using service role (bypasses RLS for insert)
     const { data: orderData, error: orderError } = await adminClient
       .from("orders")
@@ -220,6 +243,9 @@ Deno.serve(async (req) => {
         payment_status: paymentStatus,
         coupon_code: couponCode || null,
         special_instructions: specialInstructions,
+        vendor_id: orderVendorId,
+        lab_name: labName || cartItems[0]?.labName || null,
+        test_name: cartItems.length === 1 ? cartItems[0].name : `${cartItems.length} tests`,
       })
       .select()
       .single();

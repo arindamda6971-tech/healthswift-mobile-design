@@ -122,6 +122,7 @@ export type Database = {
       diagnostic_centers: {
         Row: {
           address: string
+          available_tests: Json | null
           city: string
           closing_time: string | null
           created_at: string
@@ -139,14 +140,17 @@ export type Database = {
           opening_time: string | null
           phone: string | null
           pincode: string
+          pricing: Json | null
           rating: number | null
           reviews_count: number | null
           services: Json | null
           state: string
           updated_at: string
+          vendor_id: string | null
         }
         Insert: {
           address: string
+          available_tests?: Json | null
           city: string
           closing_time?: string | null
           created_at?: string
@@ -164,14 +168,17 @@ export type Database = {
           opening_time?: string | null
           phone?: string | null
           pincode: string
+          pricing?: Json | null
           rating?: number | null
           reviews_count?: number | null
           services?: Json | null
           state: string
           updated_at?: string
+          vendor_id?: string | null
         }
         Update: {
           address?: string
+          available_tests?: Json | null
           city?: string
           closing_time?: string | null
           created_at?: string
@@ -189,11 +196,13 @@ export type Database = {
           opening_time?: string | null
           phone?: string | null
           pincode?: string
+          pricing?: Json | null
           rating?: number | null
           reviews_count?: number | null
           services?: Json | null
           state?: string
           updated_at?: string
+          vendor_id?: string | null
         }
         Relationships: []
       }

@@ -269,6 +269,7 @@ interface DiagnosticCenter {
   home_collection_available: boolean | null;
   logo_url: string | null;
   phone: string | null;
+  vendor_id: string | null;
 }
 
 const LabDetailScreen = () => {
@@ -386,6 +387,7 @@ const LabDetailScreen = () => {
             price: test.price,
             labId: labId || "",
             labName: lab.name,
+            vendorId: labFromDb?.vendor_id || undefined,
           });
           if (ok) {
             toast.success(`${testName} added to cart`);

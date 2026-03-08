@@ -251,6 +251,10 @@ Deno.serve(async (req) => {
       "Imaging": 999, "Other": 399,
     };
 
+    // Log received cart items for debugging
+    console.log("Cart items received:", JSON.stringify(cartItems.map((i: OrderItemInput) => ({ id: i.id, name: i.name, price: i.price, labId: i.labId }))));
+    console.log("Price map resolved:", JSON.stringify(priceMap));
+
     // Validate and compute server-side subtotal
     let serverSubtotal = 0;
     for (const item of cartItems) {
@@ -265,7 +269,6 @@ Deno.serve(async (req) => {
         serverSubtotal += aiPrice * item.quantity;
       } else if (item.id.startsWith("dc-")) {
         // DC item without price found in database - use client price but log warning
-        // This handles cases where pricing might not be set in the database
         console.warn(`DC item ${item.id} (${item.name}) not found in pricing, using client price: ${item.price}`);
         priceMap[item.id] = item.price;
         serverSubtotal += item.price * item.quantity;
@@ -275,10 +278,17 @@ Deno.serve(async (req) => {
           JSON.stringify({ error: "Could not verify ECG test pricing. Please try again." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      } else if (item.labId && item.name) {
+        // Item with labId but not resolved - likely a diagnostic center test with non-dc prefix
+        // Fall back to client price with warning
+        console.warn(`Unresolved lab item ${item.id} (${item.name}) from lab ${item.labId}, using client price: ${item.price}`);
+        priceMap[item.id] = item.price;
+        serverSubtotal += item.price * item.quantity;
       } else {
-        // Unknown item type - reject entirely
+        // Unknown item type - reject with details for debugging
+        console.error(`Unknown item rejected: id=${item.id}, name=${item.name}, price=${item.price}, labId=${item.labId}`);
         return new Response(
-          JSON.stringify({ error: "Unknown item in order" }),
+          JSON.stringify({ error: `Unknown item in order: ${item.id}` }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

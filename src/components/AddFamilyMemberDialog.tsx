@@ -22,9 +22,9 @@ import { toast } from "sonner";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (member: Omit<FamilyMember, "id">) => void;
+  onAdd: (member: Omit<FamilyMember, "id">) => void | Promise<any>;
   editMember?: FamilyMember | null;
-  onEdit?: (id: string, data: Omit<FamilyMember, "id">) => void;
+  onEdit?: (id: string, data: Omit<FamilyMember, "id">) => void | Promise<any>;
 }
 
 const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd, editMember, onEdit }: Props) => {

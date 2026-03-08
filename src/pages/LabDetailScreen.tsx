@@ -394,9 +394,10 @@ const LabDetailScreen = () => {
         timing: `${labFromDb.opening_time || '7:00 AM'} - ${labFromDb.closing_time || '9:00 PM'}`,
         homeCollection: labFromDb.home_collection_available ?? true,
         accredited: ["NABL"],
-        tests: localData?.tests || labsData["lal-pathlabs"].tests, // Fallback to Lal PathLabs tests
+        tests: testsToUse,
         phone: labFromDb.phone,
         logoUrl: labFromDb.logo_url,
+        vendorId: labFromDb.vendor_id,
       };
     }
     

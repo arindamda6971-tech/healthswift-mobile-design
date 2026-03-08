@@ -149,6 +149,45 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Server-side pricing for diagnostic center tests (dc-{labId}-{index})
+    const dcItems = cartItems.filter((i) => i.id.startsWith("dc-"));
+    if (dcItems.length > 0) {
+      // Extract unique lab IDs from dc items
+      const dcLabIds = [...new Set(dcItems.map((i) => {
+        const parts = i.id.replace("dc-", "").split("-");
+        // Format: dc-{uuid}-{index}, reconstruct the UUID (5 parts)
+        if (parts.length >= 5) {
+          return parts.slice(0, 5).join("-");
+        }
+        return null;
+      }).filter(Boolean))] as string[];
+
+      if (dcLabIds.length > 0) {
+        const { data: dcCenters } = await adminClient
+          .from("diagnostic_centers")
+          .select("id, pricing")
+          .in("id", dcLabIds);
+
+        if (dcCenters) {
+          for (const center of dcCenters) {
+            const pricing = center.pricing as Record<string, number> | null;
+            if (pricing) {
+              // Map dc items from this center to their prices
+              for (const item of dcItems) {
+                if (item.id.includes(center.id)) {
+                  // Look up price by test name
+                  const testPrice = pricing[item.name];
+                  if (testPrice != null) {
+                    priceMap[item.id] = Number(testPrice);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Server-side pricing for AI-recommended tests (from prescription analysis)
     // These have fixed category-based pricing maintained server-side
     const AI_TEST_PRICES: Record<string, number> = {
@@ -169,6 +208,12 @@ Deno.serve(async (req) => {
         const validCategory = AI_TEST_PRICES[category] !== undefined ? category : "Other";
         const aiPrice = AI_TEST_PRICES[validCategory];
         serverSubtotal += aiPrice * item.quantity;
+      } else if (item.id.startsWith("dc-")) {
+        // DC item without price found in database - use client price but log warning
+        // This handles cases where pricing might not be set in the database
+        console.warn(`DC item ${item.id} (${item.name}) not found in pricing, using client price: ${item.price}`);
+        priceMap[item.id] = item.price;
+        serverSubtotal += item.price * item.quantity;
       } else if (item.id.startsWith("ecg-") && priceMap[item.id] === undefined) {
         // ECG item with no lab price found - reject
         return new Response(
@@ -261,7 +306,7 @@ Deno.serve(async (req) => {
     // Create order items with server-validated prices
     const orderItems = cartItems.map((item) => ({
       order_id: orderData.id,
-      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
+      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-") ? null : item.id,
       package_id: item.packageId || null,
       quantity: item.quantity,
       price: priceMap[item.id] !== undefined

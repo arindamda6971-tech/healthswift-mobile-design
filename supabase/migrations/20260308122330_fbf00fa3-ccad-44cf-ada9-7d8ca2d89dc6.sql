@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_order_insert_notify_partner ON public.orders;

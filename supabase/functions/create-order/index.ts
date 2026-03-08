@@ -331,6 +331,32 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Notify partner hub if vendor is assigned (replaces pg_net trigger)
+    if (orderVendorId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const webhookPayload = {
+          type: "INSERT",
+          table: "orders",
+          schema: "public",
+          record: orderData,
+          old_record: null,
+        };
+        // Fire-and-forget: don't block order response on webhook
+        fetch(`${supabaseUrl}/functions/v1/partner-hub-webhook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify(webhookPayload),
+        }).catch((e) => console.error("Partner webhook fire-and-forget error:", e));
+      } catch (e) {
+        console.error("Partner notification error (non-blocking):", e);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         orderId: orderData.id,

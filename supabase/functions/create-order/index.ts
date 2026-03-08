@@ -210,6 +210,39 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fallback pricing for persisted cart rows that lost synthetic IDs (e.g., dc-* IDs)
+    const unresolvedLabItems = cartItems.filter((item) =>
+      priceMap[item.id] === undefined &&
+      !item.id.startsWith("ai-") &&
+      !item.id.startsWith("ecg-") &&
+      item.labId &&
+      item.name
+    );
+
+    if (unresolvedLabItems.length > 0) {
+      const unresolvedLabIds = [...new Set(unresolvedLabItems.map((item) => item.labId).filter(Boolean))] as string[];
+      const { data: unresolvedCenters } = await adminClient
+        .from("diagnostic_centers")
+        .select("id, pricing")
+        .in("id", unresolvedLabIds);
+
+      if (unresolvedCenters) {
+        for (const center of unresolvedCenters) {
+          const pricing = center.pricing as Record<string, number> | null;
+          if (!pricing) continue;
+
+          for (const item of unresolvedLabItems) {
+            if (item.labId === center.id) {
+              const resolvedPrice = pricing[item.name];
+              if (resolvedPrice != null) {
+                priceMap[item.id] = Number(resolvedPrice);
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Server-side pricing for AI-recommended tests (from prescription analysis)
     // These have fixed category-based pricing maintained server-side
     const AI_TEST_PRICES: Record<string, number> = {

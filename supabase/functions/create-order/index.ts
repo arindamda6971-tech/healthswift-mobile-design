@@ -326,18 +326,36 @@ Deno.serve(async (req) => {
     }
 
     // Create order items with server-validated prices
-    const orderItems = cartItems.map((item) => ({
-      order_id: orderData.id,
-      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-") ? null : item.id,
-      package_id: item.packageId || null,
-      quantity: item.quantity,
-      price: priceMap[item.id] !== undefined
-        ? priceMap[item.id]
-        : item.id.startsWith("ai-")
-          ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
-          : item.price,
-      family_member_id: item.familyMemberId || null,
-    }));
+    const orderItems = cartItems.map((item) => {
+      const isSpecialItem = item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-");
+      const isPackageItem = knownPackageIds.has(item.id);
+      const mappedProductTestId = productTestIdMap[item.id];
+
+      const resolvedTestId = isSpecialItem
+        ? null
+        : mappedProductTestId !== undefined
+          ? mappedProductTestId
+          : isPackageItem
+            ? null
+            : item.id;
+
+      const resolvedPackageId = isPackageItem
+        ? (item.packageId || item.id)
+        : (item.packageId || null);
+
+      return {
+        order_id: orderData.id,
+        test_id: resolvedTestId,
+        package_id: resolvedPackageId,
+        quantity: item.quantity,
+        price: priceMap[item.id] !== undefined
+          ? priceMap[item.id]
+          : item.id.startsWith("ai-")
+            ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
+            : item.price,
+        family_member_id: item.familyMemberId || null,
+      };
+    });
 
     const { error: itemsError } = await adminClient
       .from("order_items")

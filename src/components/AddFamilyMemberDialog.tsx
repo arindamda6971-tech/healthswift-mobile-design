@@ -62,7 +62,7 @@ const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd, editMember, onEdit }
     setCustomRelationship("");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!fullName.trim()) { toast.error("Full name is required"); return; }
     if (!age || Number(age) < 1 || Number(age) > 120) { toast.error("Enter valid age (1–120)"); return; }
     if (!gender) { toast.error("Gender is required"); return; }
@@ -80,10 +80,10 @@ const AddFamilyMemberDialog = ({ open, onOpenChange, onAdd, editMember, onEdit }
     };
 
     if (editMember && onEdit) {
-      onEdit(editMember.id, memberData);
+      await onEdit(editMember.id, memberData);
       toast.success("Family member updated");
     } else {
-      onAdd(memberData);
+      await onAdd(memberData);
       toast.success("Family member added");
     }
     reset();

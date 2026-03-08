@@ -269,6 +269,7 @@ interface DiagnosticCenter {
   home_collection_available: boolean | null;
   logo_url: string | null;
   phone: string | null;
+  vendor_id: string | null;
 }
 
 const LabDetailScreen = () => {

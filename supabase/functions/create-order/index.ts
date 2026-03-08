@@ -87,31 +87,53 @@ Deno.serve(async (req) => {
     // Server-side price validation: fetch actual prices from DB
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    const testIds = cartItems.filter((i) => !i.id.startsWith("ecg-") && !i.id.startsWith("ai-")).map((i) => i.id);
+    const regularItemIds = cartItems
+      .filter((i) => !i.id.startsWith("ecg-") && !i.id.startsWith("ai-") && !i.id.startsWith("dc-"))
+      .map((i) => i.id);
 
     let priceMap: Record<string, number> = {};
+    const knownTestIds = new Set<string>();
+    const knownPackageIds = new Set<string>();
+    const productTestIdMap: Record<string, string | null> = {};
 
-    if (testIds.length > 0) {
+    if (regularItemIds.length > 0) {
       const { data: tests } = await adminClient
         .from("tests")
         .select("id, price")
-        .in("id", testIds);
+        .in("id", regularItemIds);
 
       if (tests) {
         for (const t of tests) {
+          knownTestIds.add(t.id);
           priceMap[t.id] = Number(t.price);
         }
       }
 
-      // Also check packages
       const { data: packages } = await adminClient
         .from("test_packages")
         .select("id, price")
-        .in("id", testIds);
+        .in("id", regularItemIds);
 
       if (packages) {
         for (const p of packages) {
+          knownPackageIds.add(p.id);
           priceMap[p.id] = Number(p.price);
+        }
+      }
+
+      const unresolvedItemIds = regularItemIds.filter((id) => priceMap[id] === undefined);
+      if (unresolvedItemIds.length > 0) {
+        const { data: products } = await adminClient
+          .from("products")
+          .select("id, price, test_id")
+          .in("id", unresolvedItemIds)
+          .eq("availability", true);
+
+        if (products) {
+          for (const product of products) {
+            priceMap[product.id] = Number(product.price);
+            productTestIdMap[product.id] = product.test_id || null;
+          }
         }
       }
     }

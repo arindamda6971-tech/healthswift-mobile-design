@@ -18,6 +18,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 
 interface PhlebotomistInfo {
   name: string;

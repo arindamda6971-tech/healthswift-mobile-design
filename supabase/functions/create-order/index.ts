@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
     // Create order items with server-validated prices
     const orderItems = cartItems.map((item) => ({
       order_id: orderData.id,
-      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") ? null : item.id,
+      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-") ? null : item.id,
       package_id: item.packageId || null,
       quantity: item.quantity,
       price: priceMap[item.id] !== undefined

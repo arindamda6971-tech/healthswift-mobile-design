@@ -299,6 +299,7 @@ export type Database = {
           discount: number | null
           family_member_id: string | null
           id: string
+          lab_name: string | null
           order_number: string | null
           payment_method: string | null
           payment_status: string | null
@@ -308,9 +309,11 @@ export type Database = {
           special_instructions: string | null
           status: string | null
           subtotal: number
+          test_name: string | null
           total: number
           updated_at: string
           user_id: string
+          vendor_id: string | null
         }
         Insert: {
           address_id?: string | null
@@ -319,6 +322,7 @@ export type Database = {
           discount?: number | null
           family_member_id?: string | null
           id?: string
+          lab_name?: string | null
           order_number?: string | null
           payment_method?: string | null
           payment_status?: string | null
@@ -328,9 +332,11 @@ export type Database = {
           special_instructions?: string | null
           status?: string | null
           subtotal?: number
+          test_name?: string | null
           total?: number
           updated_at?: string
           user_id: string
+          vendor_id?: string | null
         }
         Update: {
           address_id?: string | null
@@ -339,6 +345,7 @@ export type Database = {
           discount?: number | null
           family_member_id?: string | null
           id?: string
+          lab_name?: string | null
           order_number?: string | null
           payment_method?: string | null
           payment_status?: string | null
@@ -348,9 +355,11 @@ export type Database = {
           special_instructions?: string | null
           status?: string | null
           subtotal?: number
+          test_name?: string | null
           total?: number
           updated_at?: string
           user_id?: string
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -434,6 +443,39 @@ export type Database = {
           rating?: number | null
           reviews_count?: number | null
           verification_id?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          availability: boolean
+          created_at: string
+          description: string | null
+          id: string
+          price: number
+          product_name: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          availability?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          price?: number
+          product_name: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          availability?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          price?: number
+          product_name?: string
+          updated_at?: string
+          vendor_id?: string
         }
         Relationships: []
       }
@@ -852,6 +894,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       phlebotomists_public: {
@@ -886,10 +946,16 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "vendor" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1016,6 +1082,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "vendor", "user"],
+    },
   },
 } as const

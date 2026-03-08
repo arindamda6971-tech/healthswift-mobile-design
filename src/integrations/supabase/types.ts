@@ -197,6 +197,45 @@ export type Database = {
         }
         Relationships: []
       }
+      family_members: {
+        Row: {
+          age: string
+          created_at: string
+          custom_relationship: string | null
+          full_name: string
+          gender: string
+          id: string
+          phone: string
+          relationship: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age: string
+          created_at?: string
+          custom_relationship?: string | null
+          full_name: string
+          gender: string
+          id?: string
+          phone: string
+          relationship: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: string
+          created_at?: string
+          custom_relationship?: string | null
+          full_name?: string
+          gender?: string
+          id?: string
+          phone?: string
+          relationship?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string

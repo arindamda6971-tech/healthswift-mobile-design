@@ -39,6 +39,9 @@ const BookingsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("upcoming");
 
+  // Subscribe to real-time order updates
+  useRealtimeOrders();
+
   useEffect(() => {
     if (user) {
       fetchOrders();

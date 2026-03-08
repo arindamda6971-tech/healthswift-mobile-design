@@ -39,37 +39,33 @@ const ProfileScreen = () => {
   const { theme, toggleTheme } = useTheme();
   const { membershipType, isActive } = useSubscription();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.user_metadata?.avatar_url || null);
-  const { members: familyMembers, addMember } = useFamilyMembers();
-  
+  const { members: familyMembers } = useFamilyMembers();
+  const [addressCount, setAddressCount] = useState(0);
 
   useEffect(() => {
-    const loadProfileImage = async () => {
+    const loadProfileData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        const { data } = await supabase
+        // Load avatar
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("avatar_url")
           .eq("id", session.user.id)
           .maybeSingle();
-        if (data?.avatar_url) {
-          setProfileImageUrl(data.avatar_url);
+        if (profileData?.avatar_url) {
+          setProfileImageUrl(profileData.avatar_url);
         }
+
+        // Load address count directly from Supabase
+        const { count } = await supabase
+          .from("addresses")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", session.user.id);
+        setAddressCount(count ?? 0);
       }
     };
-    loadProfileImage();
+    loadProfileData();
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("Logged out successfully");
-      navigate("/login", { replace: true });
-    } catch (error) {
-      toast.error("Failed to log out");
-    }
-  };
-
-  const { addresses, defaultAddressId } = useAddresses();
 
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
   const contactInfo = user?.phone || user?.email || "";

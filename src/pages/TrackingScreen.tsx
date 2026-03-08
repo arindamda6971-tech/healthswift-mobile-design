@@ -195,6 +195,9 @@ const TrackingScreen = () => {
               familyMemberId: item.familyMemberId || null,
               packageId: item.packageId || null,
               category: item.category || null,
+              labId: item.labId || null,
+              labName: item.labName || null,
+              vendorId: item.vendorId || null,
             })),
             addressId: bookingState?.addressId || null,
             scheduledDate: bookingState?.scheduledDate || null,
@@ -208,6 +211,9 @@ const TrackingScreen = () => {
             patientAge: bookingState?.patientAge,
             patientGender: bookingState?.patientGender,
             patientPhone: bookingState?.patientPhone,
+            labId: stateCartItems[0]?.labId || null,
+            labName: stateCartItems[0]?.labName || null,
+            vendorId: stateCartItems[0]?.vendorId || null,
           },
         });
 

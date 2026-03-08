@@ -370,7 +370,9 @@ Deno.serve(async (req) => {
           ? mappedProductTestId
           : isPackageItem
             ? null
-            : item.id;
+            : knownTestIds.has(item.id)
+              ? item.id
+              : null;
 
       const resolvedPackageId = isPackageItem
         ? (item.packageId || item.id)

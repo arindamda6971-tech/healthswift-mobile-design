@@ -67,6 +67,16 @@ const ProfileScreen = () => {
     loadProfileData();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
+
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
   const contactInfo = user?.phone || user?.email || "";
 

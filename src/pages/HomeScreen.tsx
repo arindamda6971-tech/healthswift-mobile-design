@@ -18,6 +18,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 import { toast } from "sonner";
 import DiagnosticCentersCarousel from "@/components/home/DiagnosticCentersCarousel";
 
@@ -57,6 +58,9 @@ const HomeScreen = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [diagnosticCenters, setDiagnosticCenters] = useState<{id: string; name: string; rating: number; tests: number; logo?: string}[]>([]);
   const [healthPackages, setHealthPackages] = useState<{id: string; name: string; tests_count: number; price: number; original_price?: number; discount_percent?: number; icon?: string; color?: string; lab_name?: string; lab_logo?: string}[]>([]);
+
+  // Subscribe to real-time product updates
+  useRealtimeProducts();
 
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {

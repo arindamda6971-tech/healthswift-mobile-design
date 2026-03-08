@@ -18,6 +18,7 @@ import ScreenHeader from "@/components/layout/ScreenHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/CartContext";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 
 interface PhlebotomistInfo {
   name: string;
@@ -72,6 +73,9 @@ const TrackingScreen = () => {
   const [orderError, setOrderError] = useState<string | null>(null);
   const [fetchedBooking, setFetchedBooking] = useState<BookingState | undefined>(undefined);
   const [phlebotomist, setPhlebotomist] = useState<PhlebotomistInfo | null>(null);
+
+  // Subscribe to real-time order status updates
+  const { latestStatus } = useRealtimeOrders(paramOrderId || orderId || undefined);
 
   // expose booking state for UI (patient info / schedule)
   const bookingState = location.state as BookingState | undefined;

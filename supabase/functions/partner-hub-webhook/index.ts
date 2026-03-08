@@ -1,0 +1,142 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+interface OrderWebhookPayload {
+  type: "INSERT" | "UPDATE" | "DELETE";
+  table: string;
+  record: {
+    id: string;
+    order_number: string;
+    user_id: string;
+    vendor_id: string | null;
+    lab_name: string | null;
+    test_name: string | null;
+    status: string;
+    total: number;
+    subtotal: number;
+    discount: number;
+    scheduled_date: string | null;
+    scheduled_time_slot: string | null;
+    address_id: string | null;
+    payment_method: string | null;
+    payment_status: string | null;
+    special_instructions: string | null;
+    created_at: string;
+  };
+  schema: string;
+  old_record: null | Record<string, unknown>;
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const payload: OrderWebhookPayload = await req.json();
+    
+    console.log("Partner Hub Webhook received:", JSON.stringify(payload, null, 2));
+
+    // Only process INSERT events
+    if (payload.type !== "INSERT") {
+      return new Response(
+        JSON.stringify({ message: "Ignored non-INSERT event" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const order = payload.record;
+
+    // Skip if no vendor assigned
+    if (!order.vendor_id) {
+      console.log("Order has no vendor_id, skipping vendor notification");
+      return new Response(
+        JSON.stringify({ message: "No vendor assigned to this order" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Initialize Supabase client with service role for admin operations
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch vendor's diagnostic center details
+    const { data: vendorCenter, error: centerError } = await adminClient
+      .from("diagnostic_centers")
+      .select("id, name, email, phone")
+      .eq("vendor_id", order.vendor_id)
+      .single();
+
+    if (centerError) {
+      console.error("Error fetching vendor center:", centerError);
+    }
+
+    // Fetch address details if available
+    let addressDetails = null;
+    if (order.address_id) {
+      const { data: address } = await adminClient
+        .from("addresses")
+        .select("address_line1, address_line2, city, state, pincode")
+        .eq("id", order.address_id)
+        .single();
+      addressDetails = address;
+    }
+
+    // Prepare the notification payload for the vendor
+    const vendorNotification = {
+      order_id: order.id,
+      order_number: order.order_number,
+      vendor_id: order.vendor_id,
+      diagnostic_center: vendorCenter ? {
+        id: vendorCenter.id,
+        name: vendorCenter.name,
+        email: vendorCenter.email,
+        phone: vendorCenter.phone,
+      } : null,
+      order_details: {
+        lab_name: order.lab_name,
+        test_name: order.test_name,
+        total: order.total,
+        subtotal: order.subtotal,
+        discount: order.discount,
+        scheduled_date: order.scheduled_date,
+        scheduled_time_slot: order.scheduled_time_slot,
+        payment_method: order.payment_method,
+        payment_status: order.payment_status,
+        special_instructions: order.special_instructions,
+      },
+      customer_address: addressDetails,
+      created_at: order.created_at,
+    };
+
+    console.log("Vendor notification prepared:", JSON.stringify(vendorNotification, null, 2));
+
+    // Here you would typically:
+    // 1. Send push notification to vendor app
+    // 2. Send email/SMS to vendor
+    // 3. Update a vendor_notifications table
+    // For now, we log the notification for future integration
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Vendor notified of new order",
+        notification: vendorNotification,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Partner Hub Webhook error:", err);
+    return new Response(
+      JSON.stringify({ error: "Webhook processing failed", details: String(err) }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

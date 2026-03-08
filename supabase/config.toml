@@ -12,3 +12,7 @@ verify_jwt = false
 verify_jwt = false
 # JWT validation done in code via getClaims()
 
+[functions.partner-hub-webhook]
+verify_jwt = false
+# Called by database webhook trigger with service role key
+

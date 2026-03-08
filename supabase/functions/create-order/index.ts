@@ -92,7 +92,6 @@ Deno.serve(async (req) => {
       .map((i) => i.id);
 
     let priceMap: Record<string, number> = {};
-    const knownTestIds = new Set<string>();
     const knownPackageIds = new Set<string>();
     const productTestIdMap: Record<string, string | null> = {};
 
@@ -104,7 +103,6 @@ Deno.serve(async (req) => {
 
       if (tests) {
         for (const t of tests) {
-          knownTestIds.add(t.id);
           priceMap[t.id] = Number(t.price);
         }
       }

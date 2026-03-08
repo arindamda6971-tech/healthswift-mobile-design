@@ -33,6 +33,9 @@ interface CreateOrderRequest {
   patientAge?: number | string | null;
   patientGender?: string | null;
   patientPhone?: string | null;
+  labId?: string | null;
+  labName?: string | null;
+  vendorId?: string | null;
 }
 
 Deno.serve(async (req) => {

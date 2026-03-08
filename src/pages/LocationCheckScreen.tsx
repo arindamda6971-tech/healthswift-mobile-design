@@ -69,17 +69,28 @@ const LocationCheckScreen = () => {
   const saveAddressAndProceed = async (pc: string, displayName: string, lat?: number, lon?: number) => {
     if (!user) return;
     try {
-      await supabase.from("addresses").insert({
-        user_id: user.id,
-        address_line1: displayName || `Location - ${pc}`,
-        city: displayName.split(",")[0]?.trim() || "",
-        state: displayName.split(",")[1]?.trim() || "",
-        pincode: pc,
-        latitude: lat || null,
-        longitude: lon || null,
-        is_default: true,
-        type: "Home",
-      });
+      // Check if an address with the same pincode already exists for this user
+      const { data: existing } = await supabase
+        .from("addresses")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("pincode", pc.trim())
+        .limit(1);
+
+      if (!existing || existing.length === 0) {
+        // No duplicate found — insert new address
+        await supabase.from("addresses").insert({
+          user_id: user.id,
+          address_line1: displayName || `Location - ${pc}`,
+          city: displayName.split(",")[0]?.trim() || "",
+          state: displayName.split(",")[1]?.trim() || "",
+          pincode: pc,
+          latitude: lat || null,
+          longitude: lon || null,
+          is_default: true,
+          type: "Home",
+        });
+      }
     } catch (e) {
       console.error("Failed to save address:", e);
     }

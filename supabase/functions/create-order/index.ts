@@ -14,6 +14,9 @@ interface OrderItemInput {
   familyMemberId?: string;
   packageId?: string;
   category?: string;
+  labId?: string;
+  labName?: string;
+  vendorId?: string;
 }
 
 interface CreateOrderRequest {

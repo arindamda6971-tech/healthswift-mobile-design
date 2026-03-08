@@ -25,9 +25,9 @@ const FamilyMembersScreen = () => {
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteId) {
-      removeMember(deleteId);
+      await removeMember(deleteId);
       toast.success("Family member removed");
       setDeleteId(null);
     }

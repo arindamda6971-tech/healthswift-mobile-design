@@ -387,6 +387,7 @@ const LabDetailScreen = () => {
             price: test.price,
             labId: labId || "",
             labName: lab.name,
+            vendorId: labFromDb?.vendor_id || undefined,
           });
           if (ok) {
             toast.success(`${testName} added to cart`);

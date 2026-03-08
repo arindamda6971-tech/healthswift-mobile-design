@@ -129,7 +129,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           lab_name: item.labName || null,
           quantity: item.quantity,
           family_member_id: item.familyMemberId || null,
-        }));
+        } as any));
 
         const { error } = await supabase
           .from("cart_items")

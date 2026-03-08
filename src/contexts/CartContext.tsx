@@ -80,6 +80,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           price: Number(item.price) || 0,
           labId: item.lab_id || undefined,
           labName: item.lab_name || undefined,
+          vendorId: (item as any).vendor_id || undefined,
           quantity: item.quantity || 1,
           familyMemberId: item.family_member_id || undefined,
         }));

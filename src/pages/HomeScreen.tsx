@@ -59,6 +59,9 @@ const HomeScreen = () => {
   const [diagnosticCenters, setDiagnosticCenters] = useState<{id: string; name: string; rating: number; tests: number; logo?: string}[]>([]);
   const [healthPackages, setHealthPackages] = useState<{id: string; name: string; tests_count: number; price: number; original_price?: number; discount_percent?: number; icon?: string; color?: string; lab_name?: string; lab_logo?: string}[]>([]);
 
+  // Subscribe to real-time product updates
+  useRealtimeProducts();
+
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {
     const { data } = await supabase

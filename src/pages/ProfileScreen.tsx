@@ -170,8 +170,8 @@ const ProfileScreen = () => {
               </div>
               <span className="flex-1 text-left font-medium text-foreground">{item.label}</span>
               {item.label === "Saved Addresses" ? (
-                <Badge variant={addresses.length > 0 ? "softSuccess" : "secondary"}>
-                  {addresses.length > 0 ? `${addresses.length} saved` : "No saved"}
+                <Badge variant={addressCount > 0 ? "softSuccess" : "secondary"}>
+                  {addressCount > 0 ? `${addressCount} saved` : "No saved"}
                 </Badge>
               ) : item.label === "Family Members" ? (
                 <Badge variant={familyMembers.length > 0 ? "softSuccess" : "secondary"}>

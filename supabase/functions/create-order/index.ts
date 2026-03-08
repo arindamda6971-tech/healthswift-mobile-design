@@ -87,31 +87,53 @@ Deno.serve(async (req) => {
     // Server-side price validation: fetch actual prices from DB
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    const testIds = cartItems.filter((i) => !i.id.startsWith("ecg-") && !i.id.startsWith("ai-")).map((i) => i.id);
+    const regularItemIds = cartItems
+      .filter((i) => !i.id.startsWith("ecg-") && !i.id.startsWith("ai-") && !i.id.startsWith("dc-"))
+      .map((i) => i.id);
 
     let priceMap: Record<string, number> = {};
+    const knownTestIds = new Set<string>();
+    const knownPackageIds = new Set<string>();
+    const productTestIdMap: Record<string, string | null> = {};
 
-    if (testIds.length > 0) {
+    if (regularItemIds.length > 0) {
       const { data: tests } = await adminClient
         .from("tests")
         .select("id, price")
-        .in("id", testIds);
+        .in("id", regularItemIds);
 
       if (tests) {
         for (const t of tests) {
+          knownTestIds.add(t.id);
           priceMap[t.id] = Number(t.price);
         }
       }
 
-      // Also check packages
       const { data: packages } = await adminClient
         .from("test_packages")
         .select("id, price")
-        .in("id", testIds);
+        .in("id", regularItemIds);
 
       if (packages) {
         for (const p of packages) {
+          knownPackageIds.add(p.id);
           priceMap[p.id] = Number(p.price);
+        }
+      }
+
+      const unresolvedItemIds = regularItemIds.filter((id) => priceMap[id] === undefined);
+      if (unresolvedItemIds.length > 0) {
+        const { data: products } = await adminClient
+          .from("products")
+          .select("id, price, test_id")
+          .in("id", unresolvedItemIds)
+          .eq("availability", true);
+
+        if (products) {
+          for (const product of products) {
+            priceMap[product.id] = Number(product.price);
+            productTestIdMap[product.id] = product.test_id || null;
+          }
         }
       }
     }
@@ -181,6 +203,39 @@ Deno.serve(async (req) => {
                     priceMap[item.id] = Number(testPrice);
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback pricing for persisted cart rows that lost synthetic IDs (e.g., dc-* IDs)
+    const unresolvedLabItems = cartItems.filter((item) =>
+      priceMap[item.id] === undefined &&
+      !item.id.startsWith("ai-") &&
+      !item.id.startsWith("ecg-") &&
+      item.labId &&
+      item.name
+    );
+
+    if (unresolvedLabItems.length > 0) {
+      const unresolvedLabIds = [...new Set(unresolvedLabItems.map((item) => item.labId).filter(Boolean))] as string[];
+      const { data: unresolvedCenters } = await adminClient
+        .from("diagnostic_centers")
+        .select("id, pricing")
+        .in("id", unresolvedLabIds);
+
+      if (unresolvedCenters) {
+        for (const center of unresolvedCenters) {
+          const pricing = center.pricing as Record<string, number> | null;
+          if (!pricing) continue;
+
+          for (const item of unresolvedLabItems) {
+            if (item.labId === center.id) {
+              const resolvedPrice = pricing[item.name];
+              if (resolvedPrice != null) {
+                priceMap[item.id] = Number(resolvedPrice);
               }
             }
           }
@@ -304,18 +359,38 @@ Deno.serve(async (req) => {
     }
 
     // Create order items with server-validated prices
-    const orderItems = cartItems.map((item) => ({
-      order_id: orderData.id,
-      test_id: item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-") ? null : item.id,
-      package_id: item.packageId || null,
-      quantity: item.quantity,
-      price: priceMap[item.id] !== undefined
-        ? priceMap[item.id]
-        : item.id.startsWith("ai-")
-          ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
-          : item.price,
-      family_member_id: item.familyMemberId || null,
-    }));
+    const orderItems = cartItems.map((item) => {
+      const isSpecialItem = item.id.startsWith("ecg-") || item.id.startsWith("ai-") || item.id.startsWith("dc-");
+      const isPackageItem = knownPackageIds.has(item.id);
+      const mappedProductTestId = productTestIdMap[item.id];
+
+      const resolvedTestId = isSpecialItem
+        ? null
+        : mappedProductTestId !== undefined
+          ? mappedProductTestId
+          : isPackageItem
+            ? null
+            : knownTestIds.has(item.id)
+              ? item.id
+              : null;
+
+      const resolvedPackageId = isPackageItem
+        ? (item.packageId || item.id)
+        : (item.packageId || null);
+
+      return {
+        order_id: orderData.id,
+        test_id: resolvedTestId,
+        package_id: resolvedPackageId,
+        quantity: item.quantity,
+        price: priceMap[item.id] !== undefined
+          ? priceMap[item.id]
+          : item.id.startsWith("ai-")
+            ? AI_TEST_PRICES[AI_TEST_PRICES[item.category || "Other"] !== undefined ? (item.category || "Other") : "Other"]
+            : item.price,
+        family_member_id: item.familyMemberId || null,
+      };
+    });
 
     const { error: itemsError } = await adminClient
       .from("order_items")

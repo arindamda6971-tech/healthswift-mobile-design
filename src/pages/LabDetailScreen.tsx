@@ -83,6 +83,13 @@ const labBrandData: Record<string, {
     tagline: "Healthcare You Can Trust",
     accentColor: "#0284c7"
   },
+  "LifeCare Diagnostics": {
+    logo: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=100&q=80",
+    bannerGradient: "from-[#047857] via-[#059669] to-[#10b981]",
+    bannerImage: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80",
+    tagline: "Quality Care, Affordable Prices",
+    accentColor: "#059669"
+  },
 };
 
 // Fallback gradients for unknown labs
@@ -270,6 +277,17 @@ interface DiagnosticCenter {
   logo_url: string | null;
   phone: string | null;
   vendor_id: string | null;
+  available_tests: string[] | null;
+  pricing: Record<string, number> | null;
+}
+
+interface DynamicTest {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  popular?: boolean;
 }
 
 const LabDetailScreen = () => {
@@ -280,6 +298,7 @@ const LabDetailScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [addedTests, setAddedTests] = useState<Set<string>>(new Set());
   const [labFromDb, setLabFromDb] = useState<DiagnosticCenter | null>(null);
+  const [dynamicTests, setDynamicTests] = useState<DynamicTest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Try to fetch lab from database first
@@ -295,7 +314,44 @@ const LabDetailScreen = () => {
           .single();
         
         if (!error && data) {
-          setLabFromDb(data);
+          setLabFromDb(data as DiagnosticCenter);
+          
+          // If vendor has products in products table, fetch them
+          if (data.vendor_id) {
+            const { data: products } = await supabase
+              .from('products')
+              .select('*')
+              .eq('vendor_id', data.vendor_id)
+              .eq('availability', true);
+            
+            if (products && products.length > 0) {
+              const tests: DynamicTest[] = products.map((p) => ({
+                id: p.id,
+                name: p.name || p.product_name,
+                price: Number(p.price),
+                category: p.category || 'Blood Tests',
+                popular: false,
+              }));
+              setDynamicTests(tests);
+            }
+          }
+          
+          // If no vendor products, use available_tests + pricing from diagnostic_centers
+          if (!data.vendor_id || dynamicTests.length === 0) {
+            const availableTests = data.available_tests as string[] | null;
+            const pricing = data.pricing as Record<string, number> | null;
+            
+            if (availableTests && availableTests.length > 0 && pricing) {
+              const tests: DynamicTest[] = availableTests.map((testName, idx) => ({
+                id: `dc-${data.id}-${idx}`,
+                name: testName,
+                price: pricing[testName] || 299,
+                category: categorizeTest(testName),
+                popular: idx < 3,
+              }));
+              setDynamicTests(tests);
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching lab:', err);
@@ -307,6 +363,21 @@ const LabDetailScreen = () => {
     fetchLabFromDb();
   }, [labId]);
 
+  // Categorize test based on name
+  const categorizeTest = (testName: string): string => {
+    const name = testName.toLowerCase();
+    if (name.includes('blood') || name.includes('cbc') || name.includes('hemoglobin') || name.includes('esr')) return 'Blood Tests';
+    if (name.includes('thyroid') || name.includes('t3') || name.includes('t4') || name.includes('tsh')) return 'Thyroid';
+    if (name.includes('liver') || name.includes('lft') || name.includes('sgpt') || name.includes('sgot')) return 'Liver Health';
+    if (name.includes('kidney') || name.includes('kft') || name.includes('creatinine') || name.includes('urea')) return 'Kidney Health';
+    if (name.includes('sugar') || name.includes('glucose') || name.includes('hba1c') || name.includes('diabetes')) return 'Diabetes';
+    if (name.includes('lipid') || name.includes('cholesterol') || name.includes('heart')) return 'Heart Health';
+    if (name.includes('vitamin')) return 'Vitamins';
+    if (name.includes('urine')) return 'Urine Tests';
+    if (name.includes('package') || name.includes('checkup') || name.includes('profile')) return 'Health Packages';
+    return 'Blood Tests';
+  };
+
   // Get lab data - prefer database, fallback to hardcoded
   const getLabData = () => {
     if (labFromDb) {
@@ -317,6 +388,11 @@ const LabDetailScreen = () => {
       
       const localData = localKey ? labsData[localKey] : null;
       
+      // Use dynamic tests if available, otherwise fall back to local data
+      const testsToUse = dynamicTests.length > 0 
+        ? dynamicTests 
+        : (localData?.tests || labsData["lal-pathlabs"].tests);
+      
       return {
         name: labFromDb.name,
         rating: labFromDb.rating || 4.5,
@@ -325,9 +401,10 @@ const LabDetailScreen = () => {
         timing: `${labFromDb.opening_time || '7:00 AM'} - ${labFromDb.closing_time || '9:00 PM'}`,
         homeCollection: labFromDb.home_collection_available ?? true,
         accredited: ["NABL"],
-        tests: localData?.tests || labsData["lal-pathlabs"].tests, // Fallback to Lal PathLabs tests
+        tests: testsToUse,
         phone: labFromDb.phone,
         logoUrl: labFromDb.logo_url,
+        vendorId: labFromDb.vendor_id,
       };
     }
     
@@ -387,7 +464,7 @@ const LabDetailScreen = () => {
             price: test.price,
             labId: labId || "",
             labName: lab.name,
-            vendorId: labFromDb?.vendor_id || undefined,
+            vendorId: (lab as { vendorId?: string | null }).vendorId || undefined,
           });
           if (ok) {
             toast.success(`${testName} added to cart`);

@@ -18,6 +18,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useRealtimeProducts } from "@/hooks/useRealtimeProducts";
 import { toast } from "sonner";
 import DiagnosticCentersCarousel from "@/components/home/DiagnosticCentersCarousel";
 

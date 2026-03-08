@@ -18,6 +18,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import ScreenHeader from "@/components/layout/ScreenHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeOrders } from "@/hooks/useRealtimeOrders";
 import { format } from "date-fns";
 
 type Order = {

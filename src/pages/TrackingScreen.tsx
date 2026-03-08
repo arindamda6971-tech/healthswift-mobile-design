@@ -44,6 +44,10 @@ interface BookingState {
     quantity: number;
     familyMemberId?: string;
     packageId?: string;
+    labId?: string;
+    labName?: string;
+    vendorId?: string;
+    category?: string;
   }>;
   addressId: string | null;
   scheduledDate: string | null;

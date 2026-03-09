@@ -238,7 +238,7 @@ const SupportScreen = () => {
                         <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
                       </div>
                     </button>
-                  ))
+                  ))}
                 </div>
               )}
             </motion.div>

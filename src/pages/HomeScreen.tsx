@@ -63,6 +63,22 @@ const HomeScreen = () => {
   // Subscribe to real-time product updates
   useRealtimeProducts();
 
+  // Fetch bridge tests catalog
+  const { data: bridgeData } = useBridgeTests();
+  const trendingTests = useMemo(() => {
+    if (bridgeData?.tests?.length) {
+      return bridgeData.tests.slice(0, 6).map((t) => ({
+        id: t.id,
+        name: t.test_name,
+        price: t.price,
+        originalPrice: Math.round(t.price * 1.4),
+        discount: `${Math.round(((t.price * 1.4 - t.price) / (t.price * 1.4)) * 100)}%`,
+        time: t.report_delivery_time || "24 hours",
+      }));
+    }
+    return fallbackTrendingTests;
+  }, [bridgeData]);
+
   // Fetch all tests for search
   const fetchTests = useCallback(async () => {
     const { data } = await supabase

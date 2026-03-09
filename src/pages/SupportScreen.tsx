@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSubmitTicket, useMyTickets, useTicketStatus, type TicketCategory, type TicketPriority } from "@/hooks/useBridgeTickets";
+import { useSubmitTicket, useMyTickets, useTicketStatus, type TicketCategory, type TicketPriority, type Ticket } from "@/hooks/useBridgeTickets";
 import { toast } from "sonner";
 import StatusBadge from "@/components/ui/status-badge";
+import TicketDetailSheet from "@/components/support/TicketDetailSheet";
 
 const SUPPORT_PHONE = "6296092819";
 

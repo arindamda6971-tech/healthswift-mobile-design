@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSubmitTicket, useMyTickets, useTicketStatus, type TicketCategory, type TicketPriority } from "@/hooks/useBridgeTickets";
+import { useSubmitTicket, useMyTickets, useTicketStatus, type TicketCategory, type TicketPriority, type Ticket } from "@/hooks/useBridgeTickets";
 import { toast } from "sonner";
 import StatusBadge from "@/components/ui/status-badge";
+import TicketDetailSheet from "@/components/support/TicketDetailSheet";
 
 const SUPPORT_PHONE = "6296092819";
 
@@ -54,6 +55,7 @@ const SupportScreen = () => {
   const [priority, setPriority] = useState<TicketPriority>("medium");
   const [trackNumber, setTrackNumber] = useState("");
   const [searchTicketNumber, setSearchTicketNumber] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   const submitMutation = useSubmitTicket();
   const { data: ticketsData, isLoading: ticketsLoading } = useMyTickets();
@@ -213,7 +215,11 @@ const SupportScreen = () => {
               ) : (
                 <div className="space-y-3">
                   {tickets.map((ticket: any) => (
-                    <div key={ticket.id || ticket.ticket_number} className="soft-card">
+                    <button
+                      key={ticket.id || ticket.ticket_number}
+                      className="soft-card w-full text-left active:scale-[0.98] transition-transform"
+                      onClick={() => setSelectedTicket(ticket)}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <span className="text-xs font-mono text-muted-foreground">#{ticket.ticket_number}</span>
                         {getStatusBadge(ticket.status)}
@@ -229,8 +235,9 @@ const SupportScreen = () => {
                             {new Date(ticket.created_at).toLocaleDateString()}
                           </span>
                         )}
+                        <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -293,6 +300,12 @@ const SupportScreen = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <TicketDetailSheet
+        ticket={selectedTicket}
+        open={!!selectedTicket}
+        onClose={() => setSelectedTicket(null)}
+      />
     </MobileLayout>
   );
 };

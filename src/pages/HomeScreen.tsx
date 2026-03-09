@@ -41,7 +41,7 @@ const quickActions = [
   { icon: HeartPulse, label: "ECG Test", path: "/ecg-test", color: "bg-destructive/10 text-destructive" },
 ];
 
-const trendingTests = [
+const fallbackTrendingTests = [
   { name: "Complete Blood Count", price: 299, originalPrice: 499, discount: "40%", time: "6 hours" },
   { name: "Thyroid Profile", price: 399, originalPrice: 699, discount: "43%", time: "24 hours" },
   { name: "Vitamin D & B12", price: 799, originalPrice: 1299, discount: "38%", time: "24 hours" },

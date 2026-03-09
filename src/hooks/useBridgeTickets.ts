@@ -12,6 +12,14 @@ export interface TicketSubmission {
   description: string;
 }
 
+export interface TicketReply {
+  id: string;
+  message: string;
+  is_internal_note: boolean;
+  created_at: string;
+  author_role?: string;
+}
+
 export interface Ticket {
   id: string;
   ticket_number: string;
@@ -19,7 +27,13 @@ export interface Ticket {
   category?: string;
   priority?: string;
   subject?: string;
+  description?: string;
   created_at?: string;
+  resolved_at?: string;
+}
+
+export interface TicketDetails extends Ticket {
+  replies: TicketReply[];
 }
 
 function getAnonymousId(userId: string) {
@@ -63,6 +77,18 @@ async function fetchTicketStatus(ticketNumber: string) {
   return data;
 }
 
+async function fetchTicketDetails(ticketId: string) {
+  const { data, error } = await supabase.functions.invoke("bridge-proxy", {
+    body: {
+      endpoint: "bridge-tickets/details",
+      method: "GET",
+      params: { ticket_id: ticketId },
+    },
+  });
+  if (error) throw new Error(error.message || "Failed to fetch ticket details");
+  return data;
+}
+
 export function useSubmitTicket() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -88,5 +114,14 @@ export function useTicketStatus(ticketNumber: string | null) {
     queryKey: ["bridge-ticket-status", ticketNumber],
     queryFn: () => fetchTicketStatus(ticketNumber!),
     enabled: !!ticketNumber,
+  });
+}
+
+export function useTicketDetails(ticketId: string | null) {
+  return useQuery({
+    queryKey: ["bridge-ticket-details", ticketId],
+    queryFn: () => fetchTicketDetails(ticketId!),
+    enabled: !!ticketId,
+    staleTime: 30 * 1000,
   });
 }

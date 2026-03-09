@@ -53,8 +53,8 @@ const SupportScreen = () => {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<TicketCategory | "">("");
   const [priority, setPriority] = useState<TicketPriority>("medium");
-  const [trackNumber, setTrackNumber] = useState("");
   const [searchTicketNumber, setSearchTicketNumber] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   const submitMutation = useSubmitTicket();
   const { data: ticketsData, isLoading: ticketsLoading } = useMyTickets();

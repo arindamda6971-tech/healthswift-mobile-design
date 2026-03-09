@@ -215,7 +215,11 @@ const SupportScreen = () => {
               ) : (
                 <div className="space-y-3">
                   {tickets.map((ticket: any) => (
-                    <div key={ticket.id || ticket.ticket_number} className="soft-card">
+                    <button
+                      key={ticket.id || ticket.ticket_number}
+                      className="soft-card w-full text-left active:scale-[0.98] transition-transform"
+                      onClick={() => setSelectedTicket(ticket)}
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <span className="text-xs font-mono text-muted-foreground">#{ticket.ticket_number}</span>
                         {getStatusBadge(ticket.status)}
@@ -231,9 +235,10 @@ const SupportScreen = () => {
                             {new Date(ticket.created_at).toLocaleDateString()}
                           </span>
                         )}
+                        <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
                       </div>
-                    </div>
-                  ))}
+                    </button>
+                  ))
                 </div>
               )}
             </motion.div>

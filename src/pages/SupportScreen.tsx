@@ -300,6 +300,12 @@ const SupportScreen = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <TicketDetailSheet
+        ticket={selectedTicket}
+        open={!!selectedTicket}
+        onClose={() => setSelectedTicket(null)}
+      />
     </MobileLayout>
   );
 };

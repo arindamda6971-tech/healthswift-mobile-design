@@ -163,36 +163,50 @@ const HomeScreen = () => {
     fetchHealthPackages();
   }, [fetchTests, fetchDiagnosticCenters, fetchHealthPackages]);
 
-  // Filter tests based on search query. Use supabase results when available,
-  // otherwise fall back to the local `trendingTests` list so search works offline.
+  // Filter tests based on search query — merges Supabase tests + bridge tests
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
 
-    // Build a searchable pool from fetched tests or fallback to trending tests
-    const pool = (allTests && allTests.length > 0)
-      ? allTests.map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          price: t.price ?? t.price,
-          original_price: t.original_price ?? t.originalPrice,
-          discount_percent: t.discount_percent ?? t.discountPercent,
-          category: t.category,
-        }))
-      : trendingTests.map((t, i) => ({
-          id: `trending-${i}`,
-          name: t.name,
-          price: t.price,
-          original_price: t.originalPrice,
-          discount_percent: parseInt(t.discount),
-        }));
+    // Build a searchable pool from multiple sources
+    const pool: any[] = [];
 
-    return pool.filter((item: any) => {
+    // Add supabase tests
+    if (allTests?.length) {
+      allTests.forEach((t: any) => pool.push({
+        id: t.id, name: t.name, price: t.price, original_price: t.original_price, discount_percent: t.discount_percent, category: "",
+      }));
+    }
+
+    // Add bridge tests
+    if (bridgeData?.tests?.length) {
+      bridgeData.tests.forEach((t) => pool.push({
+        id: t.id, name: t.test_name, price: t.price, original_price: Math.round(t.price * 1.4), discount_percent: 29, category: t.category,
+      }));
+    }
+
+    // Fallback to trending
+    if (pool.length === 0) {
+      fallbackTrendingTests.forEach((t, i) => pool.push({
+        id: `trending-${i}`, name: t.name, price: t.price, original_price: t.originalPrice, discount_percent: parseInt(t.discount),
+      }));
+    }
+
+    // Deduplicate by name
+    const seen = new Set<string>();
+    const deduped = pool.filter((item) => {
+      const key = item.name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return deduped.filter((item: any) => {
       const name = (item.name || "").toLowerCase();
       const category = (item.category || "").toLowerCase();
       return name.includes(q) || category.includes(q);
     }).slice(0, 7);
-  }, [searchQuery, allTests]);
+  }, [searchQuery, allTests, bridgeData]);
 
   const handleSearchKeyDown = (e: any) => {
     if (e.key === "Enter") {

@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can update their own orders" ON public.orders;

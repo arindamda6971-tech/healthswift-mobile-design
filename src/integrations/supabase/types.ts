@@ -699,6 +699,8 @@ export type Database = {
           membership_type: string
           start_date: string
           status: string
+          subscriber_name: string | null
+          subscriber_type: string
           subscription_plan: string
           updated_at: string
           user_id: string
@@ -712,6 +714,8 @@ export type Database = {
           membership_type?: string
           start_date?: string
           status?: string
+          subscriber_name?: string | null
+          subscriber_type?: string
           subscription_plan: string
           updated_at?: string
           user_id: string
@@ -725,6 +729,8 @@ export type Database = {
           membership_type?: string
           start_date?: string
           status?: string
+          subscriber_name?: string | null
+          subscriber_type?: string
           subscription_plan?: string
           updated_at?: string
           user_id?: string

@@ -7,9 +7,18 @@ const corsHeaders = {
 };
 
 // Server-side plan pricing (source of truth)
-const PLAN_PRICES: Record<string, number> = {
+// User plans
+const USER_PLAN_PRICES: Record<string, number> = {
   monthly: 29,
   yearly: 299,
+};
+
+// Vendor/Partner plans
+const VENDOR_PLAN_PRICES: Record<string, number> = {
+  "starter_monthly": 29,
+  "starter_yearly": 299,
+  "growth_monthly": 1999,
+  "growth_yearly": 19999,
 };
 
 Deno.serve(async (req) => {
@@ -18,41 +27,63 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const bridgeApiKey = Deno.env.get("BRIDGE_API_KEY");
 
-    // User client for auth verification
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const body = await req.json();
+    const { plan, action, subscriber_type, subscriber_name, vendor_id } = body;
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let userId: string;
+
+    // Check if this is a partner/vendor bridge call
+    const authHeader = req.headers.get("Authorization");
+    const isBridgeCall = subscriber_type === "vendor" && body.bridge_api_key;
+
+    if (isBridgeCall) {
+      // Validate bridge API key for vendor subscriptions
+      if (!bridgeApiKey || body.bridge_api_key !== bridgeApiKey) {
+        return new Response(JSON.stringify({ error: "Invalid bridge API key" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!vendor_id) {
+        return new Response(JSON.stringify({ error: "vendor_id required for vendor subscriptions" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = vendor_id;
+    } else {
+      // Standard user JWT auth
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = claimsData.claims.sub;
     }
 
-    const userId = claimsData.claims.sub;
-
-    // Parse and validate request
-    const { plan, action } = await req.json();
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const subType = isBridgeCall ? "vendor" : (subscriber_type || "user");
 
     if (action === "cancel") {
-      // Cancel active subscription
-      const adminClient = createClient(supabaseUrl, supabaseServiceKey);
       const { data: activeSub } = await adminClient
         .from("subscriptions")
         .select("id")
@@ -80,19 +111,36 @@ Deno.serve(async (req) => {
     }
 
     // Purchase flow
-    if (!plan || !PLAN_PRICES[plan]) {
-      return new Response(JSON.stringify({ error: "Invalid plan" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let price: number;
+    let membershipType: string;
+    let subscriptionPlan: string;
+
+    if (subType === "vendor") {
+      // Vendor plan keys: "starter_monthly", "starter_yearly", "growth_monthly", "growth_yearly"
+      if (!plan || !VENDOR_PLAN_PRICES[plan]) {
+        return new Response(JSON.stringify({ error: "Invalid vendor plan. Use: starter_monthly, starter_yearly, growth_monthly, growth_yearly" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      price = VENDOR_PLAN_PRICES[plan];
+      // Extract membership type from plan key
+      membershipType = plan.startsWith("growth") ? "growth_pro" : "starter";
+      subscriptionPlan = plan.includes("yearly") ? "yearly" : "monthly";
+    } else {
+      // User plans
+      if (!plan || !USER_PLAN_PRICES[plan]) {
+        return new Response(JSON.stringify({ error: "Invalid plan" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      price = USER_PLAN_PRICES[plan];
+      membershipType = "gold";
+      subscriptionPlan = plan;
     }
 
-    const price = PLAN_PRICES[plan]; // Server-determined price
-
-    // Use service role to write to subscriptions (client has no INSERT policy)
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Cancel any existing active subscriptions
+    // Cancel any existing active subscriptions for this user
     await adminClient
       .from("subscriptions")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
@@ -101,23 +149,25 @@ Deno.serve(async (req) => {
 
     // Calculate end date server-side
     const endDate = new Date();
-    if (plan === "monthly") {
+    if (subscriptionPlan === "monthly") {
       endDate.setMonth(endDate.getMonth() + 1);
     } else {
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
 
-    // Insert new subscription with server-validated price
+    // Insert new subscription
     const { data: newSub, error: insertError } = await adminClient
       .from("subscriptions")
       .insert({
         user_id: userId,
-        subscription_plan: plan,
-        membership_type: "gold",
+        subscription_plan: subscriptionPlan,
+        membership_type: membershipType,
         end_date: endDate.toISOString(),
         status: "active",
         amount_paid: price,
         is_auto_renew: true,
+        subscriber_type: subType,
+        subscriber_name: subscriber_name || null,
       })
       .select()
       .single();
